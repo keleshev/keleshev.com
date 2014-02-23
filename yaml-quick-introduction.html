@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <p id='home'><a href='/'>&#9991;</a></p>
+        <h1>YAML: Quick Introduction</h1>
+
+<p><strong>YAML</strong> /'ya-mel/ <em>YAML Ain't Markup Language</em></p>
+
+<h2>Simple data</h2>
+
+<p>YAML is "data serialization" language that matches your expectations about
+data. Say, what do you expect the following to be?</p>
+
+<pre><code>Quick brown fox jumped over the lazy dog.
+</code></pre>
+
+<p>Odds are you will say it is a string. Let's find out what YAML thinks about it:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('Quick brown fox jumped over the lazy dog.')
+'Quick brown fox jumped over the lazy dog.'
+</code></pre>
+
+<p>Well, what about this one?</p>
+
+<pre><code>3.1415926536
+</code></pre>
+
+<p>YAML agrees, it is a floating point number:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('3.1415926536')
+3.1415926536
+</code></pre>
+
+<p>But that was trivial, right? What do you think of that:</p>
+
+<pre><code>2011-11-18
+</code></pre>
+
+<p>That looks like a date to me and to YAML:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('2011-11-18')
+datetime.date(2011, 11, 18)
+</code></pre>
+
+<p>Time also can be incorporated:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('2011-11-18 19:00:59')
+datetime.datetime(2011, 11, 18, 19, 00, 59)
+</code></pre>
+
+<h2>Data structures</h2>
+
+<p>What do you think is this:</p>
+
+<pre><code>- eggs
+- ham
+- spam
+- French basil salmon terrine
+</code></pre>
+
+<p>For me it is a list of food. For YAML it is a list of strings:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('''
+    - eggs
+    - ham
+    - spam
+    - French basil salmon terrine
+    ''')
+['eggs', 'ham', 'spam', 'French basil salmon terrine']
+</code></pre>
+
+<p>Unfortunately, YAML does not know concept of food, but it did well with list
+of strings, I think.</p>
+
+<p>Also, if you want a list to be in-line, add brackets around:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('[eggs, ham, spam]')
+['eggs', 'ham', 'spam']
+</code></pre>
+
+<p>Another one:</p>
+
+<pre><code>registry: USS Enterprise (XCV 330)
+service: circa 2130s
+captain: unknown
+</code></pre>
+
+<p>Let's try it out:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('''
+    registry: USS Enterprise (XCV 330)
+    service: circa 2130s
+    captain: unknown
+    ''')
+{'captain': 'unknown', 'registry': 'USS Enterprise (XCV 330)',
+'service': 'circa 2130s'}
+</code></pre>
+
+<p>There's a different terminology about this one, but I bet you'll agree that
+this is <em>associative array</em> or <em>hash table</em> or <em>dictionary</em>. YAML calls it a
+<em>mapping</em>.</p>
+
+<h2>More complex data structures</h2>
+
+<p>In dynamic languages like Perl, Ruby, JavaScript, and Python, where
+objects are implemented as hash tables, you can convert easily YAML mappings
+to objects:</p>
+
+<pre><code>&gt;&gt;&gt; class SpaceShip(object):
+        pass
+
+&gt;&gt;&gt; ship = SpaceShip()
+
+&gt;&gt;&gt; ship.__dict__ = yaml.load('''
+    registry: USS Enterprise (XCV 330)
+    service: circa 2130s
+    captain: unknown
+    ''')
+
+&gt;&gt;&gt; ship.registry
+'USS Enterprise (XCV 330)'
+</code></pre>
+
+<p>Also, you can have lists of lists, lists of mappings, mappings of mappings,
+and so on:</p>
+
+<pre><code># file exmpl1.yaml
+foods:
+  - eggs
+  - pizza
+drinks:
+  - water
+  - vodka
+
+&gt;&gt;&gt; yaml.load(open('exmpl1.yaml'))
+{'foods': ['eggs', 'pizza'], 'drinks': ['water', 'vodka']}
+
+# file exmpl2.yaml
+status:
+  engine: on
+  translocator: off
+misc:
+  airbag installed: yes
+  maintenance passed: no
+
+&gt;&gt;&gt; yaml.load(open('exmpl2.yaml'))
+{'status': {'engine': True, 'translocator': False},
+'misc': {'maintenance passed': False, 'airbag installed': True}}
+</code></pre>
+
+<p>YAML uses indentation to distinguish data hierarchy, and uses it very flexibly:
+you can have as little as 1 space to depict indent.</p>
+
+<p>The above examples remind me to tell you about comments syntax (hash sign
+<code>#</code> in YAML) and about boolean data in YAML:</p>
+
+<pre><code>&gt;&gt;&gt; yaml.load('[yes, Yes, YES, on, On, ON, true, True, TRUE]')
+[True, True, True, True, True, True, True, True, True]
+
+&gt;&gt;&gt; yaml.load('[no, No, NO, off, Off, OFF, false, False, FALSE]')
+[False, False, False, False, False, False, False, False, False]
+</code></pre>
+
+<p>As you can see YAML has a very broad understanding of truthness and falseness.</p>
+
+<h2>Finally</h2>
+
+<p>I think, I only scratched the surface of YAML awesomness, so if you have a
+usecase which was not covered here, you are very likely to find one on the
+official site <a href="http://yaml.org">yaml.org</a>, which you should check out anyway!</p>
+
+<h2>What's with XML?</h2>
+
+<p>You can continue using it.</p>
+
+    </body>
+</html>
