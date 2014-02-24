@@ -1,9 +1,11 @@
 body {
     margin: auto;
-    width: 700px;
-    font-size: 20px;
+    padding: 0 30px;
+    width: 900px;
+    font-size: 25.5px;
     font-family: Georgia, 'Times New Roman', Times, serif;
     line-height: 1.5em;
+    -webkit-text-size-adjust: 100%;
 }
 
 ::-moz-selection { color: white; background: #323232; }
@@ -34,7 +36,7 @@ content: '⤴'; '⇗';
     100% { -webkit-transform: rotate(360deg);}
 }
 #home a {
-    font-size: 150px;
+    font-size: 200px;
     border: 0;
 }
 

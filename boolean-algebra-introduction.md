@@ -1,10 +1,10 @@
 Boolean algebra: Introduction
------------------------------
+=============================
 
 (gj8QmRQtVao@youtube)
 
 <table>
-  <tr><th>multiplication</th><th>addition</th><th>negation</th></tr>
+  <tr><th>Multiplication</th><th>Addition</th><th>Negation</th></tr>
   <tr>
     <td>
       0 ∙ 0 = 0<br>

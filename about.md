@@ -12,7 +12,7 @@ Employment
 
  - Teaching assistant, *Data mining with Python* (September 2013—December 2013)
 
-[GreenSteam](http://www.greensteam.dk)
+[GreenSteam](http://greensteam.dk)
 
  - Software developer (September 2013)
 
@@ -41,10 +41,10 @@ Mads Clausen Institute, Campus Sønderborg
 
  - M.Sc. in Mechatronics<br>
    Profile: Embedded Control Systems<br>
-   Thesis: Redundant Multi-Core Platform for SIL3 Applications in<br>
-   Automation Industry
+   Thesis: Redundant multi-core platform for SIL3 applications in
+   automation industry
 
-Moscow State Technical University "MAMI" (August 2005—June 2009)
+Moscow State Technical University “MAMI” (August 2005—June 2009)
 
  - B.Eng. in Electrical Engineering, Electromechanics and Electrotechnology<br>
    Thesis: Development of Automotive Headlamp Electronic Control System
@@ -52,8 +52,8 @@ Moscow State Technical University "MAMI" (August 2005—June 2009)
 Awards and scholarships
 -----------------------
 
- - Danfoss A/S: Full tuition and living expenses scholarship for 2 years, based on
-   recommendations after the internship.
+ - Danfoss A/S: Full tuition and living expenses scholarship for 2 years,
+   based on recommendations after the internship.
 
  - Cybersaling Cup: The winner of LEGO NXT indoor autonomous land yacht racing
    competition based on semester project in

@@ -1,5 +1,5 @@
 Boolean algebra: Truth tables
------------------------------
+=============================
 
 (oR2Zo-E-l08@youtube)
 (3UP9XPQbrMs@youtube)
@@ -32,4 +32,4 @@ Boolean algebra: Truth tables
 (ltlhg3Ify6U@youtube)
 (I0SEkuwXwow@youtube)
 
-Next: [Karnaugh maps](/boolean-algebra-karnaugh-maps)
+Next: [Karnaugh maps](/boolean-algebra-karnaugh-maps.html)

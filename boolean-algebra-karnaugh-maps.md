@@ -1,5 +1,5 @@
 Boolean algebra: Karnaugh maps
-------------------------------
+==============================
 
 (7yea5kZzrx4@youtube)
 (SithviYgkoY@youtube)
@@ -51,4 +51,4 @@ Boolean algebra: Karnaugh maps
 (VLa_E_h0_OI@youtube)
 (zrmUM3eYZ2o@youtube)
 
-Next: [DeMorgan's theorem](/boolean-algebra-demorgans-theorem.html)
+Next: [DeMorgan’s theorem](/boolean-algebra-demorgans-theorem.html)
