@@ -1,7 +1,7 @@
-<style>#home a { color: black }</style>
-
 Vladimir Keleshev
 =================
+
+<style>#home a { color: black }</style>
 
 About
 ------

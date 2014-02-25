@@ -18,6 +18,12 @@ def add_negation(source):
     source = re('-\((.*?)\)').sub(pattern, source)
     return re('-\[(.*?)\]').sub(pattern, source)
 
+
+def parse_header(source):
+    before, during, after = source.partition('===')
+    return before.strip()
+
+
 template = open('TEMPLATE.html').read().decode('utf-8')
 
 
@@ -25,7 +31,9 @@ for file in sys.argv[1:]:
     new_file = file.partition('.md')[0] + '.html'
     print '%s -> %s' % (file, new_file)
     contents = open(file).read().decode('utf-8')
+    header = parse_header(contents)
     contents = add_youtube(add_negation(contents))
     html = markdown(contents)
     html = template.replace('{{body}}', html)
+    html = html.replace('{{title}}', header)
     open(new_file, 'w').write(html.encode('utf8'))
