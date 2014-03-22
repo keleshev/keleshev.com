@@ -1,7 +1,7 @@
 body {
     margin: auto;
     padding: 0 30px;
-    width: 900px;
+    width: 800px;
     font-size: 25.5px;
     font-family: Georgia, 'Times New Roman', Times, serif;
     line-height: 1.5em;
@@ -45,13 +45,14 @@ h1, h2, h3, h4 {
     font-weight: 100;
 }
 
-h1 { text-align: center }
-
+h1 {
+    text-align: center;
+}
 pre {
     padding-left: 2em;
 }
 
-h2 {
+h2, h3 {
     font-style: italic;
 }
 /*
