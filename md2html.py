@@ -4,6 +4,8 @@ from re import compile as re
 
 from markdown2 import markdown
 
+import hi
+
 
 def add_youtube(source):
     pattern = r'''<iframe width="640" height="360"
@@ -25,6 +27,13 @@ def parse_header(source):
 
 
 template = open('TEMPLATE.html').read().decode('utf-8')
+code = re('(?s)```(\w+)\n(.*?)```')
+
+
+def highlight(match):
+    language, source = match.groups()
+    highlighter = hi.Highlighter(getattr(hi, language))
+    return '<pre>%s</pre>' % highlighter.eval(str(source))
 
 
 for file in sys.argv[1:]:
@@ -33,7 +42,9 @@ for file in sys.argv[1:]:
     contents = open(file).read().decode('utf-8')
     header = parse_header(contents)
     contents = add_youtube(add_negation(contents))
-    html = markdown(contents)
+    contents = code.sub(highlight, contents)
+
+    html = markdown(contents, extras=['smarty-pants'])
     html = template.replace('{{body}}', html)
     html = html.replace('{{title}}', header)
     open(new_file, 'w').write(html.encode('utf8'))

@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Python noob anti-patterns</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <p id='home'><a href='/'>&#9991;</a></p>
+        <h1>Python noob anti-patterns</h1>
+
+<p>Last summer Finn Årup Nielsen
+(<a href="https://twitter.com/fnielsen">@fnielsen</a>)
+invited me to be a teaching asistant at his course called
+<em>Data mining using Python</em> at Technical University of Denmark.</p>
+
+<p>Teaching is something that I’m really excited about, so even though
+TA is usaly a student’s job, I could not resist.</p>
+
+<h2>Bad influence of other languages</h2>
+
+<pre><code>Getters and setters
+Mixing up class and instance variables
+Emulating end’s
+Using indexes for iteration: `for i in range(len(...))`
+Using `import *`
+If-else instead of dictionary look-ups
+</code></pre>
+
+<h2>Not using pyflakes</h2>
+
+<pre><code>Unused variables, imports
+</code></pre>
+
+<p>Not following PEP 8
+    Long lines</p>
+
+<h2>Not using static analysis tools</h2>
+
+<h2>Documentation</h2>
+
+<pre><code>Comments instead of docstrings
+Docstrings in wrong places
+Using JDoc
+Excessive commenting
+Not following PEP 257
+Unrepeatable doctests
+</code></pre>
+
+<h2>Subtleties</h2>
+
+<pre><code>Not subclassing `object`
+Unnecessary parenthesis
+Ennecessary backslashes
+Forgetting `if __name__ == '__main__'`
+Using double underscores for private methods
+Use of `exit` instead of `sys.exit`
+Integer division might be a bug
+Writing `== None`
+</code></pre>
+
+<h2>Language-agnostic anti-patterns</h2>
+
+<pre><code>Excessive nesting
+Single-letter variables
+Unreachable code
+Using numbers for versions
+    import sysconfig
+    if float(sysconfig.get_python_version()) &lt; 3.1:
+        exit('your version of python is below 3.1')
+Returning `True` or `False` literals
+Hardcoded constants (paths, values)
+Storing secrets in code
+Manual parsing of nested structures
+No functions
+</code></pre>
+
+<h2>System-facing</h2>
+
+<pre><code>Printing to `stdout` instead of `stderr`
+Not returning exit-codes on error
+Manually parsing `sys.argv`
+Wrong or now shebang (#!/macports/bin/python)
+</code></pre>
+
+<h2>Exceptions</h2>
+
+<h3>Putting a lot of code inside try-except</h3>
+
+<h3>Catching exception and rasing a different one</h3>
+
+<h3>Catch-all try-except blocks... pass</h3>
+
+<h2>Not knowing standard library</h2>
+
+<pre><code>Not knowing about `collections.Counter` (or `nltk.FreqDist`)
+Using `randint` instead of other alternatives (off-by-one often)
+Overuse of `copy` and `deepcopy`
+</code></pre>
+
+<h2>Not knowing built-ins (also len)</h2>
+
+<pre><code>`try-except: KeyError` instead of `get`
+Using `sorted` instead of `min` or `max`
+Doing `list(reversed(sorted(...)))`
+</code></pre>
+
+<p>Reinventing magic methods (write, delete)
+Weird anti-patterns: <code>for _ in range(1): ... break</code>
+Local imports
+Using magic methods directly
+Not using context-managers, list-comprehensions
+Functions and methods for printing objects
+Printing instead of returning a value
+Messing up encodings
+Computations in init
+“Better to ask for fogiveness than for permission”</p>
+
+    </body>
+</html>

@@ -1,3 +1,4 @@
 distribute==0.6.31
 markdown2==2.2.0
+parsimonious==0.5
 wsgiref==0.1.2

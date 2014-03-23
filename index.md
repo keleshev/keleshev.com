@@ -3,18 +3,11 @@ Vladimir Keleshev
 
 <style>#home a { color: black }</style>
 
-About
-------
-
-* [Résumé](/about.html)
-* [@keleshev](http://twitter.com/keleshev) on Twitter
-* [@halst](http://github.com/halst) on GitHub
-
-
 Blog
 ----
 
-* [YAML: Quick introduction](/yaml-quick-introduction.html)
+* [Dissecting a code golf challenge](/dissecting-a-code-golf-challenge)
+* [YAML: Quick introduction](/yaml-quick-introduction)
 
 Talks
 -----
@@ -25,12 +18,18 @@ Talks
 * [Python best practice patterns](http://youtu.be/GZNUfkVIHAY)
 * [Critique of Python](http://youtu.be/CpjUoYcaUu8)
 
+About
+------
+
+* [Résumé](/about)
+* [@keleshev](http://twitter.com/keleshev) on Twitter
+* [@halst](http://github.com/halst) on GitHub
 
 Boolean algebra
 ---------------
 
-* [Intoroduction](/boolean-algebra-introduction.html)
-* [Truth tables](/boolean-algebra-truth-tables.html)
-* [Karnaugh maps](/boolean-algebra-karnaugh-maps.html)
-* [DeMorgan’s theorem](/boolean-algebra-demorgans-theorem.html)
-* [Standard, SOP, POS forms](/boolean-algebra-standard-sop-pos-forms.html)
+* [Intoroduction](/boolean-algebra-introduction)
+* [Truth tables](/boolean-algebra-truth-tables)
+* [Karnaugh maps](/boolean-algebra-karnaugh-maps)
+* [DeMorgan’s theorem](/boolean-algebra-demorgans-theorem)
+* [Standard, SOP, POS forms](/boolean-algebra-standard-sop-pos-forms)

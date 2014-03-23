@@ -8,6 +8,19 @@ body {
     -webkit-text-size-adjust: 100%;
 }
 
+blockquote, pre {
+    border-left: 2.5px solid black;
+    margin-left: 0;
+    padding-left: 1.5em;
+}
+pre {
+    padding-left: 1.5em;
+}
+
+pre i {
+    color: #bbb;
+}
+
 ::-moz-selection { color: white; background: #323232; }
 ::selection      { color: white; background: #323232; }
 
@@ -47,9 +60,6 @@ h1, h2, h3, h4 {
 
 h1 {
     text-align: center;
-}
-pre {
-    padding-left: 2em;
 }
 
 h2, h3 {
