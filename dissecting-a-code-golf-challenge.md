@@ -315,5 +315,7 @@ I bet you have learned something new about Python today.
 [&#9991;](/ "Home")
 
 <center markdown="1">
+*Comment this on [Reddit](http://www.reddit.com/r/programming/comments/217v8s)*
+<br/>
 *Follow me on [Twitter](http://twitter.com/keleshev)*
 </center>
