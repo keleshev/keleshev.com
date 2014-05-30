@@ -6,6 +6,7 @@ Vladimir Keleshev
 Blog
 ----
 
+* [WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction)
 * [Dissecting a code golf challenge](/dissecting-a-code-golf-challenge)
 * [YAML: Quick introduction](/yaml-quick-introduction)
 

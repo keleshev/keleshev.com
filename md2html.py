@@ -44,7 +44,8 @@ for file in sys.argv[1:]:
     contents = add_youtube(add_negation(contents))
     contents = code.sub(highlight, contents)
 
-    html = markdown(contents, extras=['smarty-pants'])
+    html = markdown(contents)#, extras=['smarty-pants'])
+
     html = template.replace('{{body}}', html)
     html = html.replace('{{title}}', header)
     open(new_file, 'w').write(html.encode('utf8'))
