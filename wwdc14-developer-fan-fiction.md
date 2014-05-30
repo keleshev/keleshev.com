@@ -194,7 +194,7 @@ indistinguishable from Smalltalk. [&#9991;](/ "Home")
 <center>&#8258;</center>
 
 <center markdown="1">
+*Comment this on [Reddit](http://www.reddit.com/r/programming/comments/26wq81/wwdc14_developer_fan_fiction/)*
+<br/>
 *Follow me on [Twitter](http://twitter.com/keleshev)*
 </center>
-
-
