@@ -10,11 +10,11 @@ Employment
 
 [Technical University of Denmark](http://dtu.dk)
 
- - Teaching assistant, *Data mining with Python* (September 2013—December 2013)
+ - Teaching assistant, *Data mining with Python* (September 2013—present)
 
 [GreenSteam](http://greensteam.dk)
 
- - Software developer (September 2013)
+ - Software developer contractor (September 2013)
 
 [IO Interactive](http://ioi.dk), [Hapti.co](http://hapti.co)
 
