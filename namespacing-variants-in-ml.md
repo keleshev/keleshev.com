@@ -172,9 +172,9 @@ I'm more inclined than not
 to group them in a namespace module. [&#9991;](/ "Home")
 
 <center markdown="1">
-*Comment on [Reddit](http://www.reddit.com/r/programming/comments/217v8s)*
+*Comment on [Reddit](http://www.reddit.com/r/ocaml/comments/32cxmw/namespacing_variants_in_ml/)*
 <br/>
-*Comment on [Hacker News](http://www.reddit.com/r/programming/comments/217v8s)*
+*Comment on [Hacker News](https://news.ycombinator.com/item?id=9364405)*
 <br/>
 *Follow me on [Twitter](http://twitter.com/keleshev)*
 </center>
