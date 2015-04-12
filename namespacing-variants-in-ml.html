@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Namespacing Variants in ML</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <p id='home'><a title='Home' href='/'>&#9991;</a></p>
+        <h1>Namespacing Variants in ML</h1>
+
+<p><center>2015-04-12</center></p>
+
+<p>When reading code written in OCaml or Standard ML,
+I keep seeing variant constructors having ad-hoc prefixes
+or suffixes used for namespacing.</p>
+
+<p>Here&#8217;s an example from
+<a href="http://www.amazon.com/Modern-Compiler-Implementation-Andrew-Appel/dp/0521607647">Modern Compiler Implementation in ML</a> (page 98):</p>
+
+<pre><b>type </b>operator = PlusOp | MinusOp | TimesOp | DivideOp
+</pre>
+
+<p>And here&#8217;s just one of many examples from <a href="https://github.com/facebook/pfff/blob/master/lang_php/parsing/ast_php.ml#L138">Facebook pfff tool</a>:</p>
+
+<pre><b>type </b>hint_type =
+  | Hint <b>of </b>name * type_args option
+  | HintArray <b>of </b>tok
+  | HintQuestion <b>of </b>tok * hint_type
+  | HintTuple <b>of </b>hint_type comma_list paren
+</pre>
+
+<p>What you can do instead is to drop the prefix/suffix and use
+a small module as a namespace instead:</p>
+
+<pre><b>module </b>Operator = <b>struct
+  </b><b>type </b>t = Plus | Minus | Times | Divide
+<b>end
+</b></pre>
+
+<pre><b>module </b>Hint = <b>struct
+  </b><b>type </b>t =
+    | Name <b>of </b>name * type_args option
+    | Array <b>of </b>tok
+    | Question <b>of </b>tok * t
+    | Tuple <b>of </b>hint_type comma_list paren
+<b>end
+</b></pre>
+
+Now, at the use site you can select the most readable option depending
+on the context. You can spell it all out if the variants are only used
+briefly:
+
+<pre><b>let </b>operators = [Operator.Plus; Operator.Minus]
+</pre>
+
+<p>Or you can create a module alias if you use the variants a lot:</p>
+
+<pre><b>module </b>Op = Operator
+
+<b>let </b>operators = [Op.Plus; Op.Minus]
+</pre>
+
+<p>Or you can locally open the module if you need to use them
+intensely in a particular scope:</p>
+
+<pre><b>let </b>operators =
+  <b>let </b><b>open </b>Operator <b>in
+  </b>[Plus; Minus; Times; Divide]
+
+<em>(* or *)</em>
+
+<b>let </b>operators =
+  Operator.([Plus; Minus; Times; Divide])
+</pre>
+
+<p>Or you can just open the module at the top of
+your file if that&#8217;s your thing:</p>
+
+<pre><b>open </b>Operators
+
+<b>let </b>operators = [Plus; Minus; Times; Divide]
+</pre>
+
+<h2>Modular Programming</h2>
+
+<p>Now that you have a module like <code>Operator</code> you
+suddenly realize that other definitions probably also
+belong to it.</p>
+
+<p>You might have functions with names such as <code>parse_operator</code> or
+<code>action_of_operator</code>:</p>
+
+<pre><b>type </b>operator = PlusOp | MinusOp | TimesOp | DivideOp
+
+<b>let </b>parse_operator = <b>function
+  </b>| <em>"+"</em> -> Some PlusOp
+  | <em>"-"</em> -> Some MinusOp
+  | <em>"*"</em> -> Some TimesOp
+  | <em>"/"</em> -> Some DivideOp
+  | _   -> None
+
+<b>let </b>action_of_operator = <b>function
+  </b>| PlusOp -> (+)
+  | MinusOp -> (-)
+  | TimesOp -> ( * )
+  | Divide -> (/)
+</pre>
+
+<p>Now you can group them all in the namespace module
+and give them more appropriate names (for module context):</p>
+
+<pre><b>module </b>Operator = <b>struct
+  </b><b>type </b>t = Plus | Minus | Times | Divide
+
+  <b>let </b>of_string = <b>function
+    </b>| <em>"+"</em> -> Some Plus
+    | <em>"-"</em> -> Some Minus
+    | <em>"*"</em> -> Some Times
+    | <em>"/"</em> -> Some Divide
+    | _   -> None
+
+  <b>let </b>to_action = <b>function
+    </b>| Plus   -> (+)
+    | Minus  -> (-)
+    | Times  -> ( * )
+    | Divide -> (/)
+<b>end
+</b></pre>
+
+Namespacing functions this way has same benefits to
+namespacing your original type. The new flexibility
+affords you better readability or shorter expressions
+at the call site.
+For example, you can write something like this now:
+
+<pre><b>let </b>action =
+  Operator.(source |> of_string |> to_action)
+</pre>
+
+<p>Another advantage is that such module
+visually groups related type and functions in your source
+file.</p>
+
+<p>Yet another advantage: you can use your new
+module in functor context, assuming it implements
+the required signature:</p>
+
+<pre><b>module </b>OperatorSet = Set.Make (Operator)
+</pre>
+
+<h2>Conclusion</h2>
+
+<p>One of my fist complains coming from object-oriented to
+functional programming was that so much functional code
+looks like big bags of functions and types with little
+structure. Well, ML <em>structures</em> to the rescue!</p>
+
+<p>Nowadays whenever I have a type and a bunch of related functions
+(sounds familiar?),
+I&#8217;m more inclined than not
+to group them in a namespace module. <a href="/" title="Home">&#9991;</a></p>
+
+<p><center markdown="1">
+<em>Comment on <a href="http://www.reddit.com/r/programming/comments/217v8s">Reddit</a></em>
+<br/>
+<em>Comment on <a href="http://www.reddit.com/r/programming/comments/217v8s">Hacker News</a></em>
+<br/>
+<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
+</center></p>
+
+    </body>
+</html>

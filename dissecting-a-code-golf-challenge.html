@@ -66,8 +66,8 @@ get it down to 73. And here are the results.</p>
 
 <pre><b>import </b>sys
 
-<i># Parse matrix.
-</i>matrix = []
+<em># Parse matrix.
+</em>matrix = []
 <b>for </b>line <b>in </b>sys.stdin.read().splitlines():
     row = []
     <b>for </b>digits <b>in </b>line.split(' '):
@@ -75,13 +75,13 @@ get it down to 73. And here are the results.</p>
         row.append(number)
     matrix.append(row)
 
-<i># Row sums.
-</i>all_sums = []
+<em># Row sums.
+</em>all_sums = []
 <b>for </b>row <b>in </b>matrix:
     all_sums.append(sum(row))
 
-<i># Column sums.
-</i><b>for </b>i <b>in </b>range(10):
+<em># Column sums.
+</em><b>for </b>i <b>in </b>range(10):
     column = []
     <b>for </b>row <b>in </b>matrix:
         column.append(row[i])

@@ -11,6 +11,26 @@ body {
     background-color: white; #f3f3f3; #f0f0e9;
 }
 
+.icon, i {
+        font-family: 'Friendly-Icons-Font';
+        speak: none;
+        font-style: normal;
+        font-weight: normal;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+
+        /* Better Font Rendering =========== */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+}
+@font-face {
+ font-family: 'Friendly-Icons-Font';
+ src: url('/fonts/Friendly-Icons-Font.woff') format('woff');
+ font-weight: normal;
+ font-style: normal;
+}
+
 blockquote, pre {
     border-left: 2.5px solid black;
     margin-left: 0;
@@ -20,8 +40,9 @@ pre {
     padding-left: 1.5em;
 }
 
-pre i {
-    color: #bbb;
+pre em {
+    color: #000;
+    font-weight: 100;
 }
 
 ::-moz-selection { color: white; background: #323232; }
@@ -42,7 +63,7 @@ content: '⤴'; '⇗';
 #home {
     text-align: center;
     line-height: 1.0;
-    -webkit-animation: rotateWord 360s linear infinite 0s;
+    //-webkit-animation: rotateWord 360s linear infinite 0s;
 }
 #home:hover {
     //-webkit-animation: rotateWord 0.5s linear 1 0s;

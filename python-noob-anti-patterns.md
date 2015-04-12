@@ -264,14 +264,23 @@ that are idiomatic in them are actualy bad practices in Python.
 
 Not using static analysis tools
 ------------------------------------------------------------
-    Not using pyflakes
-        Unused variables, imports
-    Not following PEP 8
-        Long lines
 
-    flake 8
+    pyflakes:
+      unused variables
+      unused imports
+
+    pep8:
+      style
+
+    flake8 = pyflakes + pep8
 
     Vim, Emacs, Sublime Text, PyCharm
+
+
+$ pip install flake8
+$ flake8 file1.py file2.py
+
+
 
 Documentation
 ------------------------------------------------------------
@@ -285,15 +294,18 @@ Documentation
 
     def some_function(some_argument):
         """This function does this and that."""
+        ...
 
 
 # Docstrings in wrong places
 
     # BAD
+    #! /usr/bin/env python
     import io
     """This module does this and that."""
 
     # GOOD
+    #! /usr/bin/env python
     """This module does this and that."""
     import io
 
@@ -313,6 +325,7 @@ Documentation
         ...
 
 
+def parse(doc, argv):
     """Parse command line arguments.
 
     Parameters
@@ -335,7 +348,8 @@ Documentation
     PEP 257: general docstring conventions
     pep257: tool for enforcing PEP 257
 
-    NumPy / Sphinx: specific docstring conventions
+    NumPy docstring conventions: http://numpy.pep257.org/
+    Sphinx docs tring conventions: http://sphinx-doc.org/
 
 # Excessive commenting
 
@@ -348,6 +362,11 @@ Documentation
         ...
 
     # BEST
+
+class Grid(object):
+
+    ...
+
     @property
     def is_square(self):
         return set(map(len, grid)) == {len(grid)}
@@ -359,18 +378,62 @@ Documentation
 
 # Unrepeatable doctests
 
+
+    def test_tweet_sentiment():
+        tweet = Tweet(id=513015579687403520)
+        assert tweet.sentiment == 'angry'
+
+    def test_tweet_sentiment():
+        tweet = Tweet(text='OMG SO AWESOME)
+        assert tweet.sentiment == 'happy'
+
     >>> Tweet(id=513015579687403520).sentiment
     'angry'
 
     >>> Tweet(text='OMG SO AWESOME').sentiment
     'happy'
 
+# Forgetting `if __name__ == '__main__'`
+
+    # BAD
+    #! /usr/bin/env python
+
+    def some_useful_action():
+        ...
+
+    print(some_useful_action())
+
+
+    # GOOD
+    #! /usr/bin/env python
+
+    def some_useful_action():
+        ...
+
+    if __name__ == '__main__':
+        print(some_useful_action())
+
+
 Subtleties
 ------------------------------------------------------------
-    Not subclassing `object`
+
+# Ennecessary backslashes
+
+    # BAD
+    print('some long string' + \
+          'another long string')
+
+    # GOOD
+    print('some long string' +
+          'another long string')
+
+    Backslashes are not necessary inside matching tokens:
+        (), {}, [], "", '', """""", ''''''
+
+
+
+    Not subclassing `object` in Python 2
     Unnecessary parenthesis
-    Ennecessary backslashes
-    Forgetting `if __name__ == '__main__'`
     Using double underscores for private methods
     Use of `exit` instead of `sys.exit`
     Integer division might be a bug

@@ -5,6 +5,7 @@ from re import compile as re
 from markdown2 import markdown
 
 import hi
+from iconize import icons
 
 
 def add_youtube(source):
@@ -19,6 +20,24 @@ def add_negation(source):
     pattern = r'<span style="display: inline-table; border-top: 1px solid black;">\1</span>'
     source = re('-\((.*?)\)').sub(pattern, source)
     return re('-\[(.*?)\]').sub(pattern, source)
+
+
+def add_icons(source):
+    def repl(match):
+        icon_name = match.groups(1)[0]
+        if icon_name not in icons:
+            raise Exception('Icon "%s" is not found' % icon_name)
+        icon = icons[icon_name]
+        print icon, repr(icon)
+        return '<i>%s</i>' % icon
+    return re('i`(\w+)`').sub(repl, source)
+
+
+def add_inline_code(source):
+    def repl(match):
+        code = match.groups(1)[0]
+        return '<code>%s</code>' % code
+    return re('`(.+?)`').sub(repl, source)
 
 
 def parse_header(source):
@@ -41,10 +60,10 @@ for file in sys.argv[1:]:
     print '%s -> %s' % (file, new_file)
     contents = open(file).read().decode('utf-8')
     header = parse_header(contents)
-    contents = add_youtube(add_negation(contents))
+    contents = add_youtube(add_negation(add_icons(contents)))
     contents = code.sub(highlight, contents)
-
-    html = markdown(contents)#, extras=['smarty-pants'])
+    html = markdown(contents, extras=['smarty-pants', 'wiki-tables'])
+    html = add_inline_code(html)
 
     html = template.replace('{{body}}', html)
     html = html.replace('{{title}}', header)
