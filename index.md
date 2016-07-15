@@ -25,7 +25,7 @@ About
 
 * [Résumé](/about)
 * [@keleshev](http://twitter.com/keleshev) on Twitter
-* [@halst](http://github.com/halst) on GitHub
+* [@keleshev](http://github.com/keleshev) on GitHub
 
 Boolean algebra
 ---------------

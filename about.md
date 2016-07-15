@@ -4,9 +4,13 @@ Vladimir Keleshev
 Employment
 ----------
 
+[Datawire](http://datawire.io)
+
+ - Compiler engineer (December 2015—present)
+
 [Robocat](http://robo.cat)
 
- - Back-end developer (October 2013—present)
+ - Back-end developer (October 2013—December 2015)
 
 [Technical University of Denmark](http://dtu.dk)
 
