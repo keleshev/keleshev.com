@@ -4,9 +4,13 @@ Vladimir Keleshev
 Employment
 ----------
 
+[SimCorp](http://simcorp.com)
+
+ - Senior developer (September 2016—present)
+
 [Datawire](http://datawire.io)
 
- - Compiler engineer (December 2015—present)
+ - Compiler engineer (December 2015—August 2016)
 
 [Robocat](http://robo.cat)
 
@@ -14,7 +18,7 @@ Employment
 
 [Technical University of Denmark](http://dtu.dk)
 
- - Teaching assistant, *Data mining with Python* (September 2013—present)
+ - Teaching assistant, *Data mining with Python* (September 2013—December 2014)
 
 [GreenSteam](http://greensteam.dk)
 

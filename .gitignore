@@ -1,4 +1,5 @@
 # virtualenv
 venv/
 
+*.pyc
 .cache
