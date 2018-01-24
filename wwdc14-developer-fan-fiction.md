@@ -1,7 +1,7 @@
 WWDC14 Developer Fan Fiction
 ============================
 
-<center>30-05-2014</center>
+<center>2014-05-30</center>
 
 When Apple unveiled their WWDC14 slogan
 “Write the code. Change the world.”
@@ -10,7 +10,7 @@ assumed that Apple is entering the home
 automation market. Now, after the WWDC is over,
 we know that the key part was “Write the code”.
 
-<center><img src='/wwdc14.jpg'></center>
+<center><img src="/wwdc14.jpg"></center>
 
 It seems like this WWDC was a disappointment for consumers.
 Major predictions, iWatch and a thinner 12-inch

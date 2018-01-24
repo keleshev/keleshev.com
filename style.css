@@ -1,13 +1,13 @@
 body {
     margin: auto;
     padding: 0 30px;
-    width: 800px;
-    font-size: 25.5px;
+    width: 700px;
+    font-size: 19.0px;
     font-family: Georgia, 'Times New Roman', Times, serif;
     line-height: 1.5em;
     -webkit-text-size-adjust: 100%;
 
-    text-align: justify;
+    text-align: left;
     background-color: white; #f3f3f3; #f0f0e9;
 }
 
@@ -31,8 +31,14 @@ body {
  font-style: normal;
 }
 
-blockquote, pre {
+
+pre {
     border-left: 2.5px solid black;
+    margin-left: 0;
+    padding-left: 1.5em;
+}
+blockquote {
+    border: 2.5px solid black;
     margin-left: 0;
     padding-left: 1.5em;
 }
@@ -77,9 +83,12 @@ content: '⤴'; '⇗';
     border: 0;
 }
 
+ol, ul {
+}
 
 h1, h2, h3, h4 {
     font-weight: 100;
+    line-height: 1em;
 }
 
 h1 {

@@ -22,7 +22,8 @@ object override package private protected return sealed super
 this throw trait try true type val var while with yield
 _ : = => <- <: <% >: # @'''.split()
 
-ocaml = '''let module struct end open in type of function'''.split()
+ocaml = '''let module struct end open in type of function
+val sig match with fun try exception'''.split()
 
 
 class Highlighter(object):
@@ -50,8 +51,9 @@ class Highlighter(object):
         return node.text.lstrip('!')
 
     def string(self, node, children):
-        '''string = ~"[a-z]"? (('"' ~'[^"]*' '"') / ("'" ~"[^']*" "'")) '''
-        return '<em>%s</em>' % node.text
+        '''string = ~"[a-z]"? ('"' ~'[^"]*' '"')'''
+        text = node.text.replace('%d', '<b>%d</b>').replace('%s', '<b>%s</b>')
+        return '<em>%s</em>' % text
 
     def other(self, node, children):
         'other = (!"#" ~"\W")+'
@@ -66,12 +68,12 @@ class Highlighter(object):
         return '<em>%s</em>' % node.text
 
     def comment(self, node, children):
-        r'comment = ("#" ~".*" "\n") / ("(*" ~".*?\*\)")'
+        r'comment = ("#" ~".*" "\n") / ("(*" ~".*?\*\)"s)'
         return '<em>%s</em>' % node.text
 
     def glyph(self, node, children):
         # r'''glyph = ~"[^'\s]"+'''
-        r'''glyph = (!(~"\s" / "'" / '"' / word) ~".")+'''
+        r'''glyph = (!(~"\s" / '"' / word) ~".")+'''
         return node.text
 
     def word(self, node, children):

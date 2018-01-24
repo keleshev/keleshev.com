@@ -14,6 +14,14 @@ def add_youtube(source):
                          frameborder="0" allowfullscreen></iframe>'''
     return re('\((\S+?)@youtube\)').sub(pattern, source)
 
+def add_hoverquotes(source):
+    source = source.replace('".',
+      '<span><span style="position: absolute">&rdquo;</span>.</span>')
+    source = source.replace('",',
+      '<span><span style="position: absolute">&rdquo;</span>,</span>')
+    source = source.replace('."', '."<h6>Error: Use UK quotation style, not US</h6>')
+    source = source.replace(',"', '."<h6>Error: Use UK quotation style, not US</h6>')
+    return source
 
 def add_negation(source):
     pattern = r'<span style="text-decoration: overline">\1</span>'
@@ -61,6 +69,7 @@ for file in sys.argv[1:]:
     contents = open(file).read().decode('utf-8')
     header = parse_header(contents)
     contents = add_youtube(add_negation(add_icons(contents)))
+    contents = add_hoverquotes(contents)
     contents = code.sub(highlight, contents)
     html = markdown(contents, extras=['smarty-pants', 'wiki-tables'])
     html = add_inline_code(html)
