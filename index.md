@@ -6,6 +6,7 @@ Vladimir Keleshev
 Blog
 ----
 
+* [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
 * [Namespacing Variants in ML](/namespacing-variants-in-ml)
 * [WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction)
 * [Dissecting a code golf challenge](/dissecting-a-code-golf-challenge)

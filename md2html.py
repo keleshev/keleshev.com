@@ -16,9 +16,9 @@ def add_youtube(source):
 
 def add_hoverquotes(source):
     source = source.replace('".',
-      '<span><span style="position: absolute">&rdquo;</span>.</span>')
+      '<span><span style="position: absolute">.</span>&rdquo;</span>')
     source = source.replace('",',
-      '<span><span style="position: absolute">&rdquo;</span>,</span>')
+      '<span><span style="position: absolute">,</span>&rdquo;</span>')
     source = source.replace('."', '."<h6>Error: Use UK quotation style, not US</h6>')
     source = source.replace(',"', '."<h6>Error: Use UK quotation style, not US</h6>')
     return source

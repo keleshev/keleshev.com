@@ -7,7 +7,7 @@
         <link rel="icon" sizes="109x109" href="/favicon.gif" />
     </head>
     <body>
-        <p id='home'><a href='/'>&#9991;</a></p>
+        <p id='home'><a title='Home' href='/'>&#9632;</a></p>
         <h1>Python noob anti-patterns</h1>
 
 <p>Last summer Finn Årup Nielsen
@@ -20,44 +20,431 @@ TA is usaly a student’s job, I could not resist.</p>
 
 <h2>Bad influence of other languages</h2>
 
-<pre><code>Getters and setters
-Mixing up class and instance variables
-Emulating end’s
-Using indexes for iteration: `for i in range(len(...))`
-Using `import *`
-If-else instead of dictionary look-ups
+<p>Students were required to know at least one programming
+language before joining this course. Even though, there were
+a few students who knew SML and Haskell, most of them were
+only exposed to C and Java.</p>
+
+<p>Because C and Java are more low-level languages, some things
+that are idiomatic in them are actualy bad practices in Python.</p>
+
+<h1>Using an index variable for iteration</h1>
+
+<pre><code>for (int i = 0; i &lt; LENGTH; i++) {  // C, C++, C#, Java, JavaScript
+    do_something(items[i])
+}
+
+for i range(len(items)):  # BAD
+    do_something(items[i])
+
+for item in items:  # BETTER
+    do_something(item)
 </code></pre>
 
-<h2>Not using pyflakes</h2>
+<h1>Getters</h1>
 
-<pre><code>Unused variables, imports
+<pre><code>public class Point {
+
+    private Integer x;
+    private Integer y;
+
+    public void Point(Integer x, Integer y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public Integer getX() { return this.x; }
+    public Integer getY() { return this.y; }
+    public void setX(Integer x) { this.x = x; }
+    public void setY(Integer y) { this.y = y; }
+}
+
+class Point(object):
+
+    def __init__(self, x, y):
+        self._x = x
+        self._y = y
+
+    def get_x(self):
+        return self._x
+
+    def get_y(self):
+        return self._y
+
+    def get_r(self):
+        return math.sqrt(self._x ** 2 + self._y ** 2)
+
+    def get_theta(self):
+        return math.atan2(self._y, self._x)
+
+
+class Point(object):
+
+    def __init__(self, x, y):
+        self._r = math.sqrt(x ** 2 + y ** 2)
+        self._theta = math.atan2(y, x)
+
+    def get_x(self):
+        return self._r * math.cos(self._theta)
+
+    def get_y(self):
+        return self._r * math.sin(self._theta)
+
+    def get_r(self):
+        return self._r
+
+    def get_theta(self):
+        return self._theta
+
+class Point(object):
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    @property
+    def r(self):
+        return math.sqrt(self.x ** 2 + self.y ** 2)
+
+    @property
+    def theta(self):
+        return math.atan2(self.y, self.x)
+
+&gt;&gt;&gt; point = Point(10, 20)
+&gt;&gt;&gt; point.x, point.y, point.r, point.theta
+(10, 20, 22.360679774997898, 1.1071487177940904)
+
+
+class Point(object):
+
+    def __init__(self, x, y):
+        self.r = math.sqrt(x ** 2 + y ** 2)
+        self.theta = math.atan2(y, x)
+
+    @property
+    def x(self):
+        return self.r * math.cos(self.theta)
+
+    @property
+    def y(self):
+        return self.r * math.sin(self.theta)
+
+&gt;&gt;&gt; point = Point(10, 20)
+&gt;&gt;&gt; point.x, point.y, point.r, point.theta
+(10.000000000000004, 20.0, 22.360679774997898, 1.1071487177940904)
+
+class Point(object):
+
+    def __init__(self, x, y):
+        self.r = math.sqrt(x ** 2 + y ** 2)
+        self.theta = math.atan2(y, x)
+
+    x = property(lambda self: self.r * math.cos(self.theta))
+    y = property(lambda self: self.r * math.sin(self.theta))
 </code></pre>
 
-<p>Not following PEP 8
-    Long lines</p>
+<h1>Setters</h1>
+
+<pre><code>class Point(object):
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    @property
+    def r(self):
+        return math.sqrt(self.x ** 2 + self.y ** 2)
+
+    @property
+    def theta(self):
+        return math.atan2(self.y, self.x)
+
+    @r.setter
+    def r(self, r):
+        theta = self.theta
+        self.x = r * math.cos(theta)
+        self.y = r * math.sin(theta)
+
+    @theta.setter
+    def theta(self, theta):
+        r = self.r
+        self.x = r * math.cos(theta)
+        self.y = r * math.sin(theta)
+
+&gt;&gt;&gt; point = Point(10, 20)
+&gt;&gt;&gt; point.theta = 0
+&gt;&gt;&gt; point.x, point.y, point.r, point.theta
+(22.360679774997898, 0.0, 22.360679774997898, 0.0)
+</code></pre>
+
+<h1>Mixing up class and instance variables</h1>
+
+<pre><code>public class Point {
+
+    private Integer x;
+    private Integer y;
+
+    public void Point(Integer x, Integer y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class Point(object):
+
+    x = 0
+    y = 0
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+&gt;&gt;&gt; point = Point(10, 20)
+&gt;&gt;&gt; point.x
+10
+&gt;&gt;&gt; Point.x
+0
+
+class Point(object):
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+&gt;&gt;&gt; point = Point(10, 20)
+&gt;&gt;&gt; point.x
+10
+&gt;&gt;&gt; Point.x
+AttributeError: type object 'Point' has no attribute 'x'
+</code></pre>
+
+<h1>Using <code>import *</code></h1>
+
+<pre><code># BAD
+from io import *
+from numpy import *
+file = open('./file.txt')
+
+# GOOD
+import io
+import numpy as np
+file = io.open('./file.txt')
+
+# AS GOOD
+from io import open
+file = open('./file.txt')
+</code></pre>
+
+<h1>Emulating end’s</h1>
+
+<pre><code>def some_function():
+    other_function()
+    yet_another_function()
+
+    # end
+
+
+def some_function():
+    other_function()
+    yet_another_function()
+
+    return
+</code></pre>
+
+<h1>If-else instead of dictionary look-ups</h1>
+
+<pre><code># BAD
+def parse_currency(source):
+    if source == '$':
+        return 'USD'
+    elif source == '€':
+        return 'EUR'
+    elif source == '¥':
+        return 'JPY'
+    elif source == '£':
+        return 'GBP'
+
+# GOOD
+def parse_currency(source):
+    currencies = {'$': 'USD', '€': 'EUR', '¥': 'JPY', '£': 'GBP'}
+    return currencies[source]
+
+# GOOD
+{'$': 'USD', '€': 'EUR', '¥': 'JPY', '£': 'GBP'}[source]
+</code></pre>
 
 <h2>Not using static analysis tools</h2>
 
+<pre><code>pyflakes:
+  unused variables
+  unused imports
+
+pep8:
+  style
+
+flake8 = pyflakes + pep8
+
+Vim, Emacs, Sublime Text, PyCharm
+</code></pre>
+
+<p>$ pip install flake8
+$ flake8 file1.py file2.py</p>
+
 <h2>Documentation</h2>
 
-<pre><code>Comments instead of docstrings
-Docstrings in wrong places
-Using JDoc
-Excessive commenting
-Not following PEP 257
-Unrepeatable doctests
+<h1>Comments instead of docstrings</h1>
+
+<pre><code># This funciton does this and that
+def some_function(some_argument):
+    ...
+
+def some_function(some_argument):
+    """This function does this and that."&lt;h6&gt;Error: Use UK quotation style, not US&lt;/h6&gt;""
+    ...
+</code></pre>
+
+<h1>Docstrings in wrong places</h1>
+
+<pre><code># BAD
+#! /usr/bin/env python
+import io
+"""This module does this and that."&lt;h6&gt;Error: Use UK quotation style, not US&lt;/h6&gt;""
+
+# GOOD
+#! /usr/bin/env python
+"""This module does this and that."&lt;h6&gt;Error: Use UK quotation style, not US&lt;/h6&gt;""
+import io
+</code></pre>
+
+<h1>Using JavaDoc/NDoc coventions</h1>
+
+<pre><code>def __init__(name, age)
+    """
+    &lt;summary&gt;
+      Employee Class constructor
+      &lt;code&gt;
+        employee = Employee('dhaval', 25)
+      &lt;/code&gt;
+    &lt;/summary&gt;
+    &lt;param name="name"&gt;Name of the employee&lt;/param&gt;
+    &lt;param name="age"&gt;Age of the employee&lt;/param&gt;
+    """
+    ...
+</code></pre>
+
+<p>def parse(doc, argv):
+    &#8220;""Parse command line arguments.</p>
+
+<pre><code>Parameters
+----------
+doc : str
+    Description of your command-line interface.
+argv : list of str, optional
+    Argument vector to be parsed. sys.argv[1:] is used
+    if not provided.
+
+Returns
+-------
+args : dict
+    A dictionary, where keys are names of command-line
+    elements such as e.g. "--verbose" and "&lt;path&gt;&lt;span&gt;&lt;span style="position: absolute"&gt;,&lt;/span&gt;&amp;rdquo;&lt;/span&gt; and
+    values are the parsed values of those elements.
+
+"""
+
+PEP 257: general docstring conventions
+pep257: tool for enforcing PEP 257
+
+NumPy docstring conventions: http://numpy.pep257.org/
+Sphinx docs tring conventions: http://sphinx-doc.org/
+</code></pre>
+
+<h1>Excessive commenting</h1>
+
+<pre><code># Increment variable i
+i = i + 1
+
+# BAD
+# If <code>grid</code> is square
+if set(map(len, grid)) == {len(grid)}:
+    ...
+
+# BEST
+</code></pre>
+
+<p>class Grid(object):</p>
+
+<pre><code>...
+
+@property
+def is_square(self):
+    return set(map(len, grid)) == {len(grid)}
+
+if grid.is_square:
+    ...
+</code></pre>
+
+<h1>Unrepeatable doctests</h1>
+
+<pre><code>def test_tweet_sentiment():
+    tweet = Tweet(id=513015579687403520)
+    assert tweet.sentiment == 'angry'
+
+def test_tweet_sentiment():
+    tweet = Tweet(text='OMG SO AWESOME)
+    assert tweet.sentiment == 'happy'
+
+&gt;&gt;&gt; Tweet(id=513015579687403520).sentiment
+'angry'
+
+&gt;&gt;&gt; Tweet(text='OMG SO AWESOME').sentiment
+'happy'
+</code></pre>
+
+<h1>Forgetting <code>if __name__ == '__main__'</code></h1>
+
+<pre><code># BAD
+#! /usr/bin/env python
+
+def some_useful_action():
+    ...
+
+print(some_useful_action())
+
+
+# GOOD
+#! /usr/bin/env python
+
+def some_useful_action():
+    ...
+
+if __name__ == '__main__':
+    print(some_useful_action())
 </code></pre>
 
 <h2>Subtleties</h2>
 
-<pre><code>Not subclassing `object`
+<h1>Ennecessary backslashes</h1>
+
+<pre><code># BAD
+print('some long string' + \
+      'another long string')
+
+# GOOD
+print('some long string' +
+      'another long string')
+
+Backslashes are not necessary inside matching tokens:
+    (), {}, [], "&lt;span&gt;&lt;span style="position: absolute"&gt;,&lt;/span&gt;&amp;rdquo;&lt;/span&gt; '', """""&lt;span&gt;&lt;span style="position: absolute"&gt;,&lt;/span&gt;&amp;rdquo;&lt;/span&gt; ''''''
+
+
+
+Not subclassing <code>object</code> in Python 2
 Unnecessary parenthesis
-Ennecessary backslashes
-Forgetting `if __name__ == '__main__'`
 Using double underscores for private methods
-Use of `exit` instead of `sys.exit`
+Use of <code>exit</code> instead of <code>sys.exit</code>
 Integer division might be a bug
-Writing `== None`
+Writing <code>== None</code>
 </code></pre>
 
 <h2>Language-agnostic anti-patterns</h2>
@@ -69,7 +456,7 @@ Using numbers for versions
     import sysconfig
     if float(sysconfig.get_python_version()) &lt; 3.1:
         exit('your version of python is below 3.1')
-Returning `True` or `False` literals
+Returning <code>True</code> or <code>False</code> literals
 Hardcoded constants (paths, values)
 Storing secrets in code
 Manual parsing of nested structures
@@ -78,41 +465,166 @@ No functions
 
 <h2>System-facing</h2>
 
-<pre><code>Printing to `stdout` instead of `stderr`
-Not returning exit-codes on error
-Manually parsing `sys.argv`
-Wrong or now shebang (#!/macports/bin/python)
+<h2>Shell scription</h2>
+
+<h1>Wrong or no shebang</h1>
+
+<pre><code># BAD
+#! /macports/bin/python
+#! /usr/bin/python
+
+# GOOD
+#! /usr/bin/env python
+#! /usr/bin/env python2
+#! /usr/bin/env python3
 </code></pre>
+
+<h1>Not printing to <code>stderr</code> on error</h1>
+
+<h1>Not returning exit-codes on error</h1>
+
+<pre><code>import sys
+
+if not authorization.is_valid:
+    sys.stderr.write('You are not authorized.')
+    sys.exit(1)
+</code></pre>
+
+<h1>Manually parsing <code>sys.argv</code></h1>
+
+<p>Use docopt/argparse/optparse or something else.</p>
 
 <h2>Exceptions</h2>
 
-<h3>Putting a lot of code inside try-except</h3>
+<h1>Catch-all try-except blocks&#8230; pass</h1>
 
-<h3>Catching exception and rasing a different one</h3>
+<pre><code>try:
+    do_something()
+except SomeError:
+    pass
+</code></pre>
 
-<h3>Catch-all try-except blocks... pass</h3>
+<h1>Catching exception and rasing a different one</h1>
 
-<h2>Not knowing standard library</h2>
+<pre><code>try:
+    import numpy
+except ImportError:
+    raise Exception('You need NumPy installed')
+</code></pre>
 
-<pre><code>Not knowing about `collections.Counter` (or `nltk.FreqDist`)
-Using `randint` instead of other alternatives (off-by-one often)
-Overuse of `copy` and `deepcopy`
+<h1>Putting a lot of code inside try-except</h1>
+
+<pre><code># BAD
+try:
+    one = foo()
+    two = bar(one)
+    result = baz(two)
+except KeyError:
+    result = some_fallback()
+
+
+# GOOD
+try:
+    one = foo()
+except KeyError:
+    result = some_fallback()
+else:
+    two = Bar(one)
+    result = Baz(two)
 </code></pre>
 
 <h2>Not knowing built-ins (also len)</h2>
 
-<pre><code>`try-except: KeyError` instead of `get`
-Using `sorted` instead of `min` or `max`
-Doing `list(reversed(sorted(...)))`
+<h1>Using <code>sorted</code> instead of <code>min</code> or <code>max</code></h1>
+
+<pre><code>max_value = sorted(all_values)[-1]  # BAD
+max_value = max(all_values)         # GOOD
 </code></pre>
 
-<p>Reinventing magic methods (write, delete)
-Weird anti-patterns: <code>for _ in range(1): ... break</code>
+<h1>Doing <code>list(reversed(sorted(...)))</code></h1>
+
+<pre><code>reversed(sorted(collection))       # BAD
+sorted(collection, reversed=True)  # GOOD
+</code></pre>
+
+<h1><code>try-except: KeyError</code> instead of <code>get</code></h1>
+
+<pre><code># BAD
+try:
+    value = dictionary[key]
+except KeyError:
+    value = DEFAULT_VALUE
+
+# GOOD
+value = dictionary.get(key, DEFAULT_VALUE)
+</code></pre>
+
+<h2>Not knowing standard library</h2>
+
+<h1>Not knowing about <code>collections.Counter</code> (or <code>nltk.FreqDist</code>)</h1>
+
+<pre><code>&gt;&gt;&gt; from collections import Counter
+&gt;&gt;&gt; Counter(['A', 'A', 'B', 'A', 'C', 'D', 'D'])
+Counter({'A': 3, 'D': 2, 'C': 1, 'B': 1})
+</code></pre>
+
+<h1>Using <code>randint</code> instead of other alternatives (off-by-one often)</h1>
+
+<pre><code>item = items[random.randint(0, len(items))]  # BAD
+
+item = random.choice(items)  # GOOD
+</code></pre>
+
+<h1>Overuse of <code>copy</code> and <code>deepcopy</code></h1>
+
+<pre><code>???
+</code></pre>
+
+<h2>Other</h2>
+
+<h1>Reinventing special methods (write, delete)</h1>
+
+<h1>Functions and methods for printing objects</h1>
+
+<p>class Point(object):</p>
+
+<pre><code>   def __init__(self, x, y):
+       self.x, self.y = x, y
+
+   # BAD
+   def to_string(self):
+       return '({} . {})'.format(x, y)
+
+   # GOOD
+   def __str__(self):
+       return '({} . {})'.format(x, y)
+</code></pre>
+
+<h1>Guided to Python special methods:</h1>
+
+<p>http://www.rafekettler.com/magicmethods.html</p>
+
+<h1>Using magic methods directly</h1>
+
+<pre><code>items.__contains__(item)  # BAD
+
+item in items             # GOOD
+</code></pre>
+
+<h1>Printing instead of returning a value</h1>
+
+<pre><code>def analyse_sentiment(text):
+    ...
+    print result
+
+def analyse_sentiment(text):
+    ...
+    return result
+</code></pre>
+
+<p>Weird anti-patterns: <code>for _ in range(1): ... break</code>
 Local imports
-Using magic methods directly
 Not using context-managers, list-comprehensions
-Functions and methods for printing objects
-Printing instead of returning a value
 Messing up encodings
 Computations in init
 “Better to ask for fogiveness than for permission”</p>

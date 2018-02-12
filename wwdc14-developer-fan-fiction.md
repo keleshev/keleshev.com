@@ -189,7 +189,7 @@ being introduced to the Smalltalk-80 system at Xerox PARC,
 to NeXT betting on Objective-C, then Apple evolving
 it by re-introducing blocks from Smalltalk, and
 now introducing Objective, which is
-indistinguishable from Smalltalk. [&#9991;](/ "Home")
+indistinguishable from Smalltalk. [&#9632;](/ "Home")
 
 <center>&#8258;</center>
 

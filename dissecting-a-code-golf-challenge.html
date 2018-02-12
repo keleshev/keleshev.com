@@ -7,7 +7,7 @@
         <link rel="icon" sizes="109x109" href="/favicon.gif" />
     </head>
     <body>
-        <p id='home'><a title='Home' href='/'>&#9991;</a></p>
+        <p id='home'><a title='Home' href='/'>&#9632;</a></p>
         <h1>Dissecting a code golf challenge</h1>
 
 <p><center>2014-03-23</center></p>
@@ -165,7 +165,7 @@ libraries is against the rules of code golf.
 Otherwise you could just
 write libraries that solve a challenge in one function call.</p>
 
-<p>But you might know this &#8220;party trick&#8221;, that <code>zip(*matrix)</code>
+<p>But you might know this &#8220;party trick<span><span style="position: absolute">,</span>&rdquo;</span> that <code>zip(*matrix)</code>
 transposes a matrix. If you didn&#8217;t know about this,
 stop and think about it for a minute.</p>
 
@@ -260,9 +260,9 @@ Here&#8217;s some code to illustrate the issue:</p>
 >>> [x <b>for </b>x <b>in </b>range(10)]
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 >>> x
-Traceback (most recent call last):
-  File "<stdin>", line 1, <b>in </b><module>
-NameError: name 'x' <b>is </b><b>not </b>defined
+<em>Traceback (most recent call last):
+  File <em>"&lt;stdin&gt;"</em></em><em>, line 1, <b>in </b><module>
+NameError: name 'x' <b>is </b><b>not </b>defined</em>
 </pre>
 
 <pre>$ python2
@@ -288,7 +288,7 @@ without paying the cost of an explicit assignment&#8230;</p>
 <p><em>Total: 74 characters.</em></p>
 
 <p>Here we created a list of 10 <code>map</code> functions, which allowed
-us to assign <code>map</code> to &#8220;<code>_</code>&#8221; variable and save 3 characters in total.
+us to assign <code>map</code> to the undescore (<code>_</code>) variable and save 3 characters in total.
 But we are still behind the
 world&#8217;s best 73 character solution.</p>
 
@@ -297,8 +297,8 @@ world&#8217;s best 73 character solution.</p>
 <p>One less obscure feature of <code>raw_input</code> is that it takes
 an optional argument called <code>prompt</code>, which gets printed
 as a prompt before it reads a line from standard input.
-Let&#8217;s see if we gain anything by assigning <code>raw_input</code> to &#8220;<code>_</code>&#8221;, instead
-of <code>map</code>, and then&#8230;</p>
+Let&#8217;s see if we gain anything by assigning <code>raw_input</code> to
+the undescore (<code>_</code>), instead of <code>map</code>, and then&#8230;</p>
 
 <pre>m=[map(int,_().split())<b>for </b>_ <b>in</b>[raw_input]*10]
 _(max(map(sum,m+zip(*m))))
@@ -311,7 +311,7 @@ last character and reached the world record for this
 challenge.</p>
 
 <p>I bet you have learned something new about Python today.
-<a href="/" title="Home">&#9991;</a></p>
+<a href="/" title="Home">&#9632;</a></p>
 
 <p><center markdown="1">
 <em>Comment this on <a href="http://www.reddit.com/r/programming/comments/217v8s">Reddit</a></em>

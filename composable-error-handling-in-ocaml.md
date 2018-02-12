@@ -1,10 +1,15 @@
+
+
 Composable Error Handling in OCaml
 ==================================
 
-<center><em>Draft</em></center>
+<center>2018-02-12</center>
 
 Let's discuss common ways to handle errors in OCaml, their shortcomings
-and, finally, how polymorphic variants can help.
+and, finally, how polymorphic variants may help. The discussion applies
+equally well to [Reason ML][Reason].
+
+[Reason]: https://reasonml.github.io/
 
 If you need an introduction to the topic, I recommend
 Real World OCaml chapter on [Error Handling][RWO-ER].
@@ -74,6 +79,8 @@ let main source =
 And here is how we can write code that handles and reports each error:
 
 ```ocaml
+open Printf
+
 let handle_errors source =
   try
     printf (main source)
@@ -90,7 +97,7 @@ let handle_errors source =
         eprintf "Display error: %s" message
 ```
 
-*Upsides*:
+*Upsides:*
 
  * **Composition**. Functions compose freely.
  * **Concern separation**. Happy path and error handling are separated.
@@ -99,15 +106,15 @@ let handle_errors source =
  * Also, in OCaml the exception mechanism is fast and fits well
    with performance-critical sections of code.
 
-*Downsides*:
+*Downsides:*
 
  * No **error contract**.
    Comment on a function signature is our only hope to know
    that a function can raise as well as which exact exceptions it can raise.
    Nothing can save us from a comment that is missing, incorrect, or out-of-date.
    We could use a popular naming convention and name
-   our function `Parser.parse_exn`. This is definitely worthwhile, but the
-   same shortcomings apply.
+   our function `Parser.parse_exn`. This is definitely worthwhile, but
+   similar shortcomings apply.
  * No **exhaustiveness checking**. We cannot be sure that we handled all the
    error cases at a relevant call site,
    or that the cases we are covering are relevant at all.
@@ -126,7 +133,7 @@ The OCaml built-in result type provides a reusable way to express
 and distinguish a success value and an error value.
 
 ```ocaml
-type ('success, 'error) result = Pervasives.result =
+type ('success, 'error) result = ('success, 'error) Pervasives.result =
   | Ok of 'success
   | Error of 'error
 ```
@@ -134,7 +141,7 @@ type ('success, 'error) result = Pervasives.result =
 It is most often used with a combinator library like [`Base.Result`][Base.Result] of Jane Street.
 
 Below we'll talk about using strings for the `'error` type parameter, however,
-same applies for example to [`Base.Error`][Base.Error] type, which is a lazy
+same applies, for example, to [`Base.Error`][Base.Error] type, which is a lazy
 string specifically designed to be used together with the result type.
 
 [Base.Error]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Error/index.html
@@ -175,7 +182,7 @@ let main source =
 
 Or we could use the bind operator (`>>=`)
 to monadically compose the
-result-returning functions and thus separate error handling from the happy-path.
+result-returning functions and thus separate error handling from the happy path.
 
 ```ocaml
 let main source =
@@ -198,9 +205,7 @@ let main source =
   Display.render tree
 ```
 
-Notice how similar this looks to our original version
-which was based on exceptions.
-
+Notice how similar this looks to our original version based on exceptions.
 In both cases we can handle the errors separately:
 
 ```ocaml
@@ -211,7 +216,7 @@ let handle_errors source =
 ```
 
 
-*Upsides*:
+*Upsides:*
 
  * **Composition**. Functions compose using the result monad.
  * **Concern separation**. The error handling and the happy-path code can be separated.
@@ -219,10 +224,10 @@ let handle_errors source =
    part of the type signature, however, we can't infer which exact errors are
    part of the contract.
 
-*Downsides*:
+*Downsides:*
 
  * Not **distinguishable errors**. At the site where we handle errors we can't
-   distinguish two errors, for example a "length error" from a "height error".
+   distinguish two errors, for example, a "length error" from a "height error".
  * No **exhaustiveness checking**. When a new error case is introduced the
    compiler will not help us find the call sites where a change would be relevant.
 
@@ -232,7 +237,7 @@ to know from a type signature that a function can return an error.
 
 ## C. Result type with custom variants for errors
 
-A natural way to improve the previous example would to use the result type
+A natural way to improve upon the previous example would to use the result type
 with a custom variant type for the `'error` type parameter instead of string:
 
 ```ocaml
@@ -279,7 +284,7 @@ let main source =
 ```
 
 However, if we try to compose the three functions monadically (like we
-did in the previous example), we discover that they do not compose
+did in the previous example), we discover that it is not possible
 because the bind operator requires the `'error` type parameters of different
 functions to unify (notably, unlike the `'success` type parameter):
 
@@ -289,14 +294,14 @@ val (>>=) : ('a, 'error) result
          -> ('b, 'error) result
 ```
 
-*Upsides*:
+*Upsides:*
 
  * **Error contract**. The type—not a comment—reflects the relevant error cases.
  * **Distinguishable errors**. We can pattern-match to distinguish errors.
  * **Exhaustiveness checking**. When the called function gets an additional error case
    the compiler will show all the call sites that need to be updated.
 
-*Downsides*:
+*Downsides:*
 
  * No **composition**. We can't compose the functions directly,
    monadically, or otherwise.
@@ -305,12 +310,13 @@ val (>>=) : ('a, 'error) result
 
 There is a way to work around the two downsides. You can lift each function
 you want to compose to a result type where `'error` can encompass all the
-possible errors. However, that adds boilerplate per each function and requires
+possible errors in your combined expression.
+However, that adds boilerplate per each function and requires
 to manage the new "large" error type.
 
 Compared with _B. Result type with strings for errors_ approach, we lose
 composition (wich is a big deal), mix up the happy path with error handling,
-but gain the ability to distinguish and exhaustively check error cases,
+but regain the ability to distinguish and exhaustively check error cases,
 while having a strong error contract.
 
 Seems like you can't have the cake and eat it too.
@@ -361,9 +367,8 @@ We specifically annotated
 our functions with `[> error]` to signify that this
 error type can unify with "larger" polymorphic variants.
 
-
-> *There's more to polymorphic variants, but let's ignore
-> the rest for now.*
+> *There’s more to polymorphic variants, but it’s ourside of scope for this
+> article. You will find links to resources about polymorphic variants below.*
 
 Now look, if you compose just two functions, parser and validator:
 
@@ -374,7 +379,7 @@ let parse_and_validate source =
   Validation.perform tree
 ```
 
-Then not only this will work, but the type of such function will be:
+Then not only will this work, but the type of such a function will be:
 
 ```ocaml
 val parse_and_validate : string -> (tree, [>
@@ -386,7 +391,7 @@ val parse_and_validate : string -> (tree, [>
 ```
 
 As you can see, the error branch of the result type is a union of the two
-variants of parser errors *and* the two variants of the validator errors!
+variants of the parser errors *and* the two variants of the validator errors!
 
 Let us now throw in our render function:
 
@@ -410,7 +415,7 @@ val main : string -> (tree, [>
 ]) result
 ```
 
-This way, if your error-returning functions uses polymorphic variants for
+This way, if your error-returning functions use polymorphic variants for
 error branches, then you can compose as many of them as you want and the
 resulting type that will be infered will reflect the exact error cases
 that the composed function can exibit.
@@ -434,9 +439,10 @@ let handle_errors source =
       eprintf "Display error: %s" message
 ```
 
-Summary:
+*Summary:*
 
- * **Composition**. Functions compose monadically by unifying the `'error` branch of the result type.
+ * **Composition**. Functions compose monadically by unifying the `'error`
+   branch of the result type.
  * **Concern separation**. Happy path and error handling can be separated.
  * **Error contract**. Polymorphic variant type reflects the relevant error cases.
  * **Distinguishable errors**. We can pattern-match to distinguish errors.
@@ -472,18 +478,20 @@ This approach to error handling scales well. However, it requires good
 familiarity with how polymorphic variants work. Here are a few resources:
 
 * Chapter of Real World OCaml on [Polymorhic Variants][RWO-POLY]
-* Axel Rauschmayer's [ReasonML: polymorphic variant types][Axel]
-* Thomas Leonard's [Option Handling with Polymorphic Variants][LEO2013]
+* Axel Rauschmayer's [ReasonML: polymorphic variant types][Axel],
+  which has a further list of valuable resources
 
 [RWO-POLY]: https://realworldocaml.org/v1/en/html/variants.html#polymorphic-variants
 [Axel]: http://2ality.com/2018/01/polymorphic-variants-reasonml.html
-[LEO2013]: http://roscidus.com/blog/blog/2013/08/31/option-handling-with-ocaml-polymorphic-variants/
 
 ## Acknowledgements
 
-Big thanks to [Oskar Wickström](https://twitter.com/owickstrom) and
-Kristian Støvring for giving feedback on a draft of this post.
+Big thanks to [Oskar Wickström](https://twitter.com/owickstrom)
+for giving feedback on a draft of this post. [&#9632;](/ "Home")
 
+<center markdown="1">
+*Follow me on [Twitter](http://twitter.com/keleshev)*
+</center>
 
 
 

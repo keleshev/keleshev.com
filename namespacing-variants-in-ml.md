@@ -169,7 +169,7 @@ structure. Well, ML *structures* to the rescue!
 Nowadays whenever I have a type and a bunch of related functions
 (sounds familiar?),
 I'm more inclined than not
-to group them in a namespace module. [&#9991;](/ "Home")
+to group them in a namespace module. [&#9632;](/ "Home")
 
 <center markdown="1">
 *Comment on [Reddit](http://www.reddit.com/r/ocaml/comments/32cxmw/namespacing_variants_in_ml/)*

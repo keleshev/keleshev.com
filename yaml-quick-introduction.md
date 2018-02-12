@@ -158,4 +158,4 @@ official site [yaml.org](http://yaml.org), which you should check out anyway!
 What's with XML?
 ----------------
 
-You can continue using it.
+You can continue using it. [&#9632;](/ "Home")

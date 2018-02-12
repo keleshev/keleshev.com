@@ -257,9 +257,9 @@ $ python3
 >>> [x for x in range(10)]
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 >>> x
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-NameError: name 'x' is not defined
+<em>Traceback (most recent call last):
+  File "&lt;stdin&gt;"</em><em>, line 1, in <module>
+NameError: name 'x' is not defined</em>
 ```
 
 ```python2
@@ -287,7 +287,7 @@ print max(_(sum,m+zip(*m)))
 *Total: 74 characters.*
 
 Here we created a list of 10 `map` functions, which allowed
-us to assign `map` to "`_`" variable and save 3 characters in total.
+us to assign `map` to the undescore (`_`) variable and save 3 characters in total.
 But we are still behind the
 world's best 73 character solution.
 
@@ -297,8 +297,8 @@ The last drop
 One less obscure feature of `raw_input` is that it takes
 an optional argument called `prompt`, which gets printed
 as a prompt before it reads a line from standard input.
-Let's see if we gain anything by assigning `raw_input` to "`_`", instead
-of `map`, and then...
+Let's see if we gain anything by assigning `raw_input` to
+the undescore (`_`), instead of `map`, and then...
 
 ```python2
 m=[map(int,_().split())for _ in[raw_input]*10]
@@ -312,7 +312,7 @@ last character and reached the world record for this
 challenge.
 
 I bet you have learned something new about Python today.
-[&#9991;](/ "Home")
+[&#9632;](/ "Home")
 
 <center markdown="1">
 *Comment this on [Reddit](http://www.reddit.com/r/programming/comments/217v8s)*
