@@ -60,13 +60,16 @@ code = re('(?s)```(\w+)\n(.*?)```')
 def highlight(match):
     language, source = match.groups()
     highlighter = hi.Highlighter(getattr(hi, language))
-    return '<pre>%s</pre>' % highlighter.eval(str(source))
+    return u'<pre>%s</pre>' % \
+        highlighter.eval(
+source)
 
 
 for file in sys.argv[1:]:
     new_file = file.partition('.md')[0] + '.html'
     print '%s -> %s' % (file, new_file)
     contents = open(file).read().decode('utf-8')
+    contents = unicode(contents)
     header = parse_header(contents)
     contents = add_youtube(add_negation(add_icons(contents)))
     contents = add_hoverquotes(contents)

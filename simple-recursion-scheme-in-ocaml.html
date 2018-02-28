@@ -1,0 +1,404 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Simple Recursion Scheme in OCaml</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
+        <h1>Simple Recursion Scheme in OCaml</h1>
+
+<p><center>Draft</center></p>
+
+<p>Let us explore a simple recursion scheme in OCaml.
+To create a motivation for it, and as an example, we will write a few
+simple compiler passes for a toy language.</p>
+
+<blockquote>
+  <p>You might think—<em>oh, crickets! again these functional programmers
+  with their compilers</em>—as opposed to real problems.
+  But I will interject.
+  First, compilers are the single most researched application of software,
+  so there is existing terminology which can be quickly used to
+  build up a realistic example.
+  Second, and more importantly, it looks like there are more and more
+  applications of compiler construction methods to other fields,
+  for example, <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2000/09/pj-eber.pdf">financial instruments</a>.
+  It even may be that every software problem is a compiler problem.</p>
+</blockquote>
+
+<p>Let&#8217;s say we have the following informally specified language:</p>
+
+<pre>e → (e)
+  | ()
+  | <b>true </b>| <b>false
+  </b>| 0 | 1 | 2 | …
+  | id
+  | e / e
+  | e; e
+  | <b>let </b>e = e <b>in </b>e
+  | <b>if </b>e <b>then </b>e <b>else </b>e
+</pre>
+
+<p>We can represent it straightforwardly with this type:</p>
+
+<pre><b>module </b>Syntax = <b>struct
+  </b><b>type </b>t =
+    | Unit
+    | Boolean <b>of </b>bool
+    | Number <b>of </b>int
+    | Name <b>of </b>string
+    | Divide <b>of </b>t * t
+    | Sequence <b>of </b>t * t
+    | Let <b>of </b>{name: string; value: t; body: t}
+    | If <b>of </b>{conditional: t; consequence: t; alternative: t}
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<h2>1. Primitive recursion</h2>
+
+<p>Now, let&#8217;s say you want to eliminate dead code by creating
+a compiler pass for the following transformation:</p>
+
+<pre><b>if </b><b>true </b><b>then </b>x <b>else </b>y ⇒ x
+<b>if </b><b>false </b><b>then </b>x <b>else </b>y ⇒ y
+</pre>
+
+<p>And here is how you can do it using primitive recursion:</p>
+
+<pre><b>module </b>Dead_code_elimination = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Unit | Boolean _ | Number _ | Name _ <b>as </b>t ->
+        t
+    | Divide (left, right) ->
+        Divide (pass left, pass right)
+    | Sequence (left, right) ->
+        Sequence (pass left, pass right)
+    | Let {name; value; body} ->
+        Let {name; value=pass value; body=pass body}
+    | If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | If {conditional; consequence; alternative} ->
+        <b>let </b>conditional = pass conditional <b>in
+        </b><b>let </b>consequence = pass consequence <b>in
+        </b><b>let </b>alternative = pass alternative <b>in
+        </b>If {conditional; consequence; alternative}
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<h2>2. Factored recursion</h2>
+
+<p>The problem with this solution is the following.
+The highlighted area represents the actual transformation,
+while the rest is boilerplate that makes sure that the
+transformation is applied recursively.</p>
+
+<p>This pattern can be captured by a <code>map</code> function that
+applies a function <code>f</code> recursively to the data structure:</p>
+
+<pre><b>let </b>map f = <b>function
+  </b>| Unit | Boolean _ | Number _ | Name _ <b>as </b>t ->
+      t
+  | Divide (left, right) ->
+      Divide (f left, f right)
+  | Sequence (left, right) ->
+      Sequence (f left, f right)
+  | Let {name; value; body} ->
+      Let {name; value=f value; body=f body}
+  | If {conditional; consequence; alternative} ->
+      <b>let </b>conditional = f conditional <b>in
+      </b><b>let </b>consequence = f consequence <b>in
+      </b><b>let </b>alternative = f alternative <b>in
+      </b>If {conditional; consequence; alternative}
+</pre>
+
+<p>Now we can rewrite our compiler pass to focus on the
+actual transformation and to delegate the recursive descent
+to <code>map</code>:</p>
+
+<pre><b>module </b>Dead_code_elimination = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | other -> map pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>Sum up:</p>
+
+<ul>
+<li>We can write several passes of the form <code>Syntax.t -&gt; Syntax.t</code>
+and reuse a single <code>map</code> implementation to factor recursion.</li>
+<li>If we extend the <code>Syntax.t</code> type with new
+constructors, we will only need to modify <code>map</code>, without the
+need to modify each pass.</li>
+<li>If we find the need for it,
+we can modify <code>map</code> to be tail-recursive and all the passes
+using it will become tail-recursive for free.</li>
+</ul>
+
+<p>Caveat: our <code>map</code> implementation above is peculiar.
+Instead of the regular signature:</p>
+
+<pre><b>val </b>map : ('a -> 'b) -> 'a t -> 'b t
+</pre>
+
+<p>It has a monomorphic signature, where <code>'a</code>, <code>'b</code>, <code>'a t</code>, <code>'b t</code> are
+the same thing:</p>
+
+<pre><b>val </b>map : (Syntax.t -> Syntax.t) -> Syntax.t -> Syntax.t
+</pre>
+
+<p>Thus, this <code>map</code> will only help us factor out recursion for
+passes of the form <code>Syntax.t -&gt; Syntax.t</code>. We&#8217;ll discuss it further.</p>
+
+<h2>3a. Recursion for free</h2>
+
+<p>So far the deal was that we can write <code>map</code> once
+and then use it in several passes. However, if
+your compiler has an intermediate representation with hundreds
+of different nodes (like many do) it might be tedious to write.
+Worse, what if you have many intermediate representations?</p>
+
+<p>Fortunately, there is <a href="https://github.com/ocaml-ppx/ppx_deriving"><code>ppx_deriving</code></a> code generation
+framework which can generate, among many others, a <code>map</code>
+implementation for us, similar to Haskell&#8217;s <code>deriving (Functor)</code>.</p>
+
+<p>However, there&#8217;s a caveat. Similar to <code>deriving (Functor)</code> in
+Haskell, deriving a <code>map</code> implementation using <code>ppx_deriving</code>
+requires a type with single type parameter: <code>'a t</code>.
+We will need to rewrite our <code>Syntax.t</code> type to use a type
+parameter instead of being defined self-referentially.
+However, we&#8217;ll be able to reclaim our monomorphic map in no time.
+See here:</p>
+
+<pre><b>module </b>Syntax = <b>struct
+  </b><b>module </b>Open = <b>struct
+    </b><b>type </b>'a t = ❶
+      | Unit
+      | Boolean <b>of </b>bool
+      | Number <b>of </b>int
+      | Name <b>of </b>string
+      | Divide <b>of </b>'a * 'a
+      | Sequence <b>of </b>'a * 'a
+      | Let <b>of </b>{name: string; value: 'a; body: 'a}
+      | If <b>of </b>{conditional: 'a; consequence: 'a; alternative: 'a}
+      [@@deriving map] ❷
+  <b>end
+
+  </b><b>type </b>t = t Open.t ❸
+
+  <b>let </b>map: (t -> t) -> t -> t = Open.map ❹
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<!--
+
+
+md5-3da100f3f30403819af5903eb21b5fff
+
+
+-->
+
+<p>First, we called our new polymorphic type <code>'a Syntax.Open.t</code> ❶.
+We&#8217;ll refer to it as an &#8220;open&#8221; type.
+Second, we used the deriving framework to get <code>map</code> for free ❷.
+We regained our monomorphic type by making a recursive type definition ❸.
+We&#8217;ll refer to this type as &#8220;closed&#8221; type.</p>
+
+<p>Unlike in Haskell, there is no need for a fix-point type and for
+the wrapping and unwrapping that is associated with it.
+OCaml supports such recursive type definitions using <code>-rectypes</code> compiler flag.
+The resulting closed type <code>Syntax.t</code> is
+undistinguishable from our original <code>Syntax.t</code>, for all intents and purposes.</p>
+
+<p>We can also regain our monomorphic <code>map</code> ❹ function, if necessary,
+by constraining <code>Open.map</code> with a signature.</p>
+
+<p>Now we can write the same short version of dead code elimination pass without
+writing the <code>map</code> function ourselves.</p>
+
+<h2>Monads</h2>
+
+<p>So far we were only able to automate recursion for
+passes of form <code>Syntax.t -&gt; Syntax.t</code>.
+What about passes that return an option?
+A result type to signal errors?
+And how about passes that need to maintain, say, a lexical environment?</p>
+
+<p>Say, we want to write a pass of form <code>Syntax.t -&gt; (Syntax.t, 'error) result</code>
+that checks for literal division by zero.</p>
+
+<p>Let&#8217;s write it using primitive recursion first.
+We&#8217;ll use result monad to recursively compose our pass:</p>
+
+<pre><b>module </b>Result = <b>struct
+  </b><b>let </b>return x = Ok x
+
+  <b>let </b>(>>=) = <b>function
+    </b>| Ok ok -> <b>fun </b>f -> f ok
+    | error -> <b>fun </b>_ -> error
+<b>end
+</b></pre>
+
+And then we implement the pass itself:
+
+<pre><b>module </b>Check_literal_division_by_zero = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Unit | Boolean _ | Number _ | Name _ <b>as </b>t ->
+        return t
+    | Divide (_, Number 0) ->
+        Error `Literal_division_by_zero
+    | Divide (left, right) ->
+        pass left >>= <b>fun </b>left ->
+        pass right >>= <b>fun </b>right ->
+        return (Divide (left, right))
+    | Sequence (left, right) ->
+        pass left >>= <b>fun </b>left ->
+        pass right >>= <b>fun </b>right ->
+        return (Sequence (left, right))
+    | Let {name; value; body} ->
+        pass value >>= <b>fun </b>value ->
+        pass body >>= <b>fun </b>body ->
+        return (Let {name; value; body})
+    | If {conditional; consequence; alternative} ->
+        pass conditional >>= <b>fun </b>conditional ->
+        pass consequence >>= <b>fun </b>consequence ->
+        pass alternative >>= <b>fun </b>alternative ->
+        return (If {conditional; consequence; alternative})
+<b>end
+</b></pre>
+
+As previously, the highlighted area shows the code that
+implements the transformation, and the rest is boilerplate
+that implements the recursion.
+
+And like before, we can just factor that boilerplate out
+and as a result, we get a <code>map_result</code> function
+that maps from <code>Syntax.t -> (Syntax.t, 'error) result</code>:
+
+<pre><b>open </b>Result
+
+<b>let </b><b>rec </b>map_result f = <b>function
+  </b>| Unit | Boolean _ | Number _ | Name _ <b>as </b>t ->
+      return t
+  | Divide (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Divide (left, right))
+  | Sequence (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Sequence (left, right))
+  | Let {name; value; body} ->
+      f value >>= <b>fun </b>value ->
+      f body >>= <b>fun </b>body ->
+      return (Let {name; value; body})
+  | If {conditional; consequence; alternative} ->
+      f conditional >>= <b>fun </b>conditional ->
+      f consequence >>= <b>fun </b>consequence ->
+      f alternative >>= <b>fun </b>alternative ->
+      return (If {conditional; consequence; alternative})
+</pre>
+
+<p>We can convince ourselves that it works by rewriting the pass
+with recursion delegated to <code>map_result</code>:</p>
+
+<pre><b>module </b>Check_literal_division_by_zero = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Divide (_, Number 0) -> Error <em>"`Literal_division_by_zero"</em>
+    | other -> map_result pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>Much better now!</p>
+
+<p>However, looking at <code>map_result</code> implementation we can
+quickly discover that it has nothing specific to
+<code>result</code> type. It only uses <code>return</code> and <code>bind</code>.
+So, instead, we can make a &#8220;generator&#8221; function
+which is parametrized over <code>return</code> and <code>bind</code> to
+get a mapper for any monad:</p>
+
+<pre><b>let </b>generate_map ~return ~bind:(>>=) f = <b>function
+  </b>| Unit | Boolean _ | Number _ | Name _ <b>as </b>t ->
+      return t
+  | Divide (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Divide (left, right))
+  | Sequence (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Sequence (left, right))
+  | Let {name; value; body} ->
+      f value >>= <b>fun </b>value ->
+      f body >>= <b>fun </b>body ->
+      return (Let {name; value; body})
+  | If {conditional; consequence; alternative} ->
+      f conditional >>= <b>fun </b>conditional ->
+      f consequence >>= <b>fun </b>consequence ->
+      f alternative >>= <b>fun </b>alternative ->
+      return (If {conditional; consequence; alternative})
+</pre>
+
+<p>What shall we do with it?</p>
+
+<p>We can generate <code>map_result</code> from result monad to implement
+our literal division checker:</p>
+
+<pre><b>let </b>map_result = generate_map ~return<em>:Result</em>.return ~bind<em>:Result</em>.(>>=)
+
+<b>module </b>Check_literal_division_by_zero = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Divide (_, Number 0) -> Error <em>"`Literal_division_by_zero"</em>
+    | other -> map_result pass other
+<b>end
+</b></pre>
+
+<p>We can generate <code>map_option</code> with option monad to get
+<code>Syntax.t -&gt; Syntax.t option</code> passes.</p>
+
+<p>We can pass identity monad to get our original <code>map</code>
+function and implement the dead code elimination pass:</p>
+
+<pre><b>let </b>map = generate_map ~return<em>:Identity</em>.return ~bind<em>:Identity</em>.(>>=)
+
+<b>module </b>Dead_code_elimination = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | other -> map pass other
+<b>end
+</b></pre>
+
+<hr />
+
+<h1>TODO</h1>
+
+<ul>
+<li>http://blog.sumtypeofway.com/an-introduction-to-recursion-schemes/</li>
+<li>mention tail recursion</li>
+<li>no <code>-rectypes</code> for polymorphic variants</li>
+</ul>
+
+    </body>
+</html>

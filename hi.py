@@ -23,7 +23,8 @@ this throw trait try true type val var while with yield
 _ : = => <- <: <% >: # @'''.split()
 
 ocaml = '''let module struct end open in type of function
-val sig match with fun try exception'''.split()
+val sig match with fun try exception if then else true false rec
+as'''.split()
 
 
 class Highlighter(object):
@@ -37,7 +38,7 @@ class Highlighter(object):
         return Grammar(grammar)['top'].parse(source)
 
     def eval(self, source):
-        node = self.parse(source) if isinstance(source, str) else source
+        node = self.parse(source) if isinstance(source, basestring) else source
         method = getattr(self, node.expr_name, lambda node, children: children)
         return method(node, [self.eval(n) for n in node])
 
