@@ -324,7 +324,7 @@ trade-offs.</p>
 
 <h2>D. Result type with polymorphic variants for errors</h2>
 
-<p>Polymorphic variants allow you to have the cake and it it too. Here&#8217;s how.</p>
+<p>Polymorphic variants allow you to have the cake and eat it too. Here&#8217;s how.</p>
 
 <p>Let&#8217;s port our previous example to use polymorphic variants instead of the
 nominal variants.</p>
@@ -440,8 +440,7 @@ that the composed function can exibit.</p>
 branch of the result type.</li>
 <li><strong>Concern separation</strong>. Happy path and error handling can be separated.</li>
 <li><strong>Error contract</strong>. Polymorphic variant type reflects the relevant error cases.</li>
-
-    <li><strong>Distinguishable errors</strong>. We can pattern-match to distinguish errors.</li>
+<li><strong>Distinguishable errors</strong>. We can pattern-match to distinguish errors.</li>
 <li><strong>Exhaustiveness checking</strong>. When the called function gets an additional error case
 the compiler will show all the call sites that need to be updated.</li>
 </ul>
@@ -484,8 +483,7 @@ which has a further list of valuable resources</li>
 for giving feedback on a draft of this post. <a href="/" title="Home">&#9632;</a></p>
 
 <p><center markdown="1">
-    <em>Discuss on <a href="https://www.reddit.com/r/ocaml/comments/7x4m0e/composable_error_handling_in_ocaml/">Reddit</a></em>
-
+<em>Discuss on <a href="https://www.reddit.com/r/ocaml/comments/7x4m0e/composable_error_handling_in_ocaml/">Reddit</a></em>
 <br/>
 <em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
 </center></p>

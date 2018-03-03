@@ -326,7 +326,7 @@ trade-offs.
 
 ## D. Result type with polymorphic variants for errors
 
-Polymorphic variants allow you to have the cake and it it too. Here's how.
+Polymorphic variants allow you to have the cake and eat it too. Here's how.
 
 Let's port our previous example to use polymorphic variants instead of the
 nominal variants.
@@ -490,9 +490,10 @@ Big thanks to [Oskar Wickström](https://twitter.com/owickstrom)
 for giving feedback on a draft of this post. [&#9632;](/ "Home")
 
 <center markdown="1">
-*Follow me on [Twitter](http://twitter.com/keleshev)*
+<em>Discuss on <a href="https://www.reddit.com/r/ocaml/comments/7x4m0e/composable_error_handling_in_ocaml/">Reddit</a></em>
+<br/>
+<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
 </center>
-
 
 
 
