@@ -24,7 +24,7 @@ _ : = => <- <: <% >: # @'''.split()
 
 ocaml = '''let module struct end open in type of function
 val sig match with fun try exception if then else true false rec
-as'''.split()
+as assert'''.split()
 
 
 class Highlighter(object):

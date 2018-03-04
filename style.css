@@ -35,15 +35,18 @@ body {
 pre {
     border-left: 2.5px solid black;
     margin-left: 0;
-    padding-left: 1.5em;
+    //font-family: 'Fira Code'
 }
 blockquote {
     border: 2.5px solid black;
     margin-left: 0;
+    margin-right: 0;
     padding-left: 1.5em;
+    padding-right: 1.5em;
 }
 pre {
-    padding-left: 1.5em;
+    padding-left: 1.20em;
+    //padding-left: 0.0em;
 }
 
 pre em {
