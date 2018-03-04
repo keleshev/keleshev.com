@@ -606,7 +606,7 @@ let () =
 
 And confirm that they are `z`, `y`, and `x`.
 If our syntax tree had location information we could easily
-collect the preciece locations of the undefined variables.
+collect the precise locations of the undefined variables.
 
 ## Summary
 
