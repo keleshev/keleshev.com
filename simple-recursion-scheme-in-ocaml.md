@@ -4,14 +4,16 @@ Simple Recursion Scheme in OCaml
 <center>Draft</center>
 
 Let us explore a simple recursion scheme in OCaml.
-To create a motivation for it, and as an example, we will write a few
+To create motivation for it, we will write a few
 simple compiler passes for a toy language.
 
 > You might think—*oh, crickets! again these functional programmers
-> with their compilers, as opposed to real problems*—but I will interject.
+> with their compilers! gimme some real problems!*—but I will interject.
+>
 > First, compilers are the single most researched application of software,
 > so there is existing terminology which can be quickly used to
 > build up a realistic example.
+>
 > Second, and more importantly, it looks like there are more and more
 > applications of compiler construction methods to other fields,
 > for example, [financial instruments][FI].
@@ -104,7 +106,6 @@ end
 
 ```
 
-The problem with this solution is the following.
 The highlighted area represents the actual transformation,
 while the rest is boilerplate that makes sure that the
 transformation is applied recursively.
@@ -148,9 +149,7 @@ end
 ```ocaml
 
 ```
-Now the pass is focused on the transofrmation.
-
-Sum up:
+Now the pass is focused on the transofrmation.  To sum up:
 
 * We can write several passes of the form `Syntax.t -> Syntax.t`
   and reuse a single `map` implementation to factor recursion.
@@ -176,9 +175,10 @@ val map : (Syntax.t -> Syntax.t) -> Syntax.t -> Syntax.t
 ```
 
 Thus, this `map` will only help us factor out recursion for
-passes of the form `Syntax.t -> Syntax.t`. We'll tackle this later.
+passes of the form `Syntax.t -> Syntax.t`.
+We'll see what we can do about other kinds of passes further.
 
-## 3a. Recursion for free
+## 3. Recursion for free
 
 So far the deal was that we can write `map` once
 and then use it in several passes. However, if
@@ -188,15 +188,15 @@ Worse, what if you have many intermediate representations?
 
 Fortunately, there is [`ppx_deriving`][DER] code generation
 framework which can generate, among many others, a `map`
-implementation for us, similar to Haskell's `deriving (Functor)`.
+implementation for us, similar to Haskell's `deriving Functor`.
 
 [DER]: https://github.com/ocaml-ppx/ppx_deriving
 
-However, there's a caveat. Similar to `deriving (Functor)` in
+However, there's a caveat. Similar to `deriving Functor` in
 Haskell, deriving a `map` implementation using `ppx_deriving`
 requires a type with a single type parameter: `'a t`.
 We will need to rewrite our `Syntax.t` type to use a type
-parameter instead of being defined self-referentially.
+parameter instead of it being defined self-referentially.
 However, we'll be able to reclaim our monomorphic map in no time.
 See here:
 
@@ -241,7 +241,7 @@ First, we called our new polymorphic type `'a Syntax.Open.t` ❶.
 We'll refer to it as an "open" type.
 Second, we used the deriving framework to get `map` for free ❷.
 We regained our monomorphic type by making a recursive type definition ❸.
-We'll refer to this type as "closed" type.
+We'll refer to this type as a "closed" type.
 
 Unlike in Haskell, there is no need for a fix-point type and for
 the wrapping and unwrapping that is associated with it.
@@ -251,7 +251,7 @@ undistinguishable from our original `Syntax.t`, for all intents and purposes.
 
 > Interestingly enough, `-rectype` flag is not necessary for tying
 > the recursive knot when used together with polymorphic variants.
-> There might be more reasons to use polymorphic variants for
+> And there might be more reasons to use polymorphic variants for
 > syntax trees and intermediate representations.
 
 We can also regain our monomorphic `map` ❹ function, if necessary,
@@ -260,19 +260,23 @@ by constraining `Open.map` with a signature.
 Now we can write the same short version of the dead code elimination pass without
 writing the `map` function ourselves.
 
-## Monads
+## 4. Monadic passes
 
 So far we were only able to automate recursion for
 passes of form `Syntax.t -> Syntax.t`.
 What about passes that return an option?
 A result type to signal errors?
-And how about passes that need to maintain, say, a lexical environment?
+And how about passes that need to maintain a lexical environment?
 
-Say, we want to write a pass of form `Syntax.t -> (Syntax.t, 'error) result`
+Say, we want a pass of form `Syntax.t -> (Syntax.t, 'error) result`
 that checks for literal division by zero.
 
 Let's write it using primitive recursion first.
-We'll use result monad to recursively compose our pass:
+We'll use the result monad to recursively compose our pass.
+Normally you would use a library like [Base.Result][Result]
+for that, but let's spell it out here:
+
+[Result]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/
 
 ```ocaml
 module Result = struct
@@ -318,14 +322,14 @@ end
 
 As previously, the highlighted area shows the code that
 implements the transformation, and the rest is boilerplate
-that implements the recursion.
+that implements recursion.
 
 > We have used a polymorphic variant <code>`Literal&lowbar;division&lowbar;by&lowbar;zero</code>
 > for our error value. To learn why this might be a good idea read
 > about [Composable Error Handling in OCaml](./composable-error-handling-in-ocaml).
 
 Like we did before, we can factor the boilerplate out
-and as a result, we get `map_result`, a function
+and, as a result, we get `map_result`, a function
 that maps `Syntax.t -> (Syntax.t, 'error) result`:
 
 ```ocaml
@@ -421,6 +425,9 @@ module Check_literal_division_by_zero = struct
     | other -> map_result pass other
 end
 ```
+```ocaml
+
+```
 
 We can generate `map_option` with option monad to get
 `Syntax.t -> Syntax.t option` passes.
@@ -445,14 +452,14 @@ end
 
 ```
 
-## State
+## 5. State monad pass
 
 Some passes need to maintain a symbol table for lexical analysis.
 
 Consider a pass that finds all variables which are undefined
 according to the rules of lexical scope.
 When recurring, it needs to pass down the list of variables available in a scope,
-and pass up the list of undefined variables, that it found.
+and pass up the list of undefined variables that it found.
 
 The following type can be used for this purpose:
 
@@ -521,7 +528,7 @@ and if it does not—it adds it to the list of `undefined` variables.
 Finally ❸ we create a function to extract the list of
 undefined variables from a monadic value.
 
-Now, we have enverything in place to write our pass
+Now, we have everything in place to write our pass
 that checks for undefined variables.
 
 First, we generate `map_environment` that maps
@@ -553,7 +560,7 @@ end
 
 When our pass reaches a let-binding, it
 uses `with_defined` to pass down the information
-about the identifier that was bound to the
+about the bound identifier to the
 body of the binding. If we had support for `let rec`
 we would also use `with_defined` for the value branch.
 
@@ -621,10 +628,25 @@ collect the precise locations of the undefined variables.
 You can find the code from this article in [a GitHub gist](https://gist.github.com/keleshev/284c5dd9a74fea8efcd66d86e4109504) along with more tests
 and examples that you can paly around.
 
+## Limitations and further steps
+
+Not all passes map over the same syntax tree or intermediate
+representation type. Many useful passes work by converting
+one representation to a different one. In a future post we'll
+explore what can be done for passes of form `a -> b m`,
+for some `a` and `b`.
+
+The approach of using a map function as a recursion scheme
+works well when your pass works on a subset of variants
+and ignores the rest. However, it does not offer anything
+for the cases when a pass needs to touch every variant,
+which is common. For these cases there are more recursive
+schemes which you can learn about below.
+
 ## Resources
 
 [Adventures in Uncertainty](http://blog.sumtypeofway.com) is a blog
-about recursion schemes in Haskell.
+about recursion schemes in Haskell. [&#9632;](/ "Home")
 
 
 
