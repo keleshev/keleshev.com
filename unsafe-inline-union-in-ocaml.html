@@ -1,0 +1,633 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Unsafe Inline Union in OCaml</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
+        <h1>Unsafe Inline Union in OCaml</h1>
+
+<p><center>Draft</center></p>
+
+<p>I was reading LexiFi blog post <a href="https://www.lexifi.com/blog/about-unboxed-float-arrays">about unboxed float arrays</a>,
+which mentions an interesting potential compiler optimization.
+You may remember that OCaml compiles <code>int</code>s, <code>bool</code>s, <code>unit</code>, and
+variants without constructor to 63 bit integers (on 64 bit platforms)
+and leaves one bit to distinguish between such integers and pointer types.
+That means</p>
+
+<p><svg width=400 height=180>
+  <rect x=50 y=20 width=150 height=150
+  style="fill:white;stroke:black;stroke-width:5&#8221; />
+</svg></p>
+
+<p>Let us explore a simple recursion scheme in OCaml.
+To create motivation for it, we will write a few
+simple compiler passes for a toy language.</p>
+
+<blockquote>
+  <p>You might think—<em>oh, crickets! again these functional programmers
+  with their compilers! gimme some real problems!</em>—but I will interject.</p>
+  
+  <p>First, compilers are the single most researched application of software,
+  so there is existing terminology which can be quickly used to
+  build up a realistic example.</p>
+  
+  <p>Second, and more importantly, it looks like there are more and more
+  applications of compiler construction methods to other fields,
+  for example, <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2000/09/pj-eber.pdf">financial instruments</a>.
+  It even may be that every software problem is a compiler problem.</p>
+</blockquote>
+
+<p>Let&#8217;s say we have the following informally specified language:</p>
+
+<p style="padding-left: 3.0em; text-indent: -1.25em" >
+<em>e&nbsp;</em> → <code>(</code><em>e</em><code>)</code><br/>
+  |<code> ()</code> <br/>
+  |<b><code> true </code></b>|<b><code> false</code><br/> </b>
+  |<code> 0 </code>|<code> 1 </code>|<code> 2 </code>|<code> </code>…<br/>
+  |<code> </code><em>id</em><br/>
+  |<code> </code><em>e</em><code> / </code><em>e</em><br/>
+  |<code> </code><em>e</em><code>; </code><em>e</em><br/>
+  |<b><code> let </code></b><em>id</em><code> = </code><em>e</em><b><code> in </code></b><em>e</em><br/>
+  |<b><code> if </code></b><em>e</em><b><code> then </code></b><em>e</em><b><code> else </code></b><em>e</em>
+</p>
+
+<!--
+
+
+md5-8440691d9d2793b04eef102d84c69df9
+
+
+-->
+
+<p>We can represent it straightforwardly with this type:</p>
+
+<pre><b>module </b>Syntax = <b>struct
+  </b><b>type </b>t =
+    | Unit
+    | Boolean <b>of </b>bool
+    | Number <b>of </b>int
+    | Id <b>of </b>string
+    | Divide <b>of </b>t * t
+    | Sequence <b>of </b>t * t
+    | Let <b>of </b>{id: string; value: t; body: t}
+    | If <b>of </b>{conditional: t; consequence: t; alternative: t}
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<h2>1. Primitive recursion</h2>
+
+<p>Now, let&#8217;s say you want to eliminate dead code by creating
+a compiler pass for the following transformation:</p>
+
+<pre><b>if </b><b>true </b><b>then </b>x <b>else </b>y ⇒ x
+<b>if </b><b>false </b><b>then </b>x <b>else </b>y ⇒ y
+</pre>
+
+<p>And here is how you can do it using primitive recursion:</p>
+
+<pre><b>module </b>Dead_code_elimination = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Unit | Boolean _ | Number _ | Id _ <b>as </b>t ->
+        t
+    | Divide (left, right) ->
+        Divide (pass left, pass right)
+    | Sequence (left, right) ->
+        Sequence (pass left, pass right)
+    | Let {id; value; body} ->
+        Let {id; value=pass value; body=pass body}
+<div style='margin-left: -1.20em; background: lightgrey'>      | If {conditional=Boolean <b>true</b>; consequence; _} ->
+          pass consequence
+      | If {conditional=Boolean <b>false</b>; alternative; _} ->
+          pass alternative
+</div>    | If {conditional; consequence; alternative} ->
+        <b>let </b>conditional = pass conditional <b>in
+        </b><b>let </b>consequence = pass consequence <b>in
+        </b><b>let </b>alternative = pass alternative <b>in
+        </b>If {conditional; consequence; alternative}
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>The highlighted area represents the actual transformation,
+while the rest is boilerplate that makes sure that the
+transformation is applied recursively.</p>
+
+<h2>2. Factored recursion</h2>
+
+<p>This pattern of recursion can be captured by a <code>map</code> function that
+applies a function <code>f</code> recursively to the data structure:</p>
+
+<pre><b>let </b>map f = <b>function
+  </b>| Unit | Boolean _ | Number _ | Id _ <b>as </b>t ->
+      t
+  | Divide (left, right) ->
+      Divide (f left, f right)
+  | Sequence (left, right) ->
+      Sequence (f left, f right)
+  | Let {id; value; body} ->
+      Let {id; value=f value; body=f body}
+  | If {conditional; consequence; alternative} ->
+      <b>let </b>conditional = f conditional <b>in
+      </b><b>let </b>consequence = f consequence <b>in
+      </b><b>let </b>alternative = f alternative <b>in
+      </b>If {conditional; consequence; alternative}
+</pre>
+
+<p>Now we can rewrite our compiler pass to focus on the
+actual transformation and to delegate the recursive descent
+to <code>map</code>:</p>
+
+<pre><b>module </b>Dead_code_elimination = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | other -> map pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>Now the pass is focused on the transofrmation.  To sum up:</p>
+
+<ul>
+<li>We can write several passes of the form <code>Syntax.t -&gt; Syntax.t</code>
+and reuse a single <code>map</code> implementation to factor recursion.</li>
+<li>If we extend the <code>Syntax.t</code> type with new
+constructors, we will only need to modify <code>map</code>, without the
+need to modify each pass.</li>
+<li>If we find the need for it,
+we can modify <code>map</code> to be tail-recursive and all the passes
+using it will become tail-recursive as well.</li>
+</ul>
+
+<p>Caveat: our <code>map</code> implementation above is peculiar.
+Instead of the regular signature:</p>
+
+<pre><b>val </b>map : ('a -> 'b) -> 'a t -> 'b t
+</pre>
+
+<p>It has a monomorphic signature, where <code>'a</code>, <code>'b</code>, <code>'a t</code>, <code>'b t</code> are
+the same thing:</p>
+
+<pre><b>val </b>map : (Syntax.t -> Syntax.t) -> Syntax.t -> Syntax.t
+</pre>
+
+<p>Thus, this <code>map</code> will only help us factor out recursion for
+passes of the form <code>Syntax.t -&gt; Syntax.t</code>.
+We&#8217;ll see what we can do about other kinds of passes further.</p>
+
+<h2>3. Recursion for free</h2>
+
+<p>So far the deal was that we can write <code>map</code> once
+and then use it in several passes. However, if
+your compiler has an intermediate representation with hundreds
+of different nodes (like many do) it might be tedious to write.
+Worse, what if you have many intermediate representations?</p>
+
+<p>Fortunately, there is <a href="https://github.com/ocaml-ppx/ppx_deriving"><code>ppx_deriving</code></a> code generation
+framework which can generate, among many others, a <code>map</code>
+implementation for us, similar to Haskell&#8217;s <code>deriving Functor</code>.</p>
+
+<p>However, there&#8217;s a caveat. Similar to <code>deriving Functor</code> in
+Haskell, deriving a <code>map</code> implementation using <code>ppx_deriving</code>
+requires a type with a single type parameter: <code>'a t</code>.
+We will need to rewrite our <code>Syntax.t</code> type to use a type
+parameter instead of it being defined self-referentially.
+However, we&#8217;ll be able to reclaim our monomorphic map in no time.
+See here:</p>
+
+<pre><b>module </b>Syntax = <b>struct
+  </b><b>module </b>Open = <b>struct
+    </b><b>type </b>'a t = ❶
+      | Unit
+      | Boolean <b>of </b>bool
+      | Number <b>of </b>int
+      | Id <b>of </b>string
+      | Divide <b>of </b>'a * 'a
+      | Sequence <b>of </b>'a * 'a
+      | Let <b>of </b>{id: string; value: 'a; body: 'a}
+      | If <b>of </b>{conditional: 'a; consequence: 'a; alternative: 'a}
+      [@@deriving map] ❷
+  <b>end
+
+  </b><b>type </b>t = t Open.t ❸
+
+  <b>let </b>map: (t -> t) -> t -> t = Open.map ❹
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<!--
+
+
+md5-53041bab332764fa20beb5c7d1a94fa8
+
+
+-->
+
+<p>First, we called our new polymorphic type <code>'a Syntax.Open.t</code> ❶.
+We&#8217;ll refer to it as an &#8220;open&#8221; type.
+Second, we used the deriving framework to get <code>map</code> for free ❷.
+We regained our monomorphic type by making a recursive type definition ❸.
+We&#8217;ll refer to this type as a &#8220;closed&#8221; type.</p>
+
+<p>Unlike in Haskell, there is no need for a fix-point type and for
+the wrapping and unwrapping that is associated with it.
+OCaml supports such recursive type definitions using <code>-rectypes</code> compiler flag.
+The resulting closed type <code>Syntax.t</code> is
+undistinguishable from our original <code>Syntax.t</code>, for all intents and purposes.</p>
+
+<blockquote>
+  <p>Interestingly enough, <code>-rectype</code> flag is not necessary for tying
+  the recursive knot when used together with polymorphic variants.
+  And there might be more reasons to use polymorphic variants for
+  syntax trees and intermediate representations.</p>
+</blockquote>
+
+<p>We can also regain our monomorphic <code>map</code> ❹ function, if necessary,
+by constraining <code>Open.map</code> with a signature.</p>
+
+<p>Now we can write the same short version of the dead code elimination pass without
+writing the <code>map</code> function ourselves.</p>
+
+<h2>4. Monadic passes</h2>
+
+<p>So far we were only able to automate recursion for
+passes of form <code>Syntax.t -&gt; Syntax.t</code>.
+What about passes that return an option?
+A result type to signal errors?
+And how about passes that need to maintain a lexical environment?</p>
+
+<p>Say, we want a pass of form <code>Syntax.t -&gt; (Syntax.t, 'error) result</code>
+that checks for literal division by zero.</p>
+
+<p>Let&#8217;s write it using primitive recursion first.
+We&#8217;ll use the result monad to recursively compose our pass.
+Normally you would use a library like <a href="https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/">Base.Result</a>
+for that, but let&#8217;s spell it out here:</p>
+
+<pre><b>module </b>Result = <b>struct
+  </b><b>let </b>return x = Ok x
+
+  <b>let </b>(>>=) = <b>function
+    </b>| Ok ok -> <b>fun </b>f -> f ok
+    | error -> <b>fun </b>_ -> error
+<b>end
+</b></pre>
+
+And then we implement the pass itself:
+
+<pre><b>module </b>Check_literal_division_by_zero = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Unit | Boolean _ | Number _ | Id _ <b>as </b>t ->
+        return t
+<div style='margin-left: -1.20em; background: lightgrey'>      | Divide (_, Number 0) ->
+          Error `Literal_division_by_zero
+</div>    | Divide (left, right) ->
+        pass left >>= <b>fun </b>left ->
+        pass right >>= <b>fun </b>right ->
+        return (Divide (left, right))
+    | Sequence (left, right) ->
+        pass left >>= <b>fun </b>left ->
+        pass right >>= <b>fun </b>right ->
+        return (Sequence (left, right))
+    | Let {id; value; body} ->
+        pass value >>= <b>fun </b>value ->
+        pass body >>= <b>fun </b>body ->
+        return (Let {id; value; body})
+    | If {conditional; consequence; alternative} ->
+        pass conditional >>= <b>fun </b>conditional ->
+        pass consequence >>= <b>fun </b>consequence ->
+        pass alternative >>= <b>fun </b>alternative ->
+        return (If {conditional; consequence; alternative})
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>As previously, the highlighted area shows the code that
+implements the transformation, and the rest is boilerplate
+that implements recursion.</p>
+
+<blockquote>
+  <p>We have used a polymorphic variant <code>`Literal&lowbar;division&lowbar;by&lowbar;zero</code>
+  for our error value. To learn why this might be a good idea read
+  about <a href="./composable-error-handling-in-ocaml">Composable Error Handling in OCaml</a>.</p>
+</blockquote>
+
+<p>Like we did before, we can factor the boilerplate out
+and, as a result, we get <code>map_result</code>, a function
+that maps <code>Syntax.t -&gt; (Syntax.t, 'error) result</code>:</p>
+
+<pre><b>open </b>Result
+
+<b>let </b><b>rec </b>map_result f = <b>function
+  </b>| Unit | Boolean _ | Number _ | Id _ <b>as </b>t ->
+      return t
+  | Divide (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Divide (left, right))
+  | Sequence (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Sequence (left, right))
+  | Let {id; value; body} ->
+      f value >>= <b>fun </b>value ->
+      f body >>= <b>fun </b>body ->
+      return (Let {id; value; body})
+  | If {conditional; consequence; alternative} ->
+      f conditional >>= <b>fun </b>conditional ->
+      f consequence >>= <b>fun </b>consequence ->
+      f alternative >>= <b>fun </b>alternative ->
+      return (If {conditional; consequence; alternative})
+</pre>
+
+<p>We can convince ourselves that it works by rewriting the pass
+with recursion delegated to <code>map_result</code>:</p>
+
+<pre><b>module </b>Check_literal_division_by_zero = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Divide (_, Number 0) ->
+        Error `Literal_division_by_zero
+    | other -> map_result pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>Much better now!</p>
+
+<p>However, looking at <code>map_result</code> implementation we can
+quickly discover that it has nothing specific to the
+<code>result</code> type. It only uses <code>return</code> and <code>bind</code>.
+So, instead, we can make a &#8220;generator&#8221; function
+which is parametrized over <code>return</code> and <code>bind</code> to
+get a mapper for any monad:</p>
+
+<pre><b>let </b>generate_map ~return ~bind:(>>=) f = <b>function
+  </b>| Unit | Boolean _ | Number _ | Id _ <b>as </b>t ->
+      return t
+  | Divide (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Divide (left, right))
+  | Sequence (left, right) ->
+      f left >>= <b>fun </b>left ->
+      f right >>= <b>fun </b>right ->
+      return (Sequence (left, right))
+  | Let {id; value; body} ->
+      f value >>= <b>fun </b>value ->
+      f body >>= <b>fun </b>body ->
+      return (Let {id; value; body})
+  | If {conditional; consequence; alternative} ->
+      f conditional >>= <b>fun </b>conditional ->
+      f consequence >>= <b>fun </b>consequence ->
+      f alternative >>= <b>fun </b>alternative ->
+      return (If {conditional; consequence; alternative})
+</pre>
+
+<blockquote>
+  <p>One can write a <code>ppx_deriving</code> plugin to automatically
+  derive this function, just like <code>map</code>.</p>
+</blockquote>
+
+<p>What can we do with it?
+We can use it to factor out recursion form any pass of the form
+<code>Syntax.t -&gt; Syntax.t m</code> where <code>m</code> is a monad type.</p>
+
+<p>We can generate <code>map_result</code> from result monad to implement
+our literal division checker:</p>
+
+<pre><b>let </b>map_result =
+  generate_map ~return&#58;Result.return ~bind&#58;Result.(>>=)
+
+<b>module </b>Check_literal_division_by_zero = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Divide (_, Number 0) ->
+        Error `Literal_division_by_zero
+    | other -> map_result pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>We can generate <code>map_option</code> with option monad to get
+<code>Syntax.t -&gt; Syntax.t option</code> passes.</p>
+
+<p>We can pass identity monad to get our original <code>map</code>
+function and implement the dead code elimination pass:</p>
+
+<pre><b>let </b>map =
+  generate_map ~return&#58;Identity.return ~bind&#58;Identity.(>>=)
+
+<b>module </b>Dead_code_elimination = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | other -> map pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<h2>5. State monad pass</h2>
+
+<p>Some passes need to maintain a symbol table for lexical analysis.</p>
+
+<p>Consider a pass that finds all variables which are undefined
+according to the rules of lexical scope.
+When recurring, it needs to pass down the list of variables available in a scope,
+and pass up the list of undefined variables that it found.</p>
+
+<p>The following type can be used for this purpose:</p>
+
+<pre><b>module </b>Environment = <b>struct
+  </b><b>type </b>t = {defined: string list; undefined: string list}
+
+  <b>let </b>initial = {defined=[]; undefined=[]}
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>Since <code>generate_map</code> works for any monad, we could
+define a state monad for <code>Environment.t</code> and use
+it to factor out the recursive pattern.</p>
+
+<p>When using a <a href="http://blogs.perl.org/users/cyocum/2012/11/writing-state-monads-in-ocaml.html">monad library in OCaml</a>
+we can obtain a state monad from a type with no effort,
+and get a rich set of functions to work with it:</p>
+
+<pre><b>module </b>Monad = StateMonad (Environment)
+</pre>
+
+<p>However, for illustrative purpose let&#8217;s write a state monad
+for <code>Environment.t</code> manually, while keeping in mind that
+we can get most of the code below for free:</p>
+
+<pre><b>module </b>Monad = <b>struct
+  </b><b>type </b>'a t = Environment.t -> 'a * Environment.t
+
+  <b>let </b>return a env = a, env
+
+  <b>let </b>(>>=) t callback env =
+    <b>let </b>a, env = t env <b>in
+    </b>callback a env
+
+  <b>let </b>with_defined name t {defined; undefined} = ❶
+    <b>let </b>a, env = t {undefined; defined=name :: defined} <b>in
+    </b>a, {env <b>with </b>defined}
+
+  <b>let </b>check_id name env = ❷
+    <b>if </b>List.mem name env.defined <b>then
+      </b>(), env
+    <b>else
+      </b>(), {env <b>with </b>undefined=name :: env.undefined}
+
+  <b>let </b>undefined t = (snd (t initial)).undefined ❸
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>We have also written three functions that are specific
+to our pass. Number ❶ is <code>with_defined</code> which
+given an identifier adds it to the <code>defined</code> list
+to pass this information down. Number ❷ is <code>check_id</code>.
+Given an identifier it checks if it belongs to the <code>defined</code> list,
+and if it does not—it adds it to the list of <code>undefined</code> variables.
+Finally ❸ we create a function to extract the list of
+undefined variables from a monadic value.</p>
+
+<p>Now, we have everything in place to write our pass
+that checks for undefined variables.</p>
+
+<p>First, we generate <code>map_environment</code> that maps
+<code>Syntax.t -&gt; Sytax.t Environment.Monad.t</code>:</p>
+
+<pre><b>let </b>map_environment =
+  generate_map ~return&#58;Monad.return ~bind&#58;Monad.(>>=)
+</pre>
+
+<p>And now, the pass itself:</p>
+
+<pre><b>module </b>Collect_undefined_variables = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| Let {id; value; body} ->
+        pass value >>= <b>fun </b>value ->
+        with_defined id (pass body) >>= <b>fun </b>body ->
+        return (Let {id; value; body})
+    | Id id <b>as </b>t ->
+        check_id id >>= <b>fun </b>() ->
+        return t
+    | other -> map_environment pass other
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>When our pass reaches a let-binding, it
+uses <code>with_defined</code> to pass down the information
+about the bound identifier to the
+body of the binding. If we had support for <code>let rec</code>
+we would also use <code>with_defined</code> for the value branch.</p>
+
+<p>When we reach an identifier, we check that it is
+in scope using <code>check_id</code> function, and if it is not,
+<code>check_id</code> will add it to the <code>undefined</code> list.</p>
+
+<p>We delegate the recursion to <code>map_environment</code>.</p>
+
+<p>Let us test this pass. Consider the following program in our toy language:</p>
+
+<pre><span style='border-bottom: 2px dashed red; background: pink'>x</span>;
+<b>let </b>x = () <b>in
+</b><b>let </b>a = () <b>in
+</b>a;
+<b>let </b>b = a <b>in
+</b><b>let </b>y = <span style='border-bottom: 2px dashed red; background: pink'>y</span> <b>in
+</b>(<b>let </b>z = () <b>in </b>());
+a; b; <span style='border-bottom: 2px dashed red; background: pink'>z</span>
+</pre>
+
+<p>The three variables highlighted are used outside
+of the lexical scope where they are defined.</p>
+
+<p>This program can be represented as the following syntax tree:</p>
+
+<pre><b>let </b>tree =
+  <b>let </b>(%) left right = Sequence (left, right) <b>in
+  </b>Id <em>"x"</em> %
+    Let {id=<em>"x"</em>; value=Unit; body=
+      Let {id=<em>"a"</em>; value=Unit; body=
+        Id <em>"a"</em> %
+          Let {id=<em>"b"</em>; value=Id <em>"a"</em>; body=
+            Let {id=<em>"y"</em>; value=Id <em>"y"</em>; body=
+              Let {id=<em>"z"</em>; value=Unit; body=Unit} %
+                Id <em>"a"</em> % Id <em>"b"</em> % Id <em>"z"</em>}}}}
+</pre>
+
+<p>We write a test that applies our pass to the
+tree and extracts the list of undefined variables
+from the resulting value:</p>
+
+<pre><b>let </b>() =
+  <b>let </b>pass = Collect_undefined_variables.pass <b>in
+  </b><b>assert </b>(undefined (pass tree) = [<em>"z"</em>; <em>"y"</em>; <em>"x"</em>])
+</pre>
+
+<p>And confirm that they are <code>z</code>, <code>y</code>, and <code>x</code>.
+If our syntax tree had location information we could easily
+collect the precise locations of the undefined variables.</p>
+
+<h2>Summary</h2>
+
+<ul>
+<li>By using <code>map</code> we can reuse the recursive
+pattern for <code>t -&gt; t</code> passes.</li>
+<li>We can get a map for our type for free using <code>deriving map</code>.</li>
+<li>We can write a general map generator that automates
+recursion for <code>t -&gt; t m</code> passes, for any monad <code>m</code>, but notably for:
+identity, option, result, and state monad.</li>
+<li>One can write a deriving plugin for the map generator, if necessary.</li>
+</ul>
+
+<p>You can find the code from this article in <a href="https://gist.github.com/keleshev/284c5dd9a74fea8efcd66d86e4109504">a GitHub gist</a> along with more tests
+and examples that you can paly around.</p>
+
+<h2>Limitations and further steps</h2>
+
+<p>Not all passes map over the same syntax tree or intermediate
+representation type. Many useful passes work by converting
+one representation to a different one. In a future post we&#8217;ll
+explore what can be done for passes of form <code>a -&gt; b m</code>,
+for some <code>a</code> and <code>b</code>.</p>
+
+<p>The approach of using a map function as a recursion scheme
+works well when your pass works on a subset of variants
+and ignores the rest. However, it does not offer anything
+for the cases when a pass needs to touch every variant,
+which is common. For these cases there are more recursive
+schemes which you can learn about below.</p>
+
+<h2>Resources</h2>
+
+<p><a href="http://blog.sumtypeofway.com">Adventures in Uncertainty</a> is a blog
+about recursion schemes in Haskell. <a href="/" title="Home">&#9632;</a></p>
+
+    </body>
+</html>
