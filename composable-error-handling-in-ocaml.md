@@ -192,7 +192,7 @@ let main source =
   Display.render tree
 ```
 
-Or even better we could use the [`ppx_let`][ppx_let] preprocessor to
+Or even better, we could use the [`ppx_let`][ppx_let] preprocessor to
 accomplish the equivalent, but in a more readable way:
 
 [ppx_let]: https://github.com/janestreet/ppx_let
