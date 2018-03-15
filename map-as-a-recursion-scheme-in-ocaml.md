@@ -1,7 +1,7 @@
 Map as a Recursion Scheme in OCaml
 ==================================
 
-<center>Draft</center>
+<center>2018-03-15</center>
 
 Let us explore a simple recursion scheme in OCaml.
 To create motivation for it, we will write a few
@@ -71,11 +71,11 @@ end
 ## 1. Primitive recursion
 
 Now, let's say you want to eliminate dead code by creating
-a compiler pass for the following transformation:
+a compiler pass for the following transformations:
 
 ```ocaml
-if true then x else y ⇒ x
-if false then x else y ⇒ y
+if true  then x else y  ⇒  x
+if false then x else y  ⇒  y
 ```
 
 And here is how you can do it using primitive recursion:
@@ -377,12 +377,12 @@ Much better now!
 However, looking at `map_result` implementation, we can
 quickly discover that it has nothing specific to the
 `result` type. It only uses `return` and `bind`.
-So, instead, we can make a "generator" function
+So, instead, we can make a "map generator" function
 which is parametrized over `return` and `bind` to
 get a mapper for any monad:
 
 ```ocaml
-let generate_map ~return ~bind:(>>=) f = function
+let map_monad ~return ~bind:(>>=) f = function
   | Unit | Boolean _ | Number _ | Id _ as t ->
       return t
   | Divide (left, right) ->
@@ -415,7 +415,7 @@ our literal division checker:
 
 ```ocaml
 let map_result =
-  generate_map ~return&#58;Result.return ~bind&#58;Result.(>>=)
+  map_monad ~return&#58;Result.return ~bind&#58;Result.(>>=)
 
 module Check_literal_division_by_zero = struct
   let rec pass = function
@@ -435,7 +435,7 @@ function and implement the dead code elimination pass:
 
 ```ocaml
 let map =
-  generate_map ~return&#58;Identity.return ~bind&#58;Identity.(>>=)
+  map_monad ~return&#58;Identity.return ~bind&#58;Identity.(>>=)
 
 module Dead_code_elimination = struct
   let rec pass = function
@@ -472,7 +472,7 @@ end
 
 ```
 
-Since `generate_map` works for any monad, we could
+Since `map_monad` works for any monad, we could
 define a state monad for `Environment.t` and use
 it to factor out the recursive pattern.
 
@@ -534,7 +534,7 @@ First, we generate `map_environment` that maps
 
 ```ocaml
 let map_environment =
-  generate_map ~return&#58;Monad.return ~bind&#58;Monad.(>>=)
+  map_monad ~return&#58;Monad.return ~bind&#58;Monad.(>>=)
 ```
 
 And now, the pass itself:
@@ -571,14 +571,14 @@ We delegate the recursion to `map_environment`.
 Let us test this pass. Consider the following program in our toy language:
 
 ```ocaml
-<span style='border-bottom: 2px dashed red; background: pink'>x</span>;
+<span style='background: lightgrey'>x</span>;
 let x = () in
 let a = () in
 a;
 let b = a in
-let y = <span style='border-bottom: 2px dashed red; background: pink'>y</span> in
+let y = <span style='background: lightgrey'>y</span> in
 (let z = () in ());
-a; b; <span style='border-bottom: 2px dashed red; background: pink'>z</span>
+a; b; <span style='background: lightgrey'>z</span>
 ```
 
 The three variables highlighted are used outside
@@ -624,9 +624,16 @@ collect the precise locations of the undefined variables.
 * One can write a deriving plugin for the map generator, if necessary.
 
 You can find the code from this article in [a GitHub gist](https://gist.github.com/keleshev/284c5dd9a74fea8efcd66d86e4109504) along with more tests
-and examples that you can play around.
+and examples that you can play with.
 
 ## Limitations and further steps
+
+The approach of using a map function as a recursion scheme
+works well when your pass works on a subset of variants
+and ignores the rest. However, it does not offer anything
+for the cases when a pass needs to touch every variant,
+which is common. For these cases there are other recursive
+schemes.
 
 Not all passes map over the same syntax tree or intermediate
 representation type. Many useful passes work by converting
@@ -634,18 +641,17 @@ one representation to a different one. In a future post we'll
 explore what can be done for passes of form `a -> b m`,
 for some `a` and `b`.
 
-The approach of using a map function as a recursion scheme
-works well when your pass works on a subset of variants
-and ignores the rest. However, it does not offer anything
-for the cases when a pass needs to touch every variant,
-which is common. For these cases there are more recursive
-schemes.
-
 ## Resources
 
 [Adventures in Uncertainty](http://blog.sumtypeofway.com) is a blog
 about recursion schemes in Haskell. [&#9632;](/ "Home")
 
 
+<center markdown="1">
+
+⁂
+
+<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
+</center>
 
 
