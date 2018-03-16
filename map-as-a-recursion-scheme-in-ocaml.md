@@ -408,7 +408,8 @@ let map_monad ~return ~bind:(>>=) f = function
 > derive this function, just like `map`.
 
 What can we do with it?
-We can use it to factor out recursion form any pass of the form`Syntax.t -> Syntax.t m` where `m` is a monad type.
+We can use it to factor out recursion from any pass of the form
+`Syntax.t -> Syntax.t m` where `m` is a monad type.
 
 We can generate `map_result` from result monad to implement
 our literal division checker:
@@ -521,7 +522,7 @@ We have also written three functions that are specific
 to our pass. Number ❶ is `with_defined` which
 given an identifier adds it to the `defined` list
 to pass this information down. Number ❷ is `check_id`.
-Given an identifier it checks if it belongs to the `defined` list,
+Given an identifier it checks if the identifier belongs to the `defined` list,
 and if it does not—it adds it to the list of `undefined` variables.
 Finally ❸ we create a function to extract the list of
 undefined variables from a monadic value.
@@ -622,6 +623,8 @@ collect the precise locations of the undefined variables.
   recursion for `t -> t m` passes, for any monad `m`, notably for
     identity, option, result, and state monads.
 * One can write a deriving plugin for the map generator, if necessary.
+
+## Code
 
 You can find the code from this article in [a GitHub gist](https://gist.github.com/keleshev/284c5dd9a74fea8efcd66d86e4109504) along with more tests
 and examples that you can play with.
