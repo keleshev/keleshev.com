@@ -1,7 +1,7 @@
 Map as a Recursion Scheme in OCaml
 ==================================
 
-<center>2018-03-15</center>
+<center>2018-03-18</center>
 
 Let us explore a simple recursion scheme in OCaml.
 To create motivation for it, we will write a few
@@ -374,7 +374,7 @@ end
 
 Much better now!
 
-However, looking at `map_result` implementation, we can
+Looking at `map_result` implementation, we can
 quickly discover that it has nothing specific to the
 `result` type. It only uses `return` and `bind`.
 So, instead, we can make a "map generator" function

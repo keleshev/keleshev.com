@@ -10,7 +10,7 @@
         <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
         <h1>Map as a Recursion Scheme in OCaml</h1>
 
-<p><center>Draft</center></p>
+<p><center>2018-03-18</center></p>
 
 <p>Let us explore a simple recursion scheme in OCaml.
 To create motivation for it, we will write a few
@@ -47,7 +47,7 @@ simple compiler passes for a toy language.</p>
 <!--
 
 
-md5-db3100113a19c011d752234e2f72c536
+md5-9d951b4d46b2aa680f6f52856dc69b9a
 
 
 -->
@@ -219,7 +219,7 @@ See here:</p>
 <!--
 
 
-md5-971a402fc4d7ce4abf617be2d2ab7658
+md5-75a8155dbb98705db4e083856317803a
 
 
 -->
@@ -357,7 +357,7 @@ with recursion delegated to <code>map_result</code>:</p>
 
 <p>Much better now!</p>
 
-<p>However, looking at <code>map_result</code> implementation, we can
+<p>Looking at <code>map_result</code> implementation, we can
 quickly discover that it has nothing specific to the
 <code>result</code> type. It only uses <code>return</code> and <code>bind</code>.
 So, instead, we can make a &#8220;map generator&#8221; function
@@ -392,7 +392,8 @@ get a mapper for any monad:</p>
 </blockquote>
 
 <p>What can we do with it?
-We can use it to factor out recursion form any pass of the form<code>Syntax.t -&gt; Syntax.t m</code> where <code>m</code> is a monad type.</p>
+We can use it to factor out recursion from any pass of the form
+<code>Syntax.t -&gt; Syntax.t m</code> where <code>m</code> is a monad type.</p>
 
 <p>We can generate <code>map_result</code> from result monad to implement
 our literal division checker:</p>
@@ -495,7 +496,7 @@ we can get most of the code below for free:</p>
 to our pass. Number ❶ is <code>with_defined</code> which
 given an identifier adds it to the <code>defined</code> list
 to pass this information down. Number ❷ is <code>check_id</code>.
-Given an identifier it checks if it belongs to the <code>defined</code> list,
+Given an identifier it checks if the identifier belongs to the <code>defined</code> list,
 and if it does not—it adds it to the list of <code>undefined</code> variables.
 Finally ❸ we create a function to extract the list of
 undefined variables from a monadic value.</p>
@@ -592,6 +593,8 @@ recursion for <code>t -&gt; t m</code> passes, for any monad <code>m</code>, not
 identity, option, result, and state monads.</li>
 <li>One can write a deriving plugin for the map generator, if necessary.</li>
 </ul>
+
+<h2>Code</h2>
 
 <p>You can find the code from this article in <a href="https://gist.github.com/keleshev/284c5dd9a74fea8efcd66d86e4109504">a GitHub gist</a> along with more tests
 and examples that you can play with.</p>
