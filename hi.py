@@ -26,6 +26,9 @@ ocaml = '''let module struct end open in type of function
 val sig match with fun try exception if then else true false rec
 as assert'''.split()
 
+haskell = '''instance where
+'''.split()
+
 
 class Highlighter(object):
 

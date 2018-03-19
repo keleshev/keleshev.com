@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Cortege: a Row-polymorphic Tuple</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
+        <h1>Cortege: a Row-polymorphic Tuple</h1>
+
+<p><center>Draft</center></p>
+
+<p>Every once in a while I stumble upon some tuple-heavy code
+<a href="ocaml-fst">like this</a>:</p>
+
+<pre><b>let </b>fst3 (x,_,_) = x
+<b>let </b>snd3 (_,x,_) = x
+<b>let </b>thd3 (_,_,x) = x
+
+<b>let </b>fst4 (x,_,_,_) = x
+<b>let </b>snd4 (_,x,_,_) = x
+<b>let </b>thd4 (_,_,x,_) = x
+<b>let </b>for4 (_,_,_,x) = x
+...
+</pre>
+
+<p>Or even <a href="hackage-tuple">like this</a>:</p>
+
+<pre><b>instance </b>Upd1 b (a1,a2) (b,a2) <b>where
+  </b>upd1 b (a1,a2) = (b,a2)
+<b>instance </b>Upd1 b (a1,a2,a3) (b,a2,a3) <b>where
+  </b>upd1 b (a1,a2,a3) = (b,a2,a3)
+<b>instance </b>Upd1 b (a1,a2,a3,a4) (b,a2,a3,a4) <b>where
+  </b>upd1 b (a1,a2,a3,a4) = (b,a2,a3,a4)
+<b>instance </b>Upd1 b (a1,a2,a3,a4,a5) (b,a2,a3,a4,a5) <b>where
+  </b>upd1 b (a1,a2,a3,a4,a5) = (b,a2,a3,a4,a5)
+<b>instance </b>Upd1 b (a1,a2,a3,a4,a5,a6) (b,a2,a3,a4,a5,a6) <b>where
+  </b>upd1 b (a1,a2,a3,a4,a5,a6) = (b,a2,a3,a4,a5,a6)
+...
+</pre>
+
+<p>It always made me wonder if we could do better.
+Couldn&#8217;t we come up with a more polymorphic tuple type
+for which we could write select, update, and other
+functions without the need to duplicate the implementation
+for each tuple type?!</p>
+
+<p>There seems to be a gap in our type systems.
+We have nominal variants, and their counterparts, row-polymorphic
+variants. We have nominal records, and row-polymorphic records.
+We have tuples. So where are all the row-polymorphic tuples?!</p>
+
+<p>Let&#8217;s employ our wishful thinking an imagine how they might
+look like.  OCaml row-polymorphic object type may look like this:</p>
+
+<pre>< width : int; height : int; ..>
+</pre>
+
+<p>Where the implicit row variable (<code>..</code>) tells us that
+more fields are allowed. So why can&#8217;t we say the same about
+tuples? Let&#8217;s use banana brackets for our imaginary
+row-polymorphic tuple.</p>
+
+<ul>
+<li><code>(| |)</code> would be a unit tuple;</li>
+<li><code>(| 'a |)</code> would be a one-tuple;</li>
+<li><code>(| 'a, 'b |)</code> would be a two-tuple;</li>
+<li><code>(| 'a, .. |)</code> would be a tuple with at least one
+element, possibly more;</li>
+<li><code>(| 'a, 'b, .. |)</code> with at least two elements, possibly more;</li>
+<li><code>(| .. |)</code> would be a possibly empty tuple</li>
+</ul>
+
+<p>Then you could write a selector function for the first
+element that would work for any tuple with at least
+one element:</p>
+
+<pre><b>val </b>first : (| 'a, .. |) -> 'a
+</pre>
+
+<p>And other similar polymorphic accessor functions:</p>
+
+<pre><b>val </b>second : (| _, 'a, .. |) -> 'a
+<b>val </b>third  : (| _, _, 'a, .. |) -> 'a
+</pre>
+
+<p>Or polymorphic update functions:</p>
+
+<pre><b>module </b>Update : <b>sig
+  </b><b>val </b>first  : 'x -> (| 'a, .. |) -> (| 'x, .. |)
+  <b>val </b>second : 'x -> (| 'a, 'b, .. |) -> (| 'a, 'x, .. |)
+  <b>val </b>third  : 'x -> (| 'a, 'b, 'c, .. |) -> (| 'a, 'c, 'x, .. |)
+<b>end
+</b></pre>
+
+Why not a polymorphic prepend function?
+
+<pre><b>val </b>prepend : 'a -> (| .. |) -> (| 'a, .. |)
+</pre>
+
+    </body>
+</html>
