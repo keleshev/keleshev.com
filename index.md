@@ -6,24 +6,17 @@ Vladimir Keleshev
 Blog
 ----
 
-2018
-
-* [Cortege: a Row-polymorphic tuple](cortege-a-row-polymorphic-tuple)
-* [Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml)
-* [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
-
-2015
-
-* [Namespacing Variants in ML](/namespacing-variants-in-ml)
-
-2014
-
-* [WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction)
-* [Dissecting a Code Golf Challenge](/dissecting-a-code-golf-challenge)
-
-2010
-
-* [YAML: Quick Introduction](/yaml-quick-introduction)
+* 2018
+  * [Cortege: a Row-polymorphic tuple](cortege-a-row-polymorphic-tuple)
+  * [Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml)
+  * [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
+* 2015
+  * [Namespacing Variants in ML](/namespacing-variants-in-ml)
+* 2014
+  * [WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction)
+  * [Dissecting a Code Golf Challenge](/dissecting-a-code-golf-challenge)
+* 2010
+  * [YAML: Quick Introduction](/yaml-quick-introduction)
 
 Me
 ------
