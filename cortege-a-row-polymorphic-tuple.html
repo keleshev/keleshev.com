@@ -10,10 +10,10 @@
         <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
         <h1>Cortege: a Row-polymorphic Tuple</h1>
 
-<p><center>Draft</center></p>
+<p><center>2018-03-25</center></p>
 
 <p>Every once in a while I stumble upon some tuple code
-<a href="ocaml-fst">like this</a>:</p>
+<a href="https://github.com/ocaml/ocaml/blob/7d5e40c102792001cd240e38c70c241fafff2d99/utils/misc.ml#L381-L388">like this</a>:</p>
 
 <pre><b>let </b>fst3 (x,_,_) = x
 <b>let </b>snd3 (_,x,_) = x
@@ -23,10 +23,9 @@
 <b>let </b>snd4 (_,x,_,_) = x
 <b>let </b>thd4 (_,_,x,_) = x
 <b>let </b>for4 (_,_,_,x) = x
-...
 </pre>
 
-<p>Or even <a href="hackage-tuple">like this</a>:</p>
+<p>Or even <a href="https://hackage.haskell.org/package/tuple-0.3.0.2/docs/src/Data-Tuple-Update.html#Upd1">like this</a>:</p>
 
 <pre><b>instance </b>Upd1 b (a1,a2) (b,a2) <b>where
   </b>upd1 b (a1,a2) = (b,a2)
@@ -38,54 +37,55 @@
   </b>upd1 b (a1,a2,a3,a4,a5) = (b,a2,a3,a4,a5)
 <b>instance </b>Upd1 b (a1,a2,a3,a4,a5,a6) (b,a2,a3,a4,a5,a6) <b>where
   </b>upd1 b (a1,a2,a3,a4,a5,a6) = (b,a2,a3,a4,a5,a6)
-...
+<span style='background: lightgrey'>...</span>
 </pre>
 
 <p>It always made me wonder if we could do better.
 Couldn&#8217;t we come up with a more polymorphic tuple type
 for which we could write select, update, and other
 functions without the need to duplicate the implementation
-for each tuple type?!</p>
+for each tuple size?!</p>
 
 <p>There seems to be a gap in our type systems.
 We have nominal variants, and their counterparts, row-polymorphic
-variants. We have nominal records, and row-polymorphic records.
+variants. We have nominal records and row-polymorphic records.
 We have tuples. So where are all the row-polymorphic tuples?!</p>
 
 <p>Let&#8217;s employ our wishful thinking and imagine how they might
 look like.</p>
 
-<h2>Notation</h2>
+<h2>Bananan Notation</h2>
 
-<p>OCaml row-polymorphic objects type look like this:</p>
+<p>OCaml row-polymorphic object type may look like this:</p>
 
 <pre>< width : int; height : int; .. >
 </pre>
 
-<p>Where the implicit row variable (<code>..</code>) tells us that
+<p>The implicit row variable (<code>..</code>) tells us that
 more fields are allowed. So why can&#8217;t we say the same about
 tuples? Let&#8217;s use banana brackets for our imaginary
-row-polymorphic tuple.</p>
+row-polymorphic tuple:</p>
 
 <ul>
 <li><code>(| 'a, 'b |)</code> would be a two-tuple;</li>
 <li><code>(| 'a |)</code> would be a one-tuple;</li>
 <li><code>(| |)</code> would be a unit tuple;</li>
 <li><code>(| 'a, 'b, .. |)</code> would be a tuple with two elements, possibly more;</li>
-<li><code>(| 'a, .. |)</code> with at least one element, possibly more;</li>
+<li><code>(| 'a, .. |)</code>—with at least one element, possibly more;</li>
 <li><code>(| .. |)</code> would be a possibly empty tuple.</li>
 </ul>
 
-<p>Then you could write a selector function for the first
-element that would work for any tuple with at least
-one element, and other polymorphic accessor functions:</p>
+<p>Then you could write selector functions
+that work for any such tuple of appropriate size.
+For example, accessor function for the first element
+would require a tuple of size one or more:</p>
 
 <pre><b>val </b>first  : (| 'a, .. |) -> 'a
 <b>val </b>second : (| _, 'a, .. |) -> 'a
 <b>val </b>third  : (| _, _, 'a, .. |) -> 'a
 </pre>
 
-<p>As well as polymorphic update functions:</p>
+<p>Similar story with polymorphic update functions:</p>
 
 <pre><b>module </b>Update : <b>sig
   </b><b>val </b>first  : 'x -> (| 'a, .. |) -> (| 'x, .. |)
@@ -94,26 +94,26 @@ one element, and other polymorphic accessor functions:</p>
 <b>end
 </b></pre>
 
-Why not some other polymorphic functions?
+As well as other polymorphic functions:
 
 <pre><b>val </b>prepend : 'a -> (| .. |) -> (| 'a, .. |)
 <b>val </b>swap : (| 'a, 'b, .. |) -> (| 'b, 'a, .. |)
 <b>val </b>tail : (| 'a, .. |) -> (| .. |)
 </pre>
 
-<p>I am a little bit fast-and-loose with notation here.
+<p>I am a little fast-and-loose with notation here.
 We would probably need to make row variables explicit
 to be able to say that they unify on both sides of an arrow:</p>
 
 <pre><b>val </b>tail : (| 'a, .. <b>as </b>'row |) -> (| .. <b>as </b>'row |)
 </pre>
 
-<p>So what is stopping us to have such row-polymorphic tuples
-in a language like, say, OCaml?! Nothing, really!</p>
+<p>So what is stopping us from having such row-polymorphic tuples
+in a language like OCaml?! Nothing, really!</p>
 
 <h2>GADT Cortege</h2>
 
-<p>Here&#8217;s Cortege: a row-polymorphic tuple, implemented using a GADT:</p>
+<p>Here&#8217;s <em>cortege</em>: a row-polymorphic tuple, implemented here using GADT:</p>
 
 <pre><b>module </b>Cortege = <b>struct
   </b><b>type </b>_ t =
@@ -122,16 +122,16 @@ in a language like, say, OCaml?! Nothing, really!</p>
 <b>end
 </b></pre>
 
-At value-level it is a simple linked list.
-We encode the type of each tuple element inside a type-level linked list.
+At value-level, it is a simple linked list.
+We also encode the type of each tuple element inside a type-level linked list.
 We could use any type-level linked list, for example:
 
 <pre><b>type </b>nil
 <b>type </b>('head, 'tail) cons
 </pre>
 
-<p>However we instead use <code>unit</code> for nil and <code>(-&gt;)</code> for cons.
-Unit type corresponds neatly to our unit Cortege, while
+<p>However, we instead use the <code>unit</code> for nil and <code>(-&gt;)</code> for cons.
+Unit type corresponds neatly to our unit cortege, while
 the function type <code>(-&gt;)</code> is convenient because of the infix notation.</p>
 
 <p>Here&#8217;s the correspondence between our notation and the Cortege type:</p>
@@ -145,7 +145,7 @@ the function type <code>(-&gt;)</code> is convenient because of the infix notati
 </pre>
 
 <p>Since OCaml version 4.03 we can re-define <code>[]</code> and <code>(::)</code> constructors
-to overload the list notation. We use this inside of the Cortege module
+to overload the list notation. We use this inside the cortege module
 to conveniently construct our row-polymorphic tuples:</p>
 
 <pre><b>let </b>unit = Cortege.[]
@@ -160,15 +160,15 @@ to conveniently construct our row-polymorphic tuples:</p>
 <b>let </b>third  Cortege0.(_ :: _ :: x :: _) = x
 </pre>
 
-<p>And check that they work on any sufficiently wide Cortege:</p>
+<p>And check that they work on any sufficiently wide cortege:</p>
 
 <pre><b>assert </b>Cortege.(first [<b>true</b>] = <b>true</b>);
 <b>assert </b>Cortege.(first [<b>true</b>; <em>"b"</em>] = <b>true</b>);
 <b>assert </b>Cortege.(first [<b>true</b>; <em>"b"</em>; `c] = <b>true</b>);
 </pre>
 
-<p>We can also notice that Cortege allows for a one-tuple.
-Not sure if it is a good or a bad thing.</p>
+<p>Notice that one-tuple is allowed.
+Not sure if it is good or not.</p>
 
 <p>Let&#8217;s define update functions:</p>
 
@@ -197,11 +197,11 @@ As well as our miscelaneous functions:
 
 <h2>Flat Cortege</h2>
 
-<p>While with Cortege we gained a more polymorphic tuple type,
+<p>While with the GADT cortege we gained a more polymorphic tuple type,
 we lost our ability to represent a tuple with a flat array.</p>
 
-<p>However, with a little big of &#8220;magic&#8221; and unsafe casting
-we can re-implement our Cortege with a flat array type:</p>
+<p>But with a little bit of &#8220;magic&#8221; and unsafe casting
+we can re-gain our flat array representation:</p>
 
 <pre><b>module </b><b>type </b>CORTEGE = <b>sig
   </b><b>type </b>_ t
@@ -235,30 +235,129 @@ we can re-implement our Cortege with a flat array type:</p>
   <span style='background: lightgrey'>...</span>
 <b>end
 </b></pre>
+<pre>
+</pre>
 
-<p>We declare Cortege to be an int array, but behind the compiler&#8217;s
-back we unsafely coerce the values using <code>Obj.magic</code> to shape
-our heterogeneous tuples as flat arrays. To know how this works
-it is usefull to know how <a href="https://realworldocaml.org/v1/en/html/memory-representation-of-values.html">OCaml represents values at runtime</a>.</p>
+<p>We declare this cortege to be an abstract type backed by an int array.
+But behind the compiler&#8217;s back,
+we unsafely coerce the values using <code>Obj.magic</code> to fit
+our heterogeneous values into the array. To understand why this works
+it is useful to know how <a href="https://realworldocaml.org/v1/en/html/memory-representation-of-values.html">OCaml represents values at runtime</a>.</p>
 
 <p>We use the same type
 parameter structure as we did with GADT to track the types of the contained
-values, however in this case the type parameter is purely
+values, however, in this case, the type parameter is purely
 a phantom type.</p>
 
 <p>We can even use the faster <code>Array.unsafe_get</code>
-and <code>Array.unsafe_set</code> in our implementation (which avoid bounds checking),
+and <code>Array.unsafe_set</code> in our implementation (which avoid bound checks),
 because we have encoded the information about the number of
-elements in a Cortege using types.</p>
+elements in a cortege using the phantom type.</p>
 
-<p>In the end of the day, consider this implementation
-a proof-of-concept that a Cortege can be backed by a flat array.
-Not something useful in practice, like the GADT version.
+<p>At the end of the day, consider this implementation
+a proof-of-concept that a cortege can be backed by a flat array,
+but not something useful in practice (unlike the GADT version).
 Notably, the <code>Array_backed_cortege</code> fails in unsafe ways whenever
 floats are stored in it, because of OCaml&#8217;s special representation
 for float arrays.
-This could be accounted for, but I would still consider it to be
-unpractical without &#8220;literal&#8221; notation and pattern matching.</p>
+We could take that into account and fix the code,
+but I would still consider it to be
+unpractical without the &#8220;literal&#8221; notation and pattern matching.</p>
+
+<h2>Right? Left? Both!</h2>
+
+<p>We have now established that a row-polymorphic tuple can be expressed
+in OCaml type system and that it could be backed by
+a flat array. However, if it is a flat array, and not a linked list,
+why limit ourselves
+to representing the &#8220;tail&#8221; of the tuple as the row type?
+Why not the start of the tuple? Why not both?</p>
+
+<p>The row variable can stand for an unknown number of elements at
+any position of the tuple: start, middle, or tail:</p>
+
+<ul>
+<li><code>(| 'a, 'b, .. |)</code> is a cortege with at least two elements, possibly
+more on the right;</li>
+<li><code>(| .., 'a, 'b |)</code> would be a cortege with at least two elements, possibly
+more on the left;</li>
+<li><code>(| 'a, .., 'b |)</code>—with two elements, possibly more in the middle.</li>
+</ul>
+
+<p>We could write accessors for last elements:</p>
+
+<pre><b>val </b>last : (| .., 'a |) -> 'a
+<b>val </b>last_but_one : (| .., 'a, _ |) -> 'a
+</pre>
+
+<p>Update functions alike. Or consider a swap function that swaps
+the first and the last
+element of any cortege, size two or more:</p>
+
+<pre><b>val </b>swap : (| 'a, .., 'b |) -> (| 'b, .., 'a |)
+</pre>
+
+<!--
+Not completely sure if it would makes sense in general
+to have more than one tow variable: <code>(| 'a, .., 'b, .., 'c |)</code>.
+But perhaps this could be useful to concatenate two tuples:
+
+
+
+md5-85f101f36a3f2accfe9e9bd069f60a07
+
+
+-->
+
+<h2>Alternatives</h2>
+
+<p>Cortege is a solution to the problem of tuples being not flexible
+and not polymorphic enough.
+However, it could be that we are trying to solve the wrong problem.</p>
+
+<p>Consider Elm, it limits tuples to at most a three-tuple and thus forces the user
+to switch to a row-polymorphic record instead.
+PureScript doesn&#8217;t have built-in support for tuples at all in the language,
+also on purpose.</p>
+
+<p>A counterargument could be that, unlike row-polymorphic records,
+corteges have a notion of order, so would fit well with applications
+where the order is important. For example, a list of corteges can
+model tabular data, like a CSV file, without losing the information
+about the column order.</p>
+
+<p>Another argument is that a Cortege could be implemented as a flat array,
+unlike a row-polymorphic record.</p>
+
+<p>So it could be that the cortege is a language feature that overlaps too much
+with other features, like row-polymorphic records.
+Or it could be a useful practical tool, who knows.
+I recommend trying to use the GADT cortege for yourself, and over time
+together we&#8217;ll learn if it is any good.</p>
+
+<h2>Code</h2>
+
+<p>Code from this article is available in <a href="https://gist.github.com/keleshev/321294ef84ceef475ddae85809c283e4">a GitHub gist</a>.</p>
+
+<h2>Name</h2>
+
+<p><em>Cortege</em> or <em>кортеж</em> is a French-borrowed Russian word for a tuple.</p>
+
+<h2>Aknowledgements</h2>
+
+<p>Heterogeneous linked lists, like the GADT cortege, are not a new
+idea. One reference to it I could find was in
+<a href="https://github.com/ocaml/ocaml/pull/234">an OCaml compiler pull request</a>.</p>
+
+<p>Thanks to my colleague Kristian Støvring for a valuable discussion
+and for suggesting to use GADT for row-polymorphic tuples.  <a href="/" title="Home">&#9632;</a></p>
+
+<p><center markdown="1"></p>
+
+<p>⁂</p>
+
+<p><em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
+</center></p>
 
     </body>
 </html>
