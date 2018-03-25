@@ -377,7 +377,7 @@ and for suggesting to use GADT for row-polymorphic tuples.  [&#9632;](/ "Home")
 
 ⁂
 
-<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
+<em>Discuss on <a href="https://twitter.com/keleshev/status/978007606466961409">Twitter</a></em>
 </center>
 
 
