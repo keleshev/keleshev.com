@@ -1,0 +1,287 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Interpretations of Fold</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
+        <h1>Interpretations of Fold</h1>
+
+<p><center style="margin-top: -1em"><em>or<br/> Fold as a Recursion Scheme</em> </center></p>
+
+<p>It is hard to remember the parameters of fold.</p>
+
+<h2>First Interpretation</h2>
+
+<p>One interpretation of fold is that it is a way to
+apply an operation &#8220;between&#8221; each two elements in a list.
+Fold-right applies them in a right-associative manner:</p>
+
+<pre>List.fold_right (^) [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>] <em>"z"</em>
+ ⇒ (<em>"a"</em> ^ (<em>"b"</em> ^ (<em>"c"</em> ^ <em>"z"</em>)))
+</pre>
+
+<p>Fold-left applies them in a left-associative manner:</p>
+
+<pre>List.fold_left (^) <em>"z"</em> [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>]
+ ⇒ (((<em>"z"</em> ^ <em>"a"</em>) ^ <em>"b"</em>) ^ <em>"c"</em>)
+</pre>
+
+<p>It is hard to remember the parameters of fold.</p>
+
+<p>OCaml standard library has <a href="http://caml.inria.fr/pub/docs/manual-ocaml/libref/StdLabels.List.html"><code>StdLabels</code> module</a>
+with labeled versions of functions, which helps:</p>
+
+<pre><b>let </b><b>open </b>StdLabels <b>in
+</b>List.fold_right ~init:<em>"z"</em> ~f:(^) [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>]
+ ⇒ (<em>"a"</em> ^ (<em>"b"</em> ^ (<em>"c"</em> ^ <em>"z"</em>)))
+</pre>
+
+<p>Jane Street <a href="https://opensource.janestreet.com/base/">Base</a>
+uses the same labeled parameters.</p>
+
+<p>Still, it is hard to remember the parameters of fold.
+Does <code>~f</code> take the accumulator first, or a list item?</p>
+
+<h2>Second Interpretation</h2>
+
+<p>Another interpretation of fold is that it is a recursion
+scheme with each parameter being a callback for each
+variant constructor.</p>
+
+<p>Let me explain. First, let&#8217;s revisit the list type:</p>
+
+<pre><b>type </b>'a list =
+  | []
+  | (::) <b>of </b>'a * 'a list
+</pre>
+
+<p>Nil constructor (<code>[]</code>) takes no parameters.
+Cons constructor <code>(::)</code> takes two parameters:
+an element of the list and the tail.</p>
+
+<p>Now consider <code>fold_right</code> signature:</p>
+
+<pre><b>val </b>fold_right : f:('a -> 'b -> 'b) -> 'a list -> init:'b -> 'b
+</pre>
+
+<p>The <code>init</code> parameter is a value (takes no parameters).
+While <code>f</code> takes two parameters: an element of a list
+and the result of applying the fold to a tail of a list.</p>
+
+<p>The correspondence between the two parameters of fold
+and the two list constructors is clear when
+you look at the implementation:</p>
+
+<pre><b>let </b><b>rec </b>fold_right ~init ~f = <b>function
+  </b>| [] -> init
+  | head :: tail -> f head (fold_right ~init ~f tail)
+</pre>
+
+<p>The fold recurses on the tail parameter similar to
+how the list type definition is recursive in the tail
+parameter.</p>
+
+<p>Let&#8217;s rename the parameters to make the relation
+between parameters and constructors even more clear:</p>
+
+<pre><b>let </b><b>rec </b>fold ~nil ~cons = <b>function
+  </b>| [] -> nil
+  | head :: tail -> cons head (fold ~nil ~cons tail)
+</pre>
+
+<p>We use <code>nil</code> value for the nil constructor,
+<code>cons</code> callback for the cons constructor.
+Fold is called recursively on the parameter that
+is recursive in the type definition.
+The fold is dual to the type.</p>
+
+<p><em>Then how do you explain fold-left?</em></p>
+
+<p>Fold-right is the <em>natural</em> fold for list, dual to the type.
+Fold-left is an unnatural
+fold for list. It is a fold that pretends that the list
+type is defined as left-heavy tree, as opposed to
+a standard right-heavy tree. It pretends that
+the cons constructor takes <code>'a list * 'a</code> instead
+of <code>'a * 'a list</code>. Sometimes it is useful to pretend.</p>
+
+<h2>Example I: Binary Tree</h2>
+
+<p>The power and generality of fold is very well known
+for lists. Now you can get the same power for any variant data type.</p>
+
+<p>Let&#8217;s define a binary tree, a natural fold for it,
+and then implement a few functions using the fold.</p>
+
+<p>First the type:</p>
+
+<pre><b>type </b>'a t =
+  | Leaf <b>of </b>'a
+  | Node <b>of </b>'a t * 'a t
+</pre>
+
+<p>Now the fold:</p>
+
+<pre><b>let </b><b>rec </b>fold ~leaf ~node = <b>function
+  </b>| Leaf a -> leaf a
+  | Node (left, right) ->
+      node (fold ~leaf ~node left) (fold ~leaf ~node right)
+</pre>
+
+<p>The fold recurses on both branches, similar to how the
+type is defined as recursive on both node parameters.</p>
+
+<blockquote>
+  <h2>The Recipe</h2>
+  
+  <p>Here&#8217;s how to define a natural fold for your variant type.</p>
+  
+  <p>Fold takes one &#8220;callback&#8221; parameter for each variant.
+  Labelled parameters work best for this.</p>
+  
+  <p>Patter match on your variant type. For each variant constructor pattern
+  call the corresponding callback with the payload of each
+  variant constructor, if any. One exception to that are the recursive
+  values. For those, recursively call fold with the same callback parameters.</p>
+</blockquote>
+
+<p>Let&#8217;s define functional constructors. They will get
+handy later.</p>
+
+<pre><b>let </b>leaf a = Leaf a
+<b>let </b>node left right = Node (left, right)
+</pre>
+
+<p>The size of a tree is a sum of sizes of each node,
+whereas a leaf node counts as one (regardless of the value):</p>
+
+<pre><b>let </b>size = fold ~leaf:(<b>fun </b>_ -> 1) ~node:(+)
+</pre>
+
+<p>The height of a singe leaf is one (regardless of the value),
+while the height of a node is one more than the height of
+its heighest branch:</p>
+
+<pre><b>let </b>height =
+  fold ~leaf:(<b>fun </b>_ -> 1) ~node:(<b>fun </b>a b -> 1 + max a b)
+</pre>
+
+<p>Let&#8217;s define <code>to_string</code> function which serializes
+a tree as an s-expression. As a parameter it takes
+a function that knows how to serialize a leaf value.
+We pass this parameter with label punning:</p>
+
+<pre><b>let </b>to_string leaf = fold ~leaf ~node:(sprintf <em>"(<b>%s</b> <b>%s</b>)"</em>)
+</pre>
+
+<p>Let&#8217;s define and observe the relation between <code>map</code>,
+<code>bind</code>, and <code>iter</code>. The map uses the <code>leaf</code> constructor
+which we defined previously. Both the map and the bind
+pass the <code>node</code> constructor with label punning.</p>
+
+<pre><b>let </b>map f = fold ~leaf:(f >> leaf) ~node
+<b>let </b>bind f = fold ~leaf&#58;f ~node
+<b>let </b>iter f = fold ~leaf&#58;f ~node:(<b>fun </b>_ _ -> ())
+</pre>
+
+<p>Finally, <code>for_all</code> and <code>exists</code>:</p>
+
+<pre><b>let </b>for_all predicate = fold ~leaf&#58;predicate ~node:(&&)
+<b>let </b>exists predicate = fold ~leaf&#58;predicate ~node:(||)
+</pre>
+
+<p>Not all of these functions are efficient.
+For example, in a strict language like OCaml, by passing <code>(&amp;&amp;)</code> and <code>(||)</code> to
+<code>for_all</code> and <code>exists</code> (as opposed to inlining them)
+we lost the short-circuiting power.
+However, the natural fold allowed us to quickly
+build a lot of functionality, and it reveals
+interesting relations between the functions that we
+implement.</p>
+
+<h2>Example II: Compiler Pass</h2>
+
+<p>Let&#8217;s re-implement the dead code elimination pass from the
+<a href="./map-as-a-recursion-scheme-in-ocaml">previous post</a>, while using fold as our recursion
+scheme, instead of map.</p>
+
+<p>First we implement fold by following the recipe.
+Then the pass itself:</p>
+
+<pre><b>module </b>Dead_code_elimination = <b>struct
+  </b><b>open </b>Syntax
+
+  <b>let </b>pass =
+    fold ~unit ~boolean ~number ~id
+         ~divide ~sequence ~let_ ~if_:(<b>function
+      </b>| {conditional=Boolean <b>true</b>; consequence; _} ->
+          consequence
+      | {conditional=Boolean <b>false</b>; alternative; _} ->
+          alternative
+      | other -> If other)
+<b>end
+</b></pre>
+
+<p>All the punned labled parameters look kinda funny.
+We could have made them optional with default
+implementations, but then the fold type would be more
+monomorphic, being able to only return the same type it
+folds on.</p>
+
+<p>For comparison, here is original code:</p>
+
+<pre><b>module </b>Dead_code_elimination = <b>struct
+  </b><b>open </b>Syntax
+
+  <b>let </b><b>rec </b>pass = <b>function
+    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | other -> map pass other
+<b>end
+</b></pre>
+
+<p>Notice how in case of fold we did not need to recursively
+apply the pass, as the fold does it for us.
+On one hand, this saves us from mistakes:
+we can&#8217;t accidentally forget to recur in one of the
+branches. On the other hand, we loose some control:
+ability to get access to a value both before and
+after the transformation, and ability <em>not</em> to
+recur.</p>
+
+<h2>Summary</h2>
+
+<p>Fold is a powerful recursion scheme and an elegant
+tool that allows to quickly implememnt a rich
+programming interface for a variant type.</p>
+
+<p>Both natural folds and unnatural folds are useful.
+Similar to how list implements natural <code>fold_right</code>
+and unnatural <code>fold_left</code>, for my variant types
+I would often implement a natural fold called <code>fold</code>
+with labelled parameters, and one or more
+unnatural folds, like <code>fold_right</code> that pretends
+to fold a list. Often folds are useful for non-variant
+types too, like <code>Array.fold_right</code> that
+pretends that it folds a list.</p>
+
+<h2>Code</h2>
+
+<p>Full code, including the ommitted pieces for the compiler pass
+is avaialbe in a <a href="https://gist.github.com/keleshev/36ea8fd1cd27995807ab49c4da04cc67">GitHub gist</a>.  <a href="/" title="Home">&#9632;</a></p>
+
+<p><center markdown="1"></p>
+
+<p>⁂</p>
+
+<p><em>Discuss on <a href="https://twitter.com/keleshev/">Twitter</a></em>
+</center></p>
+
+    </body>
+</html>
