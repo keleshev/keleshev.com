@@ -10,34 +10,44 @@
         <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
         <h1>Interpretations of Fold</h1>
 
-<p><center style="margin-top: -1em"><em>or<br/> Fold as a Recursion Scheme</em> </center></p>
+<p><center style="margin-top: -1.2em"><em>or<br/> Fold as a Recursion Scheme</em> </center></p>
 
-<p>It is hard to remember the parameters of fold.</p>
+<p><center>2018-07-16</center></p>
+
+<p>What is <em>fold</em>? There are several ways to think about it,
+and several interpretations to explore.</p>
 
 <h2>First Interpretation</h2>
 
 <p>One interpretation of fold is that it is a way to
-apply an operation &#8220;between&#8221; each two elements in a list.
+apply an operation &#8220;between&#8221; each two consequtive elements in a list.
 Fold-right applies them in a right-associative manner:</p>
 
 <pre>List.fold_right (^) [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>] <em>"z"</em>
- ⇒ (<em>"a"</em> ^ (<em>"b"</em> ^ (<em>"c"</em> ^ <em>"z"</em>)))
+  ⇒ (<em>"a"</em> ^ (<em>"b"</em> ^ (<em>"c"</em> ^ <em>"z"</em>)))
+    ⇒ <em>"abcz"</em>
 </pre>
 
 <p>Fold-left applies them in a left-associative manner:</p>
 
 <pre>List.fold_left (^) <em>"z"</em> [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>]
- ⇒ (((<em>"z"</em> ^ <em>"a"</em>) ^ <em>"b"</em>) ^ <em>"c"</em>)
+  ⇒ (((<em>"z"</em> ^ <em>"a"</em>) ^ <em>"b"</em>) ^ <em>"c"</em>)
+    ⇒ <em>"zabc"</em>
 </pre>
 
-<p>It is hard to remember the parameters of fold.</p>
+<p>The <code>List</code> module tries to be helpful and orders
+the parameters to <code>fold_right</code> and <code>fold_left</code>
+to hint where the initial parameter goes, <code>abcz</code> vs. <code>zabc</code>.
+Still, it is hard to remember the parameters of fold.</p>
 
 <p>OCaml standard library has <a href="http://caml.inria.fr/pub/docs/manual-ocaml/libref/StdLabels.List.html"><code>StdLabels</code> module</a>
 with labeled versions of functions, which helps:</p>
 
-<pre><b>let </b><b>open </b>StdLabels <b>in
-</b>List.fold_right ~init:<em>"z"</em> ~f:(^) [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>]
- ⇒ (<em>"a"</em> ^ (<em>"b"</em> ^ (<em>"c"</em> ^ <em>"z"</em>)))
+<pre><b>open </b>StdLabels
+
+List.fold_right ~init:<em>"z"</em> ~f:(^) [<em>"a"</em>; <em>"b"</em>; <em>"c"</em>]
+  ⇒ (<em>"a"</em> ^ (<em>"b"</em> ^ (<em>"c"</em> ^ <em>"z"</em>)))
+    ⇒ <em>"abcz"</em>
 </pre>
 
 <p>Jane Street <a href="https://opensource.janestreet.com/base/">Base</a>
@@ -69,8 +79,8 @@ an element of the list and the tail.</p>
 </pre>
 
 <p>The <code>init</code> parameter is a value (takes no parameters).
-While <code>f</code> takes two parameters: an element of a list
-and the result of applying the fold to a tail of a list.</p>
+While <code>f</code> takes two parameters: an element of the list
+and the result of applying the fold to the tail of the list.</p>
 
 <p>The correspondence between the two parameters of fold
 and the two list constructors is clear when
@@ -96,18 +106,23 @@ between parameters and constructors even more clear:</p>
 <p>We use <code>nil</code> value for the nil constructor,
 <code>cons</code> callback for the cons constructor.
 Fold is called recursively on the parameter that
-is recursive in the type definition.
-The fold is dual to the type.</p>
+is recursive in the type definition.</p>
 
-<p><em>Then how do you explain fold-left?</em></p>
+<p>Now, it is easy to remember parameters of fold:</p>
 
-<p>Fold-right is the <em>natural</em> fold for list, dual to the type.
-Fold-left is an unnatural
-fold for list. It is a fold that pretends that the list
+<blockquote>
+  <p>The fold definition is dual to the type.</p>
+</blockquote>
+
+<h3>Then how do you explain fold-left?</h3>
+
+<p>While fold-right is the <em>natural</em> fold for lists, dual to the type,
+fold-left is an <em>unnatural</em>
+fold for the list type. It is a fold that pretends that the list
 type is defined as left-heavy tree, as opposed to
 a standard right-heavy tree. It pretends that
 the cons constructor takes <code>'a list * 'a</code> instead
-of <code>'a * 'a list</code>. Sometimes it is useful to pretend.</p>
+of <code>'a * 'a list</code>. Sometimes it is useful to pretend, as we&#8217;ll see soon.</p>
 
 <h2>Example I: Binary Tree</h2>
 
@@ -117,14 +132,14 @@ for lists. Now you can get the same power for any variant data type.</p>
 <p>Let&#8217;s define a binary tree, a natural fold for it,
 and then implement a few functions using the fold.</p>
 
-<p>First the type:</p>
+<p>First, the type:</p>
 
 <pre><b>type </b>'a t =
   | Leaf <b>of </b>'a
   | Node <b>of </b>'a t * 'a t
 </pre>
 
-<p>Now the fold:</p>
+<p>Now, the fold:</p>
 
 <pre><b>let </b><b>rec </b>fold ~leaf ~node = <b>function
   </b>| Leaf a -> leaf a
@@ -136,14 +151,14 @@ and then implement a few functions using the fold.</p>
 type is defined as recursive on both node parameters.</p>
 
 <blockquote>
-  <h2>The Recipe</h2>
+  <h3>The Recipe</h3>
   
   <p>Here&#8217;s how to define a natural fold for your variant type.</p>
   
   <p>Fold takes one &#8220;callback&#8221; parameter for each variant.
   Labelled parameters work best for this.</p>
   
-  <p>Patter match on your variant type. For each variant constructor pattern
+  <p>Pattern-match on your variant type. For each constructor pattern,
   call the corresponding callback with the payload of each
   variant constructor, if any. One exception to that are the recursive
   values. For those, recursively call fold with the same callback parameters.</p>
@@ -156,7 +171,9 @@ handy later.</p>
 <b>let </b>node left right = Node (left, right)
 </pre>
 
-<p>The size of a tree is a sum of sizes of each node,
+<p>Now, let&#8217;s get down to business.</p>
+
+<p>The size of a tree is the sum of the sizes of each node,
 whereas a leaf node counts as one (regardless of the value):</p>
 
 <pre><b>let </b>size = fold ~leaf:(<b>fun </b>_ -> 1) ~node:(+)
@@ -202,6 +219,25 @@ However, the natural fold allowed us to quickly
 build a lot of functionality, and it reveals
 interesting relations between the functions that we
 implement.</p>
+
+<h3>It&#8217;s useful to pretend</h3>
+
+<p>Let&#8217;s implement <code>fold_right</code> for our binary tree by pretending
+that it is a right-heavy linked list:</p>
+
+<pre><b>let </b><b>rec </b>fold_right ~f ~init = <b>function
+  </b>| Leaf a -> f a init
+  | Node (left, right) ->
+      fold_right ~f ~init:(fold_right ~f ~init right) left
+</pre>
+
+<p>This allows us to express some list-centric functions more
+naturally:</p>
+
+<pre><b>let </b>to_list = fold_right ~f<em>:List</em>.cons ~init<em>:[]</em>
+
+<b>let </b>map_to_list f = fold_right ~f:(f >> List.cons) ~init<em>:[]</em>
+</pre>
 
 <h2>Example II: Compiler Pass</h2>
 
@@ -255,6 +291,9 @@ ability to get access to a value both before and
 after the transformation, and ability <em>not</em> to
 recur.</p>
 
+<!-- Note, there are more recursion schemes than just
+<code>map</code> and <code>fold</code>. -->
+
 <h2>Summary</h2>
 
 <p>Fold is a powerful recursion scheme and an elegant
@@ -262,25 +301,25 @@ tool that allows to quickly implememnt a rich
 programming interface for a variant type.</p>
 
 <p>Both natural folds and unnatural folds are useful.
-Similar to how list implements natural <code>fold_right</code>
+Similar to how lists implement natural <code>fold_right</code>
 and unnatural <code>fold_left</code>, for my variant types
 I would often implement a natural fold called <code>fold</code>
 with labelled parameters, and one or more
-unnatural folds, like <code>fold_right</code> that pretends
+unnatural folds, like <code>fold_right</code> which pretends
 to fold a list. Often folds are useful for non-variant
-types too, like <code>Array.fold_right</code> that
+types too, like the <code>Array.fold_right</code> that
 pretends that it folds a list.</p>
 
 <h2>Code</h2>
 
 <p>Full code, including the ommitted pieces for the compiler pass
-is avaialbe in a <a href="https://gist.github.com/keleshev/36ea8fd1cd27995807ab49c4da04cc67">GitHub gist</a>.  <a href="/" title="Home">&#9632;</a></p>
+is available in a <a href="https://gist.github.com/keleshev/36ea8fd1cd27995807ab49c4da04cc67">GitHub gist</a>.  <a href="/" title="Home">&#9632;</a></p>
 
 <p><center markdown="1"></p>
 
 <p>⁂</p>
 
-<p><em>Discuss on <a href="https://twitter.com/keleshev/">Twitter</a></em>
+<p><em>Follow me on <a href="https://twitter.com/keleshev/">Twitter</a></em>
 </center></p>
 
     </body>

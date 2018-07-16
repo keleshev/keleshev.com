@@ -1,30 +1,39 @@
 Interpretations of Fold
 =======================
 
-<center style="margin-top: -1em"><em>or<br/> Fold as a Recursion Scheme</em> </center>
+<center style="margin-top: -1.2em"><em>or<br/> Fold as a Recursion Scheme</em> </center>
+
+<center>2018-07-16</center>
 
 
 
-It is hard to remember the parameters of fold.
+What is *fold*? There are several ways to think about it,
+and several interpretations to explore.
 
 ## First Interpretation
+
 One interpretation of fold is that it is a way to
-apply an operation "between" each two elements in a list.
+apply an operation "between" each two consequtive elements in a list.
 Fold-right applies them in a right-associative manner:
 
 ```ocaml
 List.fold_right (^) ["a"; "b"; "c"] "z"
- ⇒ ("a" ^ ("b" ^ ("c" ^ "z")))
+  ⇒ ("a" ^ ("b" ^ ("c" ^ "z")))
+    ⇒ "abcz"
 ```
 
 Fold-left applies them in a left-associative manner:
 
 ```ocaml
 List.fold_left (^) "z" ["a"; "b"; "c"]
- ⇒ ((("z" ^ "a") ^ "b") ^ "c")
+  ⇒ ((("z" ^ "a") ^ "b") ^ "c")
+    ⇒ "zabc"
 ```
 
-It is hard to remember the parameters of fold.
+The `List` module tries to be helpful and orders
+the parameters to `fold_right` and `fold_left`
+to hint where the initial parameter goes, `abcz` vs. `zabc`.
+Still, it is hard to remember the parameters of fold.
 
 OCaml standard library has [`StdLabels` module][stdlabels]
 with labeled versions of functions, which helps:
@@ -32,9 +41,11 @@ with labeled versions of functions, which helps:
 [stdlabels]: http://caml.inria.fr/pub/docs/manual-ocaml/libref/StdLabels.List.html
 
 ```ocaml
-let open StdLabels in
+open StdLabels
+
 List.fold_right ~init:"z" ~f:(^) ["a"; "b"; "c"]
- ⇒ ("a" ^ ("b" ^ ("c" ^ "z")))
+  ⇒ ("a" ^ ("b" ^ ("c" ^ "z")))
+    ⇒ "abcz"
 ```
 
 Jane Street [Base](https://opensource.janestreet.com/base/)
@@ -68,8 +79,8 @@ val fold_right : f:('a -> 'b -> 'b) -> 'a list -> init:'b -> 'b
 ```
 
 The `init` parameter is a value (takes no parameters).
-While `f` takes two parameters: an element of a list
-and the result of applying the fold to a tail of a list.
+While `f` takes two parameters: an element of the list
+and the result of applying the fold to the tail of the list.
 
 The correspondence between the two parameters of fold
 and the two list constructors is clear when
@@ -98,17 +109,22 @@ We use `nil` value for the nil constructor,
 `cons` callback for the cons constructor.
 Fold is called recursively on the parameter that
 is recursive in the type definition.
-The fold is dual to the type.
 
-*Then how do you explain fold-left?*
+Now, it is easy to remember parameters of fold:
 
-Fold-right is the _natural_ fold for list, dual to the type.
-Fold-left is an unnatural
-fold for list. It is a fold that pretends that the list
+> The fold definition is dual to the type.
+
+
+
+### Then how do you explain fold-left?
+
+While fold-right is the _natural_ fold for lists, dual to the type,
+fold-left is an *unnatural*
+fold for the list type. It is a fold that pretends that the list
 type is defined as left-heavy tree, as opposed to
 a standard right-heavy tree. It pretends that
 the cons constructor takes `'a list * 'a` instead
-of `'a * 'a list`. Sometimes it is useful to pretend.
+of `'a * 'a list`. Sometimes it is useful to pretend, as we'll see soon.
 
 ## Example I: Binary Tree
 
@@ -118,7 +134,7 @@ for lists. Now you can get the same power for any variant data type.
 Let's define a binary tree, a natural fold for it,
 and then implement a few functions using the fold.
 
-First the type:
+First, the type:
 
 ```ocaml
 type 'a t =
@@ -126,7 +142,7 @@ type 'a t =
   | Node of 'a t * 'a t
 ```
 
-Now the fold:
+Now, the fold:
 
 ```ocaml
 let rec fold ~leaf ~node = function
@@ -138,14 +154,14 @@ let rec fold ~leaf ~node = function
 The fold recurses on both branches, similar to how the
 type is defined as recursive on both node parameters.
 
-> ## The Recipe
+> ### The Recipe
 >
 > Here's how to define a natural fold for your variant type.
 >
 > Fold takes one "callback" parameter for each variant.
 > Labelled parameters work best for this.
 >
-> Patter match on your variant type. For each variant constructor pattern
+> Pattern-match on your variant type. For each constructor pattern,
 > call the corresponding callback with the payload of each
 > variant constructor, if any. One exception to that are the recursive
 > values. For those, recursively call fold with the same callback parameters.
@@ -159,7 +175,9 @@ let leaf a = Leaf a
 let node left right = Node (left, right)
 ```
 
-The size of a tree is a sum of sizes of each node,
+Now, let's get down to business.
+
+The size of a tree is the sum of the sizes of each node,
 whereas a leaf node counts as one (regardless of the value):
 
 ```ocaml
@@ -211,6 +229,26 @@ build a lot of functionality, and it reveals
 interesting relations between the functions that we
 implement.
 
+### It's useful to pretend
+
+Let's implement `fold_right` for our binary tree by pretending
+that it is a right-heavy linked list:
+
+```ocaml
+let rec fold_right ~f ~init = function
+  | Leaf a -> f a init
+  | Node (left, right) ->
+      fold_right ~f ~init:(fold_right ~f ~init right) left
+```
+
+This allows us to express some list-centric functions more
+naturally:
+
+```ocaml
+let to_list = fold_right ~f:List.cons ~init:[]
+
+let map_to_list f = fold_right ~f:(f >> List.cons) ~init:[]
+```
 
 ## Example II: Compiler Pass
 
@@ -268,6 +306,9 @@ ability to get access to a value both before and
 after the transformation, and ability *not* to
 recur.
 
+<!-- Note, there are more recursion schemes than just
+`map` and `fold`. -->
+
 ## Summary
 
 Fold is a powerful recursion scheme and an elegant
@@ -275,19 +316,19 @@ tool that allows to quickly implememnt a rich
 programming interface for a variant type.
 
 Both natural folds and unnatural folds are useful.
-Similar to how list implements natural `fold_right`
+Similar to how lists implement natural `fold_right`
 and unnatural `fold_left`, for my variant types
 I would often implement a natural fold called `fold`
 with labelled parameters, and one or more
-unnatural folds, like `fold_right` that pretends
+unnatural folds, like `fold_right` which pretends
 to fold a list. Often folds are useful for non-variant
-types too, like `Array.fold_right` that
+types too, like the `Array.fold_right` that
 pretends that it folds a list.
 
 ## Code
 
 Full code, including the ommitted pieces for the compiler pass
-is avaialbe in a [GitHub gist][gist].  [&#9632;](/ "Home")
+is available in a [GitHub gist][gist].  [&#9632;](/ "Home")
 
 [gist]: https://gist.github.com/keleshev/36ea8fd1cd27995807ab49c4da04cc67
 
@@ -296,7 +337,7 @@ is avaialbe in a [GitHub gist][gist].  [&#9632;](/ "Home")
 
 ⁂
 
-<em>Discuss on <a href="https://twitter.com/keleshev/">Twitter</a></em>
+<em>Follow me on <a href="https://twitter.com/keleshev/">Twitter</a></em>
 </center>
 
 
