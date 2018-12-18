@@ -55,7 +55,7 @@ class Highlighter(object):
         return node.text.lstrip('!')
 
     def string(self, node, children):
-        '''string = ~"[a-z]"? ('"' ~'[^"]*' '"')'''
+        '''string = ~"[a-z]"? ('"' ~'[^" ]*' '"')'''
         text = node.text.replace('%d', '<b>%d</b>').replace('%s', '<b>%s</b>')
         return '<em>%s</em>' % text
 

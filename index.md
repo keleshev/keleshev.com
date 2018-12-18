@@ -7,7 +7,8 @@ Blog
 ----
 
 * 2018
-  * [Interpretations of Fold](interpretations-of-fold)
+  * [Point-free Pattern Matching](/point-free-pattern-matching)
+  * [Interpretations of Fold](/interpretations-of-fold)
   * [Cortege: a Row-polymorphic tuple](cortege-a-row-polymorphic-tuple)
   * [Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml)
   * [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
