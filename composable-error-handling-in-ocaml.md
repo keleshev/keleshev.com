@@ -367,7 +367,7 @@ We specifically annotated
 our functions with `[> error]` to signify that this
 error type can unify with "larger" polymorphic variants.
 
-> *There’s more to polymorphic variants, but it’s ourside of scope for this
+> *There’s more to polymorphic variants, but it’s outside of scope for this
 > article. You will find links to resources about polymorphic variants below.*
 
 Now look, if you compose just two functions, parser and validator:
