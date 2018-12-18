@@ -107,7 +107,7 @@ For non-recursive data types, *case* and *fold* are the same function.
 ## Case for Abstract Types
 
 There is a different use-case for *case*:
-to expose a pattern matching -like facility for abstract types.
+to expose a pattern-matching-like facility for abstract types.
 For example, we can re-define our original `Zero_one_many.t`
 type as an abstract type with a different implementation:
 
