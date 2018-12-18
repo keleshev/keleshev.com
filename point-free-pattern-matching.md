@@ -89,7 +89,7 @@ let to_string =
   case ~zero:&quot;(zero)&quot; ~one&colon;id ~many:(String.concat &quot;, &quot;)
 ```
 
-The difference is that for functions we can perform
+The difference is that for functions we can perform the
 [η-conversion](https://en.wikipedia.org/wiki/Lambda_calculus#η-conversion)
 to make
 the definition more concise, and in many—*but not all!*—cases, more readable.
@@ -107,7 +107,7 @@ For non-recursive data types, *case* and *fold* are the same function.
 ## Case for Abstract Types
 
 There is a different use-case for *case*:
-to expose a pattern-matching-like facility for abstract types.
+to expose a pattern matching -like facility for abstract types.
 For example, we can re-define our original `Zero_one_many.t`
 type as an abstract type with a different implementation:
 

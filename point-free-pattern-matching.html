@@ -86,7 +86,7 @@ of case analysis using labeled parameters:</p>
   case ~zero:&quot;(zero)&quot; ~one&colon;id ~many:(String.concat &quot;, &quot;)
 </pre>
 
-<p>The difference is that for functions we can perform
+<p>The difference is that for functions we can perform the
 <a href="https://en.wikipedia.org/wiki/Lambda_calculus#η-conversion">η-conversion</a>
 to make
 the definition more concise, and in many—<em>but not all!</em>—cases, more readable.</p>
@@ -102,7 +102,7 @@ For non-recursive data types, <em>case</em> and <em>fold</em> are the same funct
 <h2>Case for Abstract Types</h2>
 
 <p>There is a different use-case for <em>case</em>:
-to expose a pattern-matching-like facility for abstract types.
+to expose a pattern matching -like facility for abstract types.
 For example, we can re-define our original <code>Zero_one_many.t</code>
 type as an abstract type with a different implementation:</p>
 
