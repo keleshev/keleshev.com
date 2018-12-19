@@ -155,8 +155,6 @@ module Parity = struct
 end
 
 module Test = struct
-  open Printf
-
   Parity.case 42
     ~even:(fun n -> printf &quot;%d is even\n&quot; n)
     ~odd:(fun n -> printf &quot;%d is odd\n&quot; n);

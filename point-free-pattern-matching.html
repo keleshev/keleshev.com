@@ -148,9 +148,7 @@ decide if it is even or odd:</p>
 <b>end
 
 </b><b>module </b>Test = <b>struct
-  </b><b>open </b>Printf
-
-  Parity.case 42
+  </b>Parity.case 42
     ~even:(<b>fun </b>n -> printf &quot;%d is even\n&quot; n)
     ~odd:(<b>fun </b>n -> printf &quot;%d is odd\n&quot; n);
 
