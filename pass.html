@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <script src="/pass.js"></script>
+    <script>
+      var generate_password = function () {
+        var service_name = document.getElementsByName('service')[0].value;
+        var master_password = document.getElementsByName('master-password')[0].value;
+        var password = PassKeleshevCom.run(service_name + ' ' + master_password + '\n');
+        document.getElementsByName('password')[0].value = password;
+
+      }
+
+    </script>
+    <form action=''>
+      <input name="service" placeholder="Service name" type="text"
+        onkeypress='generate_password()'
+        required autofocus>
+      <input name="master-password" type="password" placeholder="Master password"
+        onkeypress='generate_password()'
+        required >
+      <input name="password" readonly value="hai">
+    </form>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
