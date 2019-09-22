@@ -136,7 +136,7 @@ as the recursion scheme.</p>
 
 <p>In the end, we combined the passes using function composition.</p>
 
-<h2>Manual fusion</h2>
+<h2>Manual Fusion</h2>
 
 <p>Now, let&#8217;s try to combine the three passes into a single traversal manually.</p>
 
@@ -168,7 +168,7 @@ toy language:
 <code>10 / 2</code>, and then separately run <code>Constant_propagation.pass</code> to get the
 result—<code>5</code>. At the same time, <code>Manually_fused.pass</code> dives straight into
 dead code elimination, without reconsiderations and ends up with <code>10 / 2</code>
-as a result.</p>
+as the result.</p>
 
 <p>However, both functions are not perfect and do not uncover all the
 optimization opportunities. For example, consider a syntax tree for

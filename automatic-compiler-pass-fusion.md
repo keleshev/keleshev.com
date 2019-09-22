@@ -133,7 +133,7 @@ end
 
 In the end, we combined the passes using function composition.
 
-## Manual fusion
+## Manual Fusion
 
 Now, let's try to combine the three passes into a single traversal manually.
 
@@ -167,7 +167,7 @@ The `Not_fused.pass` will first run `Dead_code_elimination.pass` to obtain
 `10 / 2`, and then separately run `Constant_propagation.pass` to get the
 result—`5`. At the same time, `Manually_fused.pass` dives straight into
 dead code elimination, without reconsiderations and ends up with `10 / 2`
-as a result.
+as the result.
 
 However, both functions are not perfect and do not uncover all the
 optimization opportunities. For example, consider a syntax tree for
