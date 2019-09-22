@@ -1,0 +1,314 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Automatic Compiler Pass Fusion</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
+        <h1>Automatic Compiler Pass Fusion</h1>
+
+<p><center>2019-21-09</center></p>
+
+<p>On the one hand, when we write a compiler we want to split it into many
+compiler passes to make each pass more tractable and testable. On the other
+hand, we want to minimize the number of AST traversals to improve performance.
+Automatic pass fusion is about combining several passes into one traversal to
+address both concerns. This article presents one way to do that.</p>
+
+<p>A previous post,
+<a href="./map-as-a-recursion-scheme-in-ocaml">map as a recursion scheme</a>,
+showed how to use the map function
+to reduce boilerplate when writing compiler passes. In this post, we build upon
+that work, including the toy language and the AST type, that we refer here as
+<code>t</code>.</p>
+
+<p>The language is as follows:</p>
+
+<p style="padding-left: 3.0em; text-indent: -1.25em" >
+<em>e&nbsp;</em> → <code>(</code><em>e</em><code>)</code><br/>
+  |<code> ()</code> <br/>
+  |<b><code> true </code></b>|<b><code> false</code><br/> </b>
+  |<code> 0 </code>|<code> 1 </code>|<code> 2 </code>|<code> </code>…<br/>
+  |<code> </code><em>id</em><br/>
+  |<code> </code><em>e</em><code> / </code><em>e</em><br/>
+  |<code> </code><em>e</em><code>; </code><em>e</em><br/>
+  |<b><code> let </code></b><em>id</em><code> = </code><em>e</em><b><code> in </code></b><em>e</em><br/>
+  |<b><code> if </code></b><em>e</em><b><code> then </code></b><em>e</em><b><code> else </code></b><em>e</em>
+</p>
+
+<p>Here is the type we use to represent its syntax:</p>
+
+<pre><b>type </b>t =
+  | Unit
+  | Boolean <b>of </b>bool
+  | Number <b>of </b>int
+  | Id <b>of </b>string
+  | Divide <b>of </b>t * t
+  | Sequence <b>of </b>t * t
+  | Let <b>of </b>{id: string; value: t; body: t}
+  | If <b>of </b>{conditional: t; consequence: t; alternative: t}
+</pre>
+
+<h2>Overview</h2>
+
+<p>We’ll take three language transformations to create motivation for our passes.
+Then we’ll implement them in three different ways:</p>
+
+<ul>
+<li>First, as three separate passes doing three traversals.</li>
+<li>Then, as one pass that is fused manually.</li>
+<li>Last, we’ll try our automatic fusion technique.</li>
+</ul>
+
+<p>As we go, we’ll compare the code, and in the end, we’ll compare the performance
+too.</p>
+
+<h2>Transformations</h2>
+
+<blockquote>
+  <p>If you’ve read this blog before, then you are familiar with these
+  transformations. We&#8217;ve used them before.</p>
+</blockquote>
+
+<p>Our first transformation is <em>dead code elimination</em>. It removes redundant
+branches of the if statement, in case the condition is hard-coded:</p>
+
+<pre><b>if </b><b>true  </b><b>then </b>x <b>else </b>y  ⇒  x
+<b>if </b><b>false </b><b>then </b>x <b>else </b>y  ⇒  y
+</pre>
+
+<p>Next one is <em>constant propagation</em> where we compute statically
+known fractions, for example:</p>
+
+<pre>42 / 2  ⇒  21
+</pre>
+
+<p>Next is <em>removing redundant let</em>, in case a let binding is
+used immediately in its own body:</p>
+
+<pre><b>let </b>x = y <b>in </b>x  ⇒  y
+</pre>
+
+<h2>No Fusion</h2>
+
+<p>First, let&#8217;s implement the three passes separately, using
+the map function
+as the recursion scheme.</p>
+
+<pre><b>module </b>Not_fused = <b>struct
+  </b><b>module </b>Dead_code_elimination = <b>struct
+    </b><b>let </b><b>rec </b>pass = <b>function
+      </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+          pass consequence
+      | If {conditional=Boolean <b>false</b>; alternative; _} ->
+          pass alternative
+      | other ->
+          map pass other
+  <b>end
+
+  </b><b>module </b>Constant_propagation = <b>struct
+    </b><b>let </b><b>rec </b>pass = <b>function
+      </b>| Divide (Number n, Number m) when m <> 0 ->
+          pass (Number (n / m))
+      | other ->
+          map pass other
+  <b>end
+
+  </b><b>module </b>Remove_redundant_let = <b>struct
+    </b><b>let </b><b>rec </b>pass = <b>function
+      </b>| Let {name; value; body=Name n} when n = name ->
+          pass value
+      | other ->
+          map pass other
+  <b>end
+
+  </b><b>let </b>pass t =
+    Remove_redundant_let.pass
+      (Constant_propagation.pass
+        (Dead_code_elimination.pass t))
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>In the end, we combined the passes using function composition.</p>
+
+<h2>Manual fusion</h2>
+
+<p>Now, let&#8217;s try to combine the three passes into a single traversal manually.</p>
+
+<pre><b>module </b>Manually_fused = <b>struct
+  </b><b>let </b><b>rec </b>pass = <b>function
+    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+        pass consequence
+    | If {conditional=Boolean <b>false</b>; alternative; _} ->
+        pass alternative
+    | Divide (Number n, Number m) when m <> 0 ->
+        pass (Number (n / m))
+    | Let {name; value; body=Name n} when n = name ->
+        pass value
+    | other ->
+        map pass other
+<b>end
+</b></pre>
+
+Note that <code>Not_fused.pass</code> and <code>Manually_fused.pass</code> are not the same
+function. Since <code>Not_fused.pass</code> works in three separate passes, an earlier
+pass might uncover more optimization opportunities for the next passes.
+For example, consider a syntax tree corresponding to a fragment of our
+toy language:
+
+<pre>10 / (<b>if </b><b>true </b><b>then </b>2 <b>else </b>5)
+</pre>
+
+<p>The <code>Not_fused.pass</code> will first run <code>Dead_code_elimination.pass</code> to obtain
+<code>10 / 2</code>, and then separately run <code>Constant_propagation.pass</code> to get the
+result—<code>5</code>. At the same time, <code>Manually_fused.pass</code> dives straight into
+dead code elimination, without reconsiderations and ends up with <code>10 / 2</code>
+as a result.</p>
+
+<p>However, both functions are not perfect and do not uncover all the
+optimization opportunities. For example, consider a syntax tree for
+the following fragment:</p>
+
+<pre>10 / (<b>let </b>x = 2 <b>in </b>x)
+</pre>
+
+<p>Both <code>Not_fused.pass</code> and <code>Manually_fused.pass</code> evaluate this to <code>10 / 2</code>.
+So both miss some optimizations, and the only way to cover them all is to
+call the function repeatedly until a fixpoint value emerges.</p>
+
+<h2>Automatic Fusion</h2>
+
+<p>Here&#8217;s an implementation style that allows writing the three passes separately,
+and then fuse them into a single traversal.</p>
+
+<pre><b>module </b>Fused = <b>struct
+  </b><b>module </b>Dead_code_elimination = <b>struct
+    </b><b>let </b>pass first_pass next_pass = <b>function
+      </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
+          first_pass consequence
+      | If {conditional=Boolean <b>false</b>; alternative; _} ->
+          first_pass alternative
+      | other ->
+          next_pass other
+  <b>end
+
+  </b><b>module </b>Constant_propagation = <b>struct
+    </b><b>let </b>pass first_pass next_pass = <b>function
+      </b>| Divide (Number n, Number m) when m <> 0 ->
+          first_pass (Number (n / m))
+      | other ->
+          next_pass other
+  <b>end
+
+  </b><b>module </b>Remove_redundant_let = <b>struct
+    </b><b>let </b>pass first_pass next_pass = <b>function
+      </b>| Let {name; value; body=Name n} when n = name ->
+          first_pass value
+      | other ->
+          next_pass other
+  <b>end
+
+  </b><em>(* Fuse the passes together *)</em>
+  <b>let </b><b>rec </b>pass t =
+    (Dead_code_elimination.pass pass
+      (Constant_propagation.pass pass
+        (Remove_redundant_let.pass pass
+          (map pass)))) t
+<b>end
+</b></pre>
+<pre>
+</pre>
+
+<p>Here, each sub-pass, instead of being directly recursive, relies on open
+recursion. Each takes two parameters: <code>first_pass</code> and <code>next_pass</code>. If none of
+the patterns in the pass match, then it delegates the work to the <code>next_pass</code>.
+However, if the pass needs to recur on a nested expression, it calls
+<code>first_pass</code>, to re-start the pipeline.</p>
+
+<p>The sub-passes are combined as follows. Each consecutive pass is the next one&#8217;s
+<code>next_pass</code> argument, ending with <code>map pass</code> which ties the first recursive knot.
+The combined pass is also recursively passed to each function as the <code>first_pass</code>
+parameter, tying the second recursive knot.</p>
+
+<p>Fixpoint combinator and function composition operator could be
+used here, but they affect the performance of the resulting
+pass (probably due to closure allocation after partial application).</p>
+
+<h2>Proof</h2>
+
+<p>The resulting function <code>Fused.pass</code> is identical to <code>Manually_fused.pass</code>
+for all inputs. We can use <a href="https://www.imandra.ai/">Imandra</a>
+proof assistant to check this:</p>
+
+<pre><em>#use "fusion.ml"
+</em>
+theorem our_fusion_is_the_same_as_manual_fusion x =
+  Fused.pass x = Manually_fused.pass x
+[@@auto]
+</pre>
+
+<p>When running this, Imandra will print several pages of proofs,
+and in the end will conclude:</p>
+
+<p><code>
+[✓] Theorem proved.
+</code></p>
+
+<h2>Benchmark</h2>
+
+<p>After generating <code>100_000_000</code> random syntax trees and measuring
+the total time of applying the three different techniques, we get the
+results in seconds:</p>
+
+<ul>
+<li><code>Not_fused.pass</code>—11.803 seconds</li>
+<li><code>Manually_fused.pass</code>—4.669 seconds</li>
+<li><code>Fused.pass</code>—6.337 seconds</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>We can see that our pass fusion technique achieves most of
+the performance benefit of manual pass fusion, while maintaining
+independent implementation of each sub-pass.</p>
+
+<p>Having independent sub-passes allows a hypothetical pass manager
+to arrange them differently, depending on the optimization level.
+For a fast unoptimized build, it can fuse as many passes as possible
+into one pipeline. For slower optimized builds it can instantiate
+each sub-pass into a full-fledged pass and even run some of them
+repeatedly.</p>
+
+<p>Another benefit is that each sub-pass can be tested in isolation.</p>
+
+<h2>Code</h2>
+
+<p>The <a href="https://gist.github.com/keleshev/3529129da1bd03b4e9e3e983434cedd8">gist</a>
+contains the code from this article together with additional
+testing and benchmarking code.</p>
+
+<h2>Futher work</h2>
+
+<p>All passes that we discussed have the form <code>t -&gt; t</code>.
+It would be interesting to see how this technique fairs
+for passes of form <code>t -&gt; t m</code> for some monad <code>m</code>, or for passes
+from one AST to a different one.</p>
+
+<p>The passes we discussed used disjoint patterns.
+It would be interesting to see if this could be adapted for
+passes with overlapping patterns.  <a href="/" title="Home">&#9632;</a></p>
+
+<p><center markdown="1"></p>
+
+<p>⁂</p>
+
+<p><em>Follow me on <a href="https://twitter.com/keleshev/">Twitter</a></em>
+</center></p>
+
+    </body>
+</html>

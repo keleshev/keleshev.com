@@ -103,6 +103,8 @@ h1 {
 h2, h3 {
     font-style: italic;
 }
+
+h2 { margin-top: 2em }
 /*
 #home {
   padding: 10px;

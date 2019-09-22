@@ -6,10 +6,12 @@ Vladimir Keleshev
 Blog
 ----
 
+* 2019
+  * [Automatic Compiler Pass Fusion](/automatic-compiler-pass-fusion)
 * 2018
   * [Point-free Pattern Matching](/point-free-pattern-matching)
   * [Interpretations of Fold](/interpretations-of-fold)
-  * [Cortege: a Row-polymorphic tuple](cortege-a-row-polymorphic-tuple)
+  * [Cortege: a Row-polymorphic Tuple](cortege-a-row-polymorphic-tuple)
   * [Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml)
   * [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
 * 2015
