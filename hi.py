@@ -1,5 +1,13 @@
 from parsimonious.grammar import Grammar
 
+arm = '''arm
+push mov ldr add sub pop cmp moveq movne bl bleq mul b beq
+'''.split()
+
+js = '''js
+function let if while else const throw catch for import return
+class static constructor return this
+'''.split()
 
 python2 = '''
 and as assert break class continue def del elif else except exec
@@ -72,7 +80,9 @@ class Highlighter(object):
         return '<em>%s</em>' % node.text
 
     def comment(self, node, children):
-        r'comment = ("#" ~".*" "\n") / ("(*" ~".*?\*\)"s)'
+        r'comment = (("#"/"//") ~".*" "\n") / ("(*" ~".*?\*\)"s)'
+        if self.keywords == arm:
+            return node.text
         return '<em>%s</em>' % node.text
 
     def glyph(self, node, children):

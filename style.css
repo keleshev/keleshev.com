@@ -84,7 +84,7 @@ content: '⤴'; '⇗';
     100% { -webkit-transform: rotate(360deg);}
 }
 #home a {
-    font-size: 200px;
+    font-size: 72px;
     border: 0;
 }
 
