@@ -285,3 +285,5 @@ be available even sooner.
 
 
 <center><img src=./dragon.jpg /></center>
+
+<center><em>Illustration by [@PbKatiuska](https://twitter.com/PbKatiuska)</em></center>
