@@ -1,0 +1,292 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Compiling to Assembly from Scratch</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <center><span id='home'><a title='Home' href='/'>☰</a></span></center>
+<!--&#9632;-->
+        <p><br/>
+<center><img src=./dragon.jpg width=168 height=228 /></center></p>
+
+<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
+
+<p><title>Compiling to Assembly from Scratch — Vladimir Keleshev</title></p>
+
+<p><center>— the book —<br/></p>
+
+<p><em>ETA: Summer 2020</em></center></p>
+
+<p><big><em>So, you&#8217;ve been trying to learn how compilers and programming languages work?</em> </big></p>
+
+<p>Perhaps, you&#8217;ve learned about compiling to JavaScript,
+or about building an interpreter? Or, maybe, about
+compiling to bytecode? All good steps.</p>
+
+<p><em>But there&#8217;s a tension building up.</em></p>
+
+<p>Because it feels a bit like cheating.
+Because you know that somewhere, somehow, the code you write
+is translated to assembly instructions. To the machine language.
+That&#8217;s where the rubber hits the road. That&#8217;s where it gets hot.
+And, oh-so-many resources are hesitant to cover this part.
+But not this book.</p>
+
+<p><big>
+This <em>small</em> book will show you in detail
+how you can build a compiler from scratch
+that goes all the way from <em>source</em> to <em>assembly</em>.
+</big></p>
+
+<p>The example code is written in <strong>TypeScript</strong>, a dialect of <strong>JavaScript</strong>.
+The book describes the design and implementation of a compiler that emits
+32-bit <strong>ARM</strong> assembly instructions.</p>
+
+<h2>Why ARM?</h2>
+
+<p>In many ways, the ARM instruction set is what makes this book possible.</p>
+
+<p>Compared to Intel x86-64, the ARM instruction set is a work of art.</p>
+
+<p>Intel x86-64 is the result of evolution from an 8-bit processor,
+to a 16-bit one, then to a 32-bit one, and finally to a 64-bit one.
+At each step of the evolution, it accumulated complexity and cruft.
+At each step, it tried to satisfy conflicting requirements.</p>
+
+<ul>
+<li>Intel x86-64 is based on <em>Complex Instruction Set Architecture</em> (CISC),
+which was initially optimized for writing assembly by hand.</li>
+<li>ARM, on the other hand, is based on <em>Reduced Instruction Set Architecture</em> (RISC),
+which is optimized for writing compilers.</li>
+</ul>
+
+<p><em>Guess which one is an easier target for a compiler writer?</em></p>
+
+<p>If this book targeted Intel x86-64 instead of ARM, it would have been three times as long
+and&hairsp;—&hairsp;more likely&hairsp;—&hairsp;never written.
+Also, with 160 <em>billion</em> devices shipped, we better get used to the fact
+that ARM is the dominant instruction set architecture today.</p>
+
+<p>In other words… ARM is a good start.
+After learning it, you will be better equipped
+for moving to x86-64 or the new ARM64.</p>
+
+<p><em>Will you be able to run the code your compiler produces?</em></p>
+
+<p>I bet you will! The Appendix will contain a bazillion ways
+to execute ARM code, starting from Raspberry Pi,
+could VM, to various ways to emulate ARM on Linux, Windows, and macOS.</p>
+
+<h2>Why TypeScript?</h2>
+
+<p>First of all, you will be able to follow this book in any reasonable programming language.
+For me, it was tough to pick one for this job, and I&#8217;m pleased I&#8217;ve chosen TypeScript.</p>
+
+<p>TypeScript is probably nobody&#8217;s favorite, but it&#8217;s a good compromise:</p>
+
+<ul>
+<li>Are you coming from a dynamic language like JavaScript, Python, or Ruby?
+Then if you close your eyes at the
+type annotations TypeScript is just modern-day JavaScript.</li>
+<li>If you&#8217;re coming from Java or C#, then you will feel right at home,
+since TypeScript
+is brought to you by the same people who brought you C# <em>(and Turbo Pascal!)</em>.</li>
+</ul>
+
+<p>Don&#8217;t worry if you&#8217;ve never seen TypeScript code before.
+If you can read the following, you will most likely be able to pick it up,
+as the book goes <em>(real code from the book here!)</em>:</p>
+
+<pre><b>class </b>Label {
+  <b>static </b>counter = 0;
+  value: number; <em>// Type annotation
+</em>
+  <b>constructor</b>() {
+    <b>this</b>.value = Label.counter++;
+  }
+
+  toString() {
+    <b>return </b>'.L' + <b>this</b>.value;
+  }
+}
+</pre>
+
+<p>I avoided using any TypeScript- or JavaScript-specific
+language features in the code.</p>
+
+<p>If you&#8217;re into statically-typed functional programming
+languages (Haskell, OCaml, or Reason ML),
+you will find that the class structure I used
+has a nice translation to an algebraic data type.
+It is, in fact, how I wrote it first.</p>
+
+<p><style>
+  #home { float: left; }
+  pre {
+    border-left: 0;
+    font-size: 16px;
+    line-height: 1.5em;
+  }</p>
+
+<p></style></p>
+
+<h2>The Contents</h2>
+
+<p>The book consists of two parts. Part I
+presents a <em>detailed</em>, <em>step-by-step</em> guide on how
+to develop a small &#8220;baseline&#8221; compiler that can compile simple
+programs to ARM assembly.</p>
+
+<p>By the end of Part I, you will have a working compiler that can
+compile simple functions like this one:</p>
+
+<!--table>
+<tr>
+<td>
+
+
+md5-d354fb5d17fb6849f7107f73af0a5544
+
+
+</td>
+<td>
+</td>
+</tr>
+</table-->
+
+<pre><b>function </b>factorial(n) {
+  <b>if </b>(n == 0) {
+    <b>return </b>1;
+  } <b>else </b>{
+    <b>return </b>n * factorial(n - 1);
+  }
+}
+</pre>
+
+<p>Into ARM assembly code like this:</p>
+
+<pre>.global factorial
+factorial:
+  <b>push </b>{fp, lr}
+  <b>mov </b>fp, sp
+  <b>push </b>{r0, r1}
+  <b>ldr </b>r0, =0
+  <b>push </b>{r0, ip}
+  <b>ldr </b>r0, [fp, #-8]
+  <b>pop </b>{r1, ip}
+  <b>cmp </b>r0, r1
+  <b>moveq </b>r0, #1
+  <b>movne </b>r0, #0
+  <b>cmp </b>r0, #0
+  <b>beq </b>.L1
+  <b>ldr </b>r0, =1
+  <b>b </b>.L2
+.L1:
+  <b>ldr </b>r0, =1
+  <b>mov </b>r1, r0
+  <b>ldr </b>r0, [fp, #-8]
+  <b>sub </b>r0, r0, r1
+  <b>bl </b>factorial
+  <b>mov </b>r1, r0
+  <b>ldr </b>r0, [fp, #-8]
+  <b>mul </b>r0, r0, r1
+.L2:
+  <b>mov </b>sp, fp
+  <b>pop </b>{fp, pc}
+</pre>
+
+<p>Part II talks about <em>more advanced</em> topics in <em>less details</em>.
+It explores several different (often mutually exclusive)
+directions in which you can take your compiler.</p>
+
+<h2>Draft Table of Content</h2>
+
+<p>Introduction</p>
+
+<p>Part I</p>
+
+<ul>
+<li>Compiler structure overview</li>
+<li>Representing programs using AST</li>
+<li>Lexing and parsing</li>
+<li>Introduction to ARM assembly</li>
+<li>Emitting assembly from an AST</li>
+</ul>
+
+<p>Part II</p>
+
+<ul>
+<li>Static type checking</li>
+<li>Dynamic typing</li>
+<li>More primitive types: null, bool, char</li>
+<li>Foreign calls</li>
+<li>System calls</li>
+<li>Heap allocation: arrays, strings, records</li>
+<li>Garbage collector</li>
+</ul>
+
+<p>Appendix: Running ARM code</p>
+
+<ul>
+<li>Linux
+<ul>
+<li>Running ARM code natively on Raspberry Pi</li>
+<li>Running ARM code natively on a cloud VM instance</li>
+<li>Emulating ARM with QEMU on Linux</li>
+<li>Emulating ARM with Android NDK</li>
+</ul></li>
+<li>Windows
+<ul>
+<li>Emulating ARM with QEMU on Windows</li>
+<li>Emulating ARM with QEMU on WSL</li>
+<li>Emulating ARM with QEMU on Cygwin</li>
+<li>Emulating ARM with Android NDK</li>
+<li>Visual Studio workflow</li>
+</ul></li>
+<li>macOS
+<ul>
+<li>Emulating ARM with QEMU on macOS</li>
+</ul></li>
+</ul>
+
+<p><center><img src=./keleshev2.jpg width=200 height=200 style=float:right /></center></p>
+
+<h2>About the author</h2>
+
+<p>My name is Vladimir Keleshev,
+I have worked with compilers both commercially
+and in open-source.
+My love for ARM assembly stems from
+my previous work in embedded systems.
+Currently, I work in finance
+with domain-specific languages.
+I&#8217;m <a href="https://twitter.com/keleshev">@keleshev</a> on Twitter.</p>
+
+<p><br /></p>
+
+<script async data-uid="7ee5be9f4e" src="https://motivated-writer-7421.ck.page/7ee5be9f4e/index.js"></script>
+
+<!--
+## It's coming summer 2020
+
+When I write blog posts I usually spent the first half
+of the time writing the code and develoing the idea, and
+the second half on the prose.
+This book will be no exception.
+
+At the moment I have finished writing
+the code, and I am very happy with the results.
+I expect the book to be ready early summer 2020, and a draft to
+be available even sooner.
+
+-->
+
+<!--script async data-uid="129429cd71" src="https://motivated-writer-7421.ck.page/129429cd71/index.js"></script-->
+
+<p><center><img src=./dragon.jpg /></center></p>
+
+    </body>
+</html>

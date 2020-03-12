@@ -3,6 +3,11 @@ Vladimir Keleshev
 
 <style>#home a { color: black }</style>
 
+My upcoming book
+----------------
+
+* [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)
+
 Blog
 ----
 

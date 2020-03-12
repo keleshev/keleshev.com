@@ -74,7 +74,9 @@ for file in sys.argv[1:]:
     contents = add_youtube(add_negation(add_icons(contents)))
     contents = add_hoverquotes(contents)
     contents = code.sub(highlight, contents)
-    html = markdown(contents, extras=['smarty-pants', 'wiki-tables'])
+    html = markdown(contents, extras=['smarty-pants', 'wiki-tables', 'metadata'])
+    if html.metadata.get('title'):
+        header = html.metadata['title']
     html = add_inline_code(html)
 
     html = template.replace('{{body}}', html)
