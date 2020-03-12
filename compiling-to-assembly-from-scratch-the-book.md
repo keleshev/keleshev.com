@@ -60,7 +60,7 @@ which was initially optimized for writing assembly by hand.
 * ARM, on the other hand, is based on *Reduced Instruction Set Architecture* (RISC),
 which is optimized for writing compilers.
 
-*Guess which one is an easier target for a compiler writer?*
+*Guess which one is an easier target for a compiler?*
 
 If this book targeted Intel x86-64 instead of ARM, it would have been three times as long
 and&hairsp;—&hairsp;more likely&hairsp;—&hairsp;never written.
@@ -254,7 +254,7 @@ Appendix: Running ARM code
 My name is Vladimir Keleshev,
 I have worked with compilers both commercially
 and in open-source.
-My love for ARM assembly stems from
+My fondness of ARM assembly stems from
 my previous work in embedded systems.
 Currently, I work in finance
 with domain-specific languages.
