@@ -75,7 +75,7 @@ for moving to x86-64 or the new ARM64.
 
 I bet you will! The Appendix will contain a bazillion ways
 to execute ARM code, starting from Raspberry Pi,
-could VM, to various ways to emulate ARM on Linux, Windows, and macOS.
+cloud VM, to various ways to emulate ARM on Linux, Windows, and macOS.
 
 ## Why TypeScript?
 
