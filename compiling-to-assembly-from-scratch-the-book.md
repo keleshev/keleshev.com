@@ -62,7 +62,7 @@ which is optimized for writing compilers.
 
 *Guess which one is an easier target for a compiler?*
 
-If this book targeted Intel x86-64 instead of ARM, it would have been three times as long
+If this book targeted Intel x86-64 instead of ARM, it would have been two times as long
 and&hairsp;—&hairsp;more likely&hairsp;—&hairsp;never written.
 Also, with 160 *billion* devices shipped, we better get used to the fact
 that ARM is the dominant instruction set architecture today.
@@ -249,7 +249,7 @@ Appendix: Running ARM code
 
 
 <center><img src=./keleshev.jpg width=200 height=200 style=float:right /></center>
-## About the author
+## About me
 
 My name is Vladimir Keleshev,
 I have worked with compilers both commercially
