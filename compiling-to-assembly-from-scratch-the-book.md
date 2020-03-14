@@ -3,7 +3,7 @@ title: Compiling to Assembly from Scratch
 ---
 
 <br/>
-<center><img src=./dragon.jpg width=168 height=228 /></center>
+<center><img src=./dragon.png width=201 height=260 /></center>
 
 Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small>
 ==================================
@@ -284,6 +284,7 @@ be available even sooner.
 
 
 
-<center><img src=./dragon.jpg /></center>
+<br/>
+<center><img src=./dragon.jpg width=168 height=228 /></center>
 
-<center><em>Illustration by [@PbKatiuska](https://twitter.com/PbKatiuska)</em></center>
+<center><em>Illustrations by [@PbKatiuska](https://twitter.com/PbKatiuska)</em></center>
