@@ -2,6 +2,7 @@
 title: Compiling to Assembly from Scratch
 ---
 
+<span id=home><a title=Home href=/>☰</a></span>
 <br/>
 <center><img src=./dragon.png width=201 height=260 /></center>
 
@@ -204,6 +205,8 @@ factorial:
   pop {fp, pc}
 ```
 
+This code won't win any awards, and an optimizing compiler
+could do much better, but it's a start!
 
 Part II talks about *more advanced* topics in *less details*.
 It explores several different (often mutually exclusive)

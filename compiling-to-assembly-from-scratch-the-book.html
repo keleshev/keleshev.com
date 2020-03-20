@@ -7,9 +7,8 @@
         <link rel="icon" sizes="109x109" href="/favicon.gif" />
     </head>
     <body>
-        <center><span id='home'><a title='Home' href='/'>☰</a></span></center>
-<!--&#9632;-->
-        <p><br/>
+        <p><span id=home><a title=Home href=/>☰</a></span>
+<br/>
 <center><img src=./dragon.png width=201 height=260 /></center></p>
 
 <h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
@@ -148,7 +147,7 @@ compile simple functions like this one:</p>
 <td>
 
 
-md5-1a41a4572d8abef10d36f695b51d4d5d
+md5-f1e8dfe634cfa60d234176a3f244f508
 
 
 </td>
@@ -197,6 +196,9 @@ factorial:
   <b>mov </b>sp, fp
   <b>pop </b>{fp, pc}
 </pre>
+
+<p>This code won&#8217;t win any awards, and an optimizing compiler
+could do much better, but it&#8217;s a start!</p>
 
 <p>Part II talks about <em>more advanced</em> topics in <em>less details</em>.
 It explores several different (often mutually exclusive)
