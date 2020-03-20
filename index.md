@@ -2,15 +2,14 @@
 title: Vladimir Keleshev
 ---
 
-<h1>
 <span id=home><a title=Home href=/>☰</a></span>
+
+<h1>
 Vladimir Keleshev
 </h1>
 
 
-<style>#home a { color: black; float: left;
-//line-height: 0.3
-}</style>
+<style>#home a { color: black; float: left; }</style>
 
 My upcoming book
 ----------------
