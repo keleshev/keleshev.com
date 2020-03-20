@@ -64,6 +64,11 @@ def highlight(match):
         highlighter.eval(
 source)
 
+def include_includes(html):
+    def process_include(match):
+        filename = match.group(1)
+        return open(filename).read()
+    return re('\{\{include (.*)\}\}').sub(process_include, html)
 
 for file in sys.argv[1:]:
     new_file = file.partition('.md')[0] + '.html'
@@ -81,4 +86,5 @@ for file in sys.argv[1:]:
 
     html = template.replace('{{body}}', html)
     html = html.replace('{{title}}', header)
+    html = include_includes(html)
     open(new_file, 'w').write(html.encode('utf8'))

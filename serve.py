@@ -1,4 +1,5 @@
 #! /usr/bin/env python2.7
+import os
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import BaseHTTPServer
 
@@ -12,7 +13,8 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     """
 
     def translate_path(self, path):
-        if '.' not in path and path != '/':
+        #if '.' not in path and path != '/':
+        if os.path.isfile('.' + path + '.html'):
             path += '.html'
         return SimpleHTTPRequestHandler.translate_path(self, path)
 

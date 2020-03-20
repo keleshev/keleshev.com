@@ -1,7 +1,16 @@
-Vladimir Keleshev
-=================
+---
+title: Vladimir Keleshev
+---
 
-<style>#home a { color: black }</style>
+<h1>
+<span id=home><a title=Home href=/>☰</a></span>
+Vladimir Keleshev
+</h1>
+
+
+<style>#home a { color: black; float: left;
+//line-height: 0.3
+}</style>
 
 My upcoming book
 ----------------
@@ -11,6 +20,8 @@ My upcoming book
 Blog
 ----
 
+* 2020
+  * [EAX x86 Register: Meaning and History](/eax-x86-register-meaning-and-history)
 * 2019
   * [Automatic Compiler Pass Fusion](/automatic-compiler-pass-fusion)
 * 2018

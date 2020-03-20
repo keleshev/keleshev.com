@@ -72,7 +72,7 @@ content: '⤴'; '⇗';
 }
 
 #home {
-    text-align: center;
+    //text-align: center;
     line-height: 1.0;
     //-webkit-animation: rotateWord 360s linear infinite 0s;
 }
