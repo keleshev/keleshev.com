@@ -50,9 +50,10 @@ The registers were encoded as three bits of the instruction,
 so it allowed for eight combinations.
 The last one was for a pseudo-register called <code>M</code>.
 It stood for <em>memory</em>.
-<code>M</code> stood for the memory location
-pointed by the combined registers <code>H</code> and <code>L</code>.
-They were referring to the <em>high</em> and the <em>low</em> byte of the address.
+<code>M</code> referred to the memory location
+pointed by the combination of registers <code>H</code> and <code>L</code>.
+<code>H</code> stood for <em>high</em> byte, while <code>L</code> stood for
+<em>low</em> byte of the memory address.
 That was the only available way to reference memory in 8008.</p>
 
 <p>So, <code>A</code> was an accumulator, <code>H</code> and <code>L</code> were also used for
@@ -89,7 +90,7 @@ data in the first four 16-bit registers could
 also be accessed by one of the eight 8-bit registers.</p>
 
 <blockquote>
-  <p><code>AX</code> was an e<em>X</em>tended accumulator, while <code>AH</code> and <code>AL</code>
+  <p><code>AX</code> was an e<em>X</em>tended 16-bit accumulator, while <code>AH</code> and <code>AL</code>
   could be thought of as 8-bit registers on their own
   or as a way to access the <em>H</em>ight and the <em>L</em>ow
   bytes of <code>AX</code>.</p>
@@ -189,14 +190,19 @@ have mnemonics that refer to one of the register
 letters like <code>A</code> or <code>B</code>.
 So they kept the
 original names, replacing <code>E</code> with <code>R</code>.
-That also provided some consistency with the new <code>R8</code>–<code>R15</code>.</p>
+That also provided at lease some
+consistency with the new <code>R8</code>–<code>R15</code>.</p>
 
 <p>The new registers also got their &#8220;narrow&#8221; versions.
 Take <code>R15</code>, for example:</p>
 
 <p><center><img src=r15.svg></center></p>
 
-<p>And that was a quick history of x86 accumulator!
+<p><br/>
+<br/>
+<br/></p>
+
+<p>And that, folks, was a quick history of x86 accumulator!
 From an 8-bit <code>A</code> of 8008, to 16-bit <code>AX</code> of 8086,
 to 32-bit <code>EAX</code> of 80386, to 64-bit <code>RAX</code>.</p>
 
@@ -243,8 +249,10 @@ to 32-bit <code>EAX</code> of 80386, to 64-bit <code>RAX</code>.</p>
 <br/>
 
 
-<em>ETA: Summer 2020</em>
 <p>Vladimir Keleshev</p>
+
+<em>ARM — TypeScript — Summer 2020</em>
+<br/>
 <br/>
 
 </a>

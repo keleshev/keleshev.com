@@ -48,9 +48,10 @@ The registers were encoded as three bits of the instruction,
 so it allowed for eight combinations.
 The last one was for a pseudo-register called `M`.
 It stood for *memory*.
-`M` stood for the memory location
-pointed by the combined registers `H` and `L`.
-They were referring to the *high* and the *low* byte of the address.
+`M` referred to the memory location
+pointed by the combination of registers `H` and `L`.
+`H` stood for *high* byte, while `L` stood for
+*low* byte of the memory address.
 That was the only available way to reference memory in 8008.
 
 So, `A` was an accumulator, `H` and `L` were also used for
@@ -86,7 +87,7 @@ As you can see from the figure above,
 data in the first four 16-bit registers could
 also be accessed by one of the eight 8-bit registers.
 
-> `AX` was an e*X*tended accumulator, while `AH` and `AL`
+> `AX` was an e*X*tended 16-bit accumulator, while `AH` and `AL`
 > could be thought of as 8-bit registers on their own
 > or as a way to access the *H*ight and the *L*ow
 > bytes of `AX`.
@@ -186,14 +187,19 @@ have mnemonics that refer to one of the register
 letters like `A` or `B`.
 So they kept the
 original names, replacing `E` with `R`.
-That also provided some consistency with the new `R8`–`R15`.
+That also provided at lease some
+consistency with the new `R8`–`R15`.
 
 The new registers also got their "narrow" versions.
 Take `R15`, for example:
 
 <center><img src=r15.svg></center>
 
-And that was a quick history of x86 accumulator!
+<br/>
+<br/>
+<br/>
+
+And that, folks, was a quick history of x86 accumulator!
 From an 8-bit `A` of 8008, to 16-bit `AX` of 8086,
 to 32-bit `EAX` of 80386, to 64-bit `RAX`.
 
@@ -247,8 +253,10 @@ For the early history of 8008, 8080, and 8086, I recommend
 <br/>
 
 
-<em>ETA: Summer 2020</em>
 <p>Vladimir Keleshev</p>
+
+<em>ARM — TypeScript — Summer 2020</em>
+<br/>
 <br/>
 
 </a>
