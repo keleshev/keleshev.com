@@ -207,7 +207,7 @@ to 32-bit `EAX` of 80386, to 64-bit `RAX`.
 
 For the early history of 8008, 8080, and 8086, I recommend reading
 [Intel Microprocessors: 8008 to 8086][MORSE]
-wirtten by 8086 architect Stephen Morse*. [&#9632;](/ "Home")
+wirtten by 8086 architect Stephen Morse. [&#9632;](/ "Home")
 
 [MORSE]: https://stevemorse.org/8086history/8086history.pdf
 
