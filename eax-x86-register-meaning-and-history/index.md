@@ -128,8 +128,8 @@ Segmented architecture deserves a story on its own,
 as it is the result of maintaining backward-compatibility
 with 8080.
 
-*It's 1979, and by all accounts, 8086 instruction set
-architecture is already a mess.*
+<!--*It's 1979, and by all accounts, 8086 instruction set
+architecture is already a mess.*-->
 
 <!--em>
 To sum up, `AX` is the 16 bit accumulator,
@@ -205,8 +205,9 @@ to 32-bit `EAX` of 80386, to 64-bit `RAX`.
 
 ## References
 
-For the early history of 8008, 8080, and 8086, I recommend
-[Stephen Morse's history piece][MORSE]. [&#9632;](/ "Home")
+For the early history of 8008, 8080, and 8086, I recommend reading
+[Intel Microprocessors: 8008 to 8086][MORSE]
+wirtten by 8086 architect Stephen Morse*. [&#9632;](/ "Home")
 
 [MORSE]: https://stevemorse.org/8086history/8086history.pdf
 
