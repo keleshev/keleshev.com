@@ -1,7 +1,14 @@
-Automatic Compiler Pass Fusion
-==============================
+---
+title: Automatic Compiler Pass Fusion
+---
 
-<center>2019-22-09</center>
+<style> #home { position: absolute; line-height: inherit; } </style>
+
+<span id=home><a title=Home href=/>☰</a></span>
+
+<h1>Automatic Compiler Pass Fusion</h1>
+
+<center>2019-09-22</center>
 
 
 

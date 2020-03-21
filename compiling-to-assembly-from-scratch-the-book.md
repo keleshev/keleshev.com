@@ -2,7 +2,10 @@
 title: Compiling to Assembly from Scratch
 ---
 
+<style> #home { position: absolute; line-height: inherit; } </style>
+
 <span id=home><a title=Home href=/>☰</a></span>
+<h1></h1>
 
 <center><img src=./dragon.png width=201 height=260 /></center>
 

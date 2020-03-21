@@ -2,6 +2,8 @@
 title: Vladimir Keleshev
 ---
 
+<style> #home { position: absolute; line-height: inherit; } </style>
+
 <span id=home><a title=Home href=/>☰</a></span>
 
 <h1>

@@ -3,11 +3,13 @@ title: EAX x86 Register: Meaning and History
 ---
 
 
+<style> #home { position:absolute; line-height: inherit; } </style>
+
 <span id=home><a title=Home href=/>☰</a></span>
 
-
-EAX x86 Register: Meaning and History
-=====================================
+<h1>
+<br style=line-height:1.5em />
+EAX x86 Register: Meaning and History</h1>
 
 <center>2020-03-20</center>
 
