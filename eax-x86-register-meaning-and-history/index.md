@@ -89,7 +89,7 @@ also be accessed by one of the eight 8-bit registers.
 
 > `AX` was an e*X*tended 16-bit accumulator, while `AH` and `AL`
 > could be thought of as 8-bit registers on their own
-> or as a way to access the *H*ight and the *L*ow
+> or as a way to access the *H*igh and the *L*ow
 > bytes of `AX`.
 
 Since 8008 had seven 8-bit registers,
@@ -187,7 +187,7 @@ have mnemonics that refer to one of the register
 letters like `A` or `B`.
 So they kept the
 original names, replacing `E` with `R`.
-That also provided at lease some
+That also provided at least some
 consistency with the new `R8`–`R15`.
 
 The new registers also got their "narrow" versions.
