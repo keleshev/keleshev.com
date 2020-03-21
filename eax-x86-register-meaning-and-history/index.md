@@ -9,7 +9,7 @@ title: EAX x86 Register: Meaning and History
 EAX x86 Register: Meaning and History
 =====================================
 
-<center>2020-04-20</center>
+<center>2020-03-20</center>
 
 Usually, x86 tutorials
 don't spend much time explaining
