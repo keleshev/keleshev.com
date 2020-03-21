@@ -35,7 +35,7 @@ But the chip was delayed and did not meet CTC expectations.
 So Intel added a few general-purpose instructions to it
 and marketed the chip to other customers.
 
-8080 had *seven* 8-bit registers:
+8008 had *seven* 8-bit registers:
 
 <center><img src=8008.svg></center>
 
