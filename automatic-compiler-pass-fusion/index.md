@@ -275,9 +275,13 @@ After generating `100_000_000` random syntax trees and measuring
 the total time of applying the three different techniques, we get the
 results in seconds:
 
+<br/>
+<center><img src=bench.svg></center>
+
+<!--
 * `Not_fused.pass`—11.803 seconds
 * `Manually_fused.pass`—4.669 seconds
-* `Fused.pass`—6.337 seconds
+* `Fused.pass`—6.337 seconds-->
 
 ## Conclusion
 
