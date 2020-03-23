@@ -18,7 +18,7 @@ Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></smal
 
 
 
-<em>ETA: Summer 2020</em></center>
+<em>ARM — TypeScript — Summer 2020</em></center>
 
 
 

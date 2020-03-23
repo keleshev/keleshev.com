@@ -41,8 +41,8 @@ and marketed the chip to other customers.
 
 <center><img src=8008.svg></center>
 
-`A` stood for *accumulator*, which was an implicit
-operand and return value of the arithmetic and logical operations.
+> `A` stood for *accumulator*, which was an implicit
+> operand and return value of the arithmetic and logical operations.
 
 You might think—*gee, seven is a very odd number of registers*—and
 would be right!
@@ -52,13 +52,13 @@ The last one was for a pseudo-register called `M`.
 It stood for *memory*.
 `M` referred to the memory location
 pointed by the combination of registers `H` and `L`.
-`H` stood for *high* byte, while `L` stood for
-*low* byte of the memory address.
+`H` stood for *high-order* byte, while `L` stood for
+*low-order* byte of the memory address.
 That was the only available way to reference memory in 8008.
 
 So, `A` was an accumulator, `H` and `L` were also used for
 addressing memory. However, `B`, `C`, `D`, `E` were
-completely generic and interchangeable.
+completely generic and interchange.
 
 ## 8086
 
@@ -89,10 +89,16 @@ As you can see from the figure above,
 data in the first four 16-bit registers could
 also be accessed by one of the eight 8-bit registers.
 
-> `AX` was an e*X*tended 16-bit accumulator, while `AH` and `AL`
+> `AX` was a 16-bit accumulator, while `AH` and `AL`
 > could be thought of as 8-bit registers on their own
-> or as a way to access the *H*igh and the *L*ow
+> or as a way to access the *high-order* and the *low-order*
 > bytes of `AX`.
+>
+> The `X` in `AX` meant to be a placeholder that stood for both
+> `H` and `L`.
+>
+> This is in a way similar to how much later
+> the "x" in x86 was meant to refer to 8086, 80186, 80286, etc.
 
 Since 8008 had seven 8-bit registers,
 they could be mapped well to the eight 8086 registers,
@@ -149,14 +155,14 @@ They were marked as *16-BIT S/W ONLY* and sold anyway.
 Many new features were introduced, but 80386
 continued to be *(mostly)* binary-compatible down to 8086.
 
-The main registers were *E*xtended to 32 bits by
+The main registers were *extended* to 32 bits by
 adding an `E` prefix:
 
 <center><img src=eax.svg></center>
 
 
-> `EAX` is now the *E*xtended e*X*tended *A*ccumulator.
-> `AX` now refers to the lower half of `EAX`,
+> `EAX` stood for *extended* `AX`.
+> And `AX` now refers to the lower half of `EAX`,
 > while `AH` and `AL` continue to refer to the two `AX` bytes.
 
 And that's how `EAX` got its name.
@@ -178,6 +184,7 @@ the `E` prefix. So the accumulator is now referred to as `RAX`:
 
 <center><img src=rax.svg></center>
 
+
 *Why `R`?*
 
 Well, AMD wanted to streamline the register handling.
@@ -192,35 +199,69 @@ original names, replacing `E` with `R`.
 That also provided at least some
 consistency with the new `R8`–`R15`.
 
+> So `R` in `RAX` stood for *register*, and was a way to unify
+> the naming to be more consistent with the new `R8`–`R15` registers.
+
 The new registers also got their "narrow" versions.
 Take `R15`, for example:
 
 <center><img src=r15.svg></center>
 
-<br/>
-<br/>
-<br/>
+<center>⁂</center>
 
 And that, folks, was a quick history of x86 accumulator!
 From an 8-bit `A` of 8008, to 16-bit `AX` of 8086,
 to 32-bit `EAX` of 80386, to 64-bit `RAX`.
 
+[MORSE]: https://stevemorse.org/8086history/8086history.pdf
+
+## Correction
+
+An earlier version of this blog post stated that the `X` in `AX` stood
+for e*X*tended.
+
+Some of you pointed out that this was not quite right
+and that the `X` stood, in a way, for "pair". I must admit that,
+unlike for the rest of the article, I couldn't find a reference that
+authoritatively described the meaning of `X`. So, I decided to reach
+out to Dr. Stephen Morse, the architect of 8086.
+
+With his permission, I include the response:
+
+> *Vladimir,*
+>
+> *Your question is certainly pushing my memory about decisions that were
+> made over 40 years ago.  So the following is the best of my recollection
+> and not necessarily 100% accurate.*
+>
+> *Prior to the 8086 the registers were single letters, e.g., A, B, C, D.
+> Each was an 8-bit register.   The 8086 had 16-bit registers that could
+> be referenced either 8-bits at a time or all 16-bits at once. For
+> example, we could reference the 8 high-order bits of the A register, the
+> 8 low-order bits of the A register, or the entire 16 bits of the A
+> register.  The nomenclature of the first two were chosen to be AL and
+> AH, where the L/H designated the low-order or the high order half.  Now
+> we needed a term to designate the full 16 bits.  So the letter X was
+> selected.  The X was simply an arbitrary letter that combined both L and
+> H -- sort of like the use of X in algebra to designate the unknown.
+> There really wasn't that much thought given as to what X stood for (if
+> anything) -- it was just a letter that was needed to identify the
+> General Registers (AX, BX, CX, DX), as opposed to the Pointer and Index
+> Registers (SP, BP, SI, DI), and the Segment Registers (CS, DS, ES, SS).*
+>
+> *-- Steve Morse*
+
 ## References
 
-For the early history of 8008, 8080, and 8086, I recommend reading
 [Intel Microprocessors: 8008 to 8086][MORSE]
-wirtten by 8086 architect Stephen Morse. [&#9632;](/ "Home")
-
-[MORSE]: https://stevemorse.org/8086history/8086history.pdf
+by Stephen Morse. [&#9632;](/ "Home")
 
 
 <center>
 
 
 <br/>
-<br/>
 ⁂
-<br/>
 <br/>
 
 <style>
@@ -266,5 +307,3 @@ wirtten by 8086 architect Stephen Morse. [&#9632;](/ "Home")
 </div>
 
 </center>
-
-<br/>
