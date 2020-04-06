@@ -1,0 +1,305 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Parsing Ambiguity: Type Argument v. Less Than — Vladimir Keleshev</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <p><style> #home { position:absolute; line-height: inherit; } </style></p>
+
+<p><span id=home><a title=Home href=/>☰</a></span></p>
+
+<h1>
+Parsing Ambiguity:<br/>Type Argument <em>v.</em> Less Than</h1>
+
+<p><center>2016-06-19</center></p>
+
+<p>In C-family languages, type arguments are usually
+delimited with &#8220;angular&#8221; brackets, like this:</p>
+
+<pre>Array&lt;String&gt;
+</pre>
+
+<p>In an expression context, the angular brackets could be
+confused with infix comparison operators.
+Think about the difference between the following two expressions:</p>
+
+<pre>x = Foo&lt;Bar&gt;(1 + 2)
+
+x = foo &lt; bar &gt; (1 + 2)
+</pre>
+
+<p>How should the parser determine that the first one
+is a constructor call, and the second one is
+two infix comparisons?</p>
+
+<p>This problem can be solved on different levels:</p>
+
+<ul>
+<li>lexer level,</li>
+<li>parser level, or</li>
+<li>language design level.</li>
+</ul>
+
+<p>First, let&#8217;s start with lexer-level solutions.</p>
+
+<h2>The lexer hack</h2>
+
+<p>We can make lexer keep track of type names.
+Every time
+we encounter a definition like <code>class Foo</code>,
+we add the type name to a symbol table.
+Next, when the lexer encounters an identifier,
+we check if this identifier is present in that symbol table.
+If it is present in the symbol table,
+we issue a <code>TYPE_IDENTIFIER</code> token, otherwise an <code>IDENTIFIER</code> token.</p>
+
+<p>This removes the ambiguity for the parser since
+<code>TYPE_IDENTIFIER '&lt;'</code> is clearly the start of a type expression,
+while <code>IDENTIFIER '&lt;'</code> is a start of a comparison.</p>
+
+<p>This solution is called
+<a href="https://en.wikipedia.org/wiki/The_lexer_hack">the lexer hack</a>.
+It was first used in C.</p>
+
+<p>There are several problems with this solution:</p>
+
+<ul>
+<li><p>If your language allows forward references, then you
+need two separate passes: the first pass to construct the
+symbol table, and the second pass that issues the tokens.</p></li>
+<li><p>Depending on how complex your type declaration
+syntax is, you might need to do some actual parsing in your
+tokenizer to extract the identifier of your type.</p></li>
+</ul>
+
+<p>For example, in C, type declarations can get quite complicated.
+Here is some standards-compliant code that shows this:</p>
+
+<pre><b>typedef </b>int (*foo)(int bar, int, baz);
+</pre>
+
+<p>Of <em>all</em> the identifiers here, it is not trivial to
+determine that &#8220;<code>foo</code>&#8221; is the type being introduced.
+Especially during lexing.
+For this, you have to do some parsing in your lexer.</p>
+
+<h2>Lexer whitespace sensitivity</h2>
+
+<p>Depending on whitespace surrounding &#8220;<code>&lt;</code>&#8221; and &#8220;<code>&gt;</code>&#8221; symbols,
+the lexer can issue different tokens.
+For example, if the next token matches a <code>"&lt;\s"</code> regular
+expression—issue <code>LESS_THAN</code> token.
+Otherwise, if it matches just <code>"&lt;"</code>—issue <code>LEFT_ANGLE_BRACKET</code>.</p>
+
+<p>The reality might be more complicated (or not).
+You need to consider cases like this:</p>
+
+<pre>Array&lt;/* hello! */String&gt;
+</pre>
+
+<p>One language that takes this approach is Swift.
+<a href="https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html#//apple_ref/doc/uid/TP40014097-CH30-ID418">Swift uses whitespace</a>
+to assign meaning to operator tokens.</p>
+
+<p>This solution can be considered a language-level
+since it affects the set and meaning of accepted programs.
+This solution is also well applicable to lexer-less
+parsing techniques, like PEG and classical parser combinators.</p>
+
+<p><center>⁂</center></p>
+
+<p>Now we move onto parser-level solutions.</p>
+
+<h2>Prioritized choice (PEG)</h2>
+
+<p><a href="
+https://pdos.csail.mit.edu/papers/parsing:popl04.pdf)
+(PEG">Parsing expression grammars</a> have an interesting feature,
+the <em>prioritized choice</em> operator &#8220;<code>/</code>&#8221; <em>(forward slash)</em>.
+Unlike the regular <em>choice</em> operator
+&#8220;<code>|</code>&#8221; <em>(vertical bar)</em>, it
+allows one grammar rule to be prioritized over another.</p>
+
+<p>For example, it allows you to say that
+we first consider &#8220;<code>&lt;</code>&#8221; to start
+a type argument list, and if this interpretation fails
+to parse, we backtrack and try to interpret it as an
+infix comparison.
+Here&#8217;s how a simplified PEG grammar like that can look like:</p>
+
+<pre>constructor_call &lt;-
+  identifier '&lt;' type_parameters '&gt;' '(' parameters ')'
+
+infix_expression <-
+  identifier (('&lt;' / '&gt;') identifier)*
+
+expression <-
+  <em># <code>constructor_call</code> takes priority if ambiguity arises:
+</em>  constructor_call / infix_expression / '(' expression ')'
+</pre>
+
+<h2>Generalized parsing</h2>
+
+<p>If PEG allows you to make a choice between two production rules,
+<a href="https://en.wikipedia.org/wiki/GLR_parser">generalized parsers like GLR</a>
+allow you to defer the choice until after parsing.
+In the case of syntactic ambiguity,
+a GLR parser will produce two parse trees:
+one for type expression, another for infix expression.
+At a later stage of compilation
+(for example, when you construct your symbol tables)
+you can make a choice of discarding one of the parse
+trees by looking up the identifier in a symbol table.</p>
+
+<p>The disadvantage of this approach is that a GLR parser will
+produce multiple parse trees for all ambiguities in
+your grammar—whether you know about them in advance or not.</p>
+
+<h2>Hand-written parser</h2>
+
+<p>In case of a hand-written parser, you can do something
+similar to the lexer hack but at the parser level.
+As you parse, you construct a symbol table for types.
+Whenever you encounter an identifier, you look it up in the
+type symbol table.</p>
+
+<p>This is how, for example, the
+<a href="https://github.com/JetBrains/kotlin/blob/23a4184e48bf1fe77ae27cbf121c51849157ecbf/compiler/frontend/src/org/jetbrains/kotlin/parsing/KotlinParsing.java#L1966">hand-written Kotlin parser</a> works.</p>
+
+<p><center>⁂</center></p>
+
+<p>Now let&#8217;s move onto the language-level solutions.</p>
+
+<p>The root of our problem is the following:
+in the same context, we want to use &#8220;<code>&lt;</code>&#8221; and &#8220;<code>&gt;</code>&#8221;
+symbols as both infix operators and as distinct parenthesis-like
+delimiters.
+So the ambiguity is inherent to the problem.</p>
+
+<p>A language-level solution would be to use
+a different syntax for the two cases.</p>
+
+<h2>Scala solution</h2>
+
+<p>One example of this is Scala, which uses
+square brackets as type parameters which avoids the problem
+altogether:</p>
+
+<pre>x = Foo[Bar](1 + 2)
+
+x = foo &lt; bar &gt; (1 + 2
+</pre>
+
+<p>While &#8220;<code>&lt;</code>&#8221; and &#8220;<code>&gt;</code>&#8221; are always parsed as infix operators,
+&#8220;<code>[</code>&#8221; and &#8220;<code>]</code>&#8221; are always parsed as parenthesis-like
+matching delimiters. So there&#8217;s no confusion.</p>
+
+<h2>Rust solution</h2>
+
+<p>Rust is one of the languages that continues the tradition
+of using &#8220;<code>&lt;</code>&#8221; and &#8220;<code>&gt;</code>&#8221; symbols for both type parameters and infix
+comparison operators.
+However, in an expression context, it requires the
+programmer to explicitly disambiguate them by using
+a &#8220;<code>::&lt;</code>&#8221; sequence. Consider:</p>
+
+<pre><b>let </b>x: foo::Foo&lt;Bar&gt; = foo::Foo::&lt;Bar&gt;(1 + 2);
+</pre>
+
+<p><em>(Having both type annotations is not necessary here, but nevertheless…)</em></p>
+
+<p>Inside the type annotation, you can write <code>Foo&lt;Bar&gt;</code>,
+because it is a type-only context.
+However, in an expression context, you need to write <code>Foo::&lt;Bar&gt;</code>.</p>
+
+<p><center>⁂</center></p>
+
+<p>You can classify the above solutions into syntactic and
+semantic ones.</p>
+
+<p>Syntactic solutions are those that make the decision
+solely based on the syntax,
+in our case:</p>
+
+<ul>
+<li>lexer whitespace sensitivity, and</li>
+<li>prioritized choice (PEG).</li>
+</ul>
+
+<p>Both of these accept slightly different languages.</p>
+
+<p>Semantic solutions are those that rely on a symbol table
+for types to disambiguate:</p>
+
+<ul>
+<li>the lexer hack,</li>
+<li>generalized parsing, and</li>
+<li>hand-written parser.</li>
+</ul>
+
+<p>Thes three solutions accept the same language.</p>
+
+<p>If you&#8217;re implementing an existing language,
+you should carefully read the spec (if one exists)
+to see which of the solutions could be applicable.
+However, if you&#8217;re designing a new language,
+you have the power to come up with a syntax that is not
+conceptually ambiguous.
+Scala and Rust are good examples of this approach.
+<a href="/" title="Home">&#9632;</a></p>
+
+<p><em>This blog post was originally written by me
+for <a href="https://www.datawire.io/distinguishing-type-constructors-arguments-comparison-expressions-parsing/">Datawire</a>
+and is re-published here with permission (and minor changes).</em></p>
+
+<p><center></p>
+
+<p><br/>
+⁂</p>
+
+<p><style>
+#cover {
+  border: 1px solid black;
+  width: 500px;
+  color: black;
+  display: block;
+}</p>
+
+<p></style></p>
+
+<h2>Did you know, I’m writing a book about compilers?</h2>
+
+<div id=cover >
+<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
+
+<br/>
+
+<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
+
+— the book —<br/>
+<br/>
+<br/>
+
+<img src=/dragon.png width=150 height=188 />
+
+<br/>
+<br/>
+<br/>
+
+
+<p>Vladimir Keleshev</p>
+
+<em>TypeScript — ARM — Summer 2020</em>
+<br/>
+<br/>
+
+</a>
+</div>
+
+<p></center></p>
+
+    </body>
+</html>

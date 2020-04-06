@@ -299,7 +299,7 @@ by Stephen Morse. [&#9632;](/ "Home")
 
 <p>Vladimir Keleshev</p>
 
-<em>ARM — TypeScript — Summer 2020</em>
+<em>TypeScript — ARM — Summer 2020</em>
 <br/>
 <br/>
 

@@ -31,6 +31,8 @@ Blog
   * [Cortege: a Row-polymorphic Tuple](cortege-a-row-polymorphic-tuple)
   * [Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml)
   * [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
+* 2016
+  * [Parsing Ambiguity: Type Argument *v.* Less Than](/parsing-ambiguity-type-argument-v-less-than)
 * 2015
   * [Namespacing Variants in ML](/namespacing-variants-in-ml)
 * 2014
