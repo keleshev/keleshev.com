@@ -7,7 +7,7 @@ title: Compiling to Assembly from Scratch
 <span id=home><a title=Home href=/>☰</a></span>
 <h1></h1>
 
-<center><img src=./dragon.png width=201 height=260 /></center>
+<center><img src=./dragon.png width=256 height=260 /></center>
 
 Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small>
 ==================================

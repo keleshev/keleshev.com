@@ -296,7 +296,7 @@ and is re-published here with permission (and minor changes).*
 <br/>
 <br/>
 
-<img src=/dragon.png width=150 height=188 />
+<img src=/dragon.png width=256 height=260 />
 
 <br/>
 <br/>
