@@ -179,6 +179,12 @@ which is an [order-only prerequisite](https://www.gnu.org/software/make/manual/h
 This is useful because we don't care about the timestamp
 of this directory, only that it exists.
 
+Running "`make open`" uses macOS `open` command
+(similar to `xdg-open` on Linux) to open
+the PDF in Preview.app.
+If it is already open, the Preview.app will refresh
+the existing window.
+
 I have a special "`.PHONY: phony`" rule, that
 allows me to write:
 
@@ -205,10 +211,10 @@ A small build script could do just as well.
 
 I am using the version of Vim that ships with macOS,
 with minimal tuning.
-The only `~/.vimrc` option worth mentioning here
+One `~/.vimrc` option worth mentioning here
 is `virtualedit`:
 
-```txt
+```vim
 set virtualedit=all
 ```
 
@@ -225,6 +231,21 @@ in Vim for about a decade now.
 My first programming environment was
 Turbo Pascal, and this is exactly how the
 cursor works there, which I grew accustomed to.
+
+When I open the editor I write `:!make open`
+to open the preview, and then use `:!!` to repeat
+that command.
+In fact, I have a shortcut that maps
+space bar to save current file and run previous command:
+
+```vim
+map &lt;Space&gt; :w&lt;Enter&gt;:!!&lt;Enter&gt;
+```
+
+This *save-file-and-repeat-last-command* command is
+is useful for other things, for example, running
+test suites.
+
 
 <center>⁂</center>
 

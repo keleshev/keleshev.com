@@ -3,6 +3,7 @@ from parsimonious.grammar import Grammar
 txt = []
 c = '''typedef'''.split()
 rust = '''let'''.split()
+vim = '''set map'''.split()
 
 arm = '''arm
 push mov ldr add sub pop cmp moveq movne bl bleq mul b beq
