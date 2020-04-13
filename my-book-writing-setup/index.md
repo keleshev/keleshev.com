@@ -1,5 +1,5 @@
 ---
-title: My Book-writing Setup — Vladimir Keleshev
+title: Writing a Book with Pandoc, Make, and Vim — Vladimir Keleshev
 ---
 
 
@@ -7,11 +7,11 @@ title: My Book-writing Setup — Vladimir Keleshev
 
 <span id=home><a title=Home href=/>☰</a></span>
 
-<h1>My Book-writing Setup</h1>
+<h1>Writing a Book<br/><small><small>with</small></small><br/> Pandoc, Make, and Vim</h1>
 
 <center>2020-04-12</center>
 
-As you probably know,
+As you might know,
 I'm writing a book called
 [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book).
 Recently I

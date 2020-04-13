@@ -22,7 +22,7 @@ Blog
 ----
 
 * 2020
-  * [My Book-writing Setup](/my-book-writing-setup)
+  * [Writing a Book with Pandoc, Make, and Vim](/my-book-writing-setup)
   * [EAX x86 Register: Meaning and History](/eax-x86-register-meaning-and-history)
 * 2019
   * [Automatic Compiler Pass Fusion](/automatic-compiler-pass-fusion)
