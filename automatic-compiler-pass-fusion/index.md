@@ -254,7 +254,7 @@ The resulting function `Fused.pass` is identical to `Manually_fused.pass`
 for all inputs. We can use [Imandra](https://www.imandra.ai/)
 proof assistant to check this:
 
-```ocaml
+```imandra
 #use "fusion.ml"
 
 theorem our_fusion_is_the_same_as_manual_fusion x =

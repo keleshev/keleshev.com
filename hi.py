@@ -42,6 +42,7 @@ as assert begin'''.split()
 haskell = '''instance where
 '''.split()
 
+imandra = ocaml + '''theorem use'''.split()
 
 class Highlighter(object):
 
