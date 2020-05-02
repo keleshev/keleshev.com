@@ -11,7 +11,7 @@ push mov ldr add sub pop cmp moveq movne bl bleq mul b beq
 
 js = '''js
 function let if while else const throw catch for import return
-class static constructor return this
+class static constructor return this new
 '''.split()
 
 python2 = '''

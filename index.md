@@ -22,6 +22,7 @@ Blog
 ----
 
 * 2020
+  * [Verbose Regular Expressions in JavaScript](/verbose-regular-expressions-in-javascript)
   * [Writing a Book with Pandoc, Make, and Vim](/my-book-writing-setup)
   * [EAX x86 Register: Meaning and History](/eax-x86-register-meaning-and-history)
 * 2019
