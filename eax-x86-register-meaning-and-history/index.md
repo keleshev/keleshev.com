@@ -8,8 +8,7 @@ title: EAX x86 Register: Meaning and History
 <span id=home><a title=Home href=/>☰</a></span>
 
 <h1>
-<br style=line-height:1.5em />
-EAX x86 Register: Meaning and History</h1>
+EAX x86 Register<br/><small><small>Meaning and History</small></small></h1>
 
 <center>2020-03-20</center>
 
