@@ -20,7 +20,7 @@ Automatic pass fusion is about combining several passes into one traversal to
 address both concerns. This article presents one way to do that.
 
 A previous post,
-[map as a recursion scheme](./map-as-a-recursion-scheme-in-ocaml),
+[map as a recursion scheme](/map-as-a-recursion-scheme-in-ocaml),
 showed how to use the map function
 to reduce boilerplate when writing compiler passes. In this post, we build upon
 that work, including the toy language and the AST type, that we refer here as
