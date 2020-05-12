@@ -1,5 +1,5 @@
 ---
-title: Verbose Regular Expressions in JavaScript
+title: Readable Regular Expressions in JavaScript
 ---
 
 
@@ -8,7 +8,7 @@ title: Verbose Regular Expressions in JavaScript
 <span id=home><a title=Home href=/>☰</a></span>
 
 <h1>
-  Verbose Regular Expressions<br/>
+  Readable Regular Expressions<br/>
   <small><small>in JavaScript</small></small><br/>
 </h1>
 
