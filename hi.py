@@ -42,6 +42,13 @@ as assert begin'''.split()
 haskell = '''instance where
 '''.split()
 
+c = '''static void const if else for return struct
+'''.split()
+
+cpp = c + '''
+'''.split()
+
+
 imandra = ocaml + '''theorem use'''.split()
 
 class Highlighter(object):
@@ -69,7 +76,7 @@ class Highlighter(object):
         return node.text.lstrip('!')
 
     def string(self, node, children):
-        '''string = ~"[a-z]"? ('"' ~'[^" ]*' '"')'''
+        '''string = ~"[a-z]"? ('"' ~'[^"]*' '"')'''
         text = node.text.replace('%d', '<b>%d</b>').replace('%s', '<b>%s</b>')
         return '<em>%s</em>' % text
 
