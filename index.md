@@ -13,6 +13,9 @@ Vladimir Keleshev
 
 <style>#home a { color: black; float: left; }</style>
 
+
+
+
 My upcoming book
 ----------------
 
@@ -22,6 +25,7 @@ Blog
 ----
 
 * 2020
+  * [Standard IO: Under the Hood](/standard-io-under-the-hood)
   * [Verbose Regular Expressions in JavaScript](/verbose-regular-expressions-in-javascript)
   * [Writing a Book with Pandoc, Make, and Vim](/my-book-writing-setup)
   * [EAX x86 Register: Meaning and History](/eax-x86-register-meaning-and-history)
@@ -43,28 +47,31 @@ Blog
 * 2010
   * [YAML: Quick Introduction](/yaml-quick-introduction)
 
-Me
+Social
 ------
 
-* [@keleshev](http://twitter.com/keleshev) on Twitter
-* [@keleshev](http://github.com/keleshev) on GitHub
-* [Résumé](/about)
+* Twitter: [@keleshev](http://twitter.com/keleshev)
+* GitHub: [@keleshev](http://github.com/keleshev)
+
+<!--* [Résumé](/about) -->
+
 
 Talks
 -----
-* Create Beautiful Command-line Interfaces with Python
-   * [At PyCon UK](http://youtu.be/pXhcPJK5cMc)
-   * [At PyCon Ireland](http://youtu.be/XwATRZFzJ4g)
-* [How to Write an Interpreter](http://youtu.be/1h1mM7VwNGo)
-* [Python Best Practice Patterns](http://youtu.be/GZNUfkVIHAY)
-* [Critique of Python](http://youtu.be/CpjUoYcaUu8)
+* [Create Beautiful Command-line Interfaces with Python](http://youtu.be/pXhcPJK5cMc)
 
 
 Boolean Algebra
 ---------------
+
+In 2010 I made a series of videos about Boolean Algebra.
 
 * [Intoroduction](/boolean-algebra-introduction)
 * [Truth Tables](/boolean-algebra-truth-tables)
 * [Karnaugh Maps](/boolean-algebra-karnaugh-maps)
 * [DeMorgan’s Theorem](/boolean-algebra-demorgans-theorem)
 * [Standard Forms](/boolean-algebra-standard-sop-pos-forms)
+
+<code>
+:wq
+</code>
