@@ -16,7 +16,7 @@ small + p { margin-top: 0}
   <small><small>Under the Hood</small></small><br/>
 </h1>
 
-<center>2020-05-14</center>
+<center>Vladimir Keleshev • 2020-05-14</center>
 
 What happens when you call `console.log` or similar in your language of choice?
 

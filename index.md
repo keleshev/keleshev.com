@@ -25,6 +25,7 @@ Blog
 ----
 
 * 2020
+  * [One-pass Compiler Primer](/one-pass-compiler-primer)
   * [Standard IO: Under the Hood](/standard-io-under-the-hood)
   * [Verbose Regular Expressions in JavaScript](/verbose-regular-expressions-in-javascript)
   * [Writing a Book with Pandoc, Make, and Vim](/my-book-writing-setup)

@@ -1,0 +1,290 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>One-pass Compiler Primer</title>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" sizes="109x109" href="/favicon.gif" />
+    </head>
+    <body>
+        <p><style> #home { position:absolute; line-height: inherit; } </style></p>
+
+<p><span id=home><a title=Home href=/>☰</a></span></p>
+
+<h1>
+  One-pass Compiler
+<br/>
+  <small><small>Primer</small></small><br/>
+</h1>
+
+<p><center>Vladimir Keleshev • 2020-05-21</center></p>
+
+<p>Let&#8217;s look at what is a one-pass compiler and try to implement one.</p>
+
+<!--So instead of parsing the source into AST and then traversing it to emit code, a compiler would emit code during parsing. -->
+
+<p>A one-pass compiler emits assembly (or binary code) right during parsing, without creating an intermediate representation, such as an AST.
+This is a rare technique that was used back in the days when computer memory was scarce.
+This limited both the language features that were possible and the quality of the produced code.
+But this techniques produced fast compilers that made Bill Gates envy.</p>
+
+<!--When it comes to langauge features, the most straightforward outcome of having a one-pass compiler is that forward references are not possible.
+
+It also limits the kinds of optimizations that the compiler can do.-->
+
+<h2>Turbo Pascal</h2>
+
+<p>A notable example of a one-pass compiler is Turbo Pascal.</p>
+
+<p>Fast compilation speed that the one-pass compiler architecture enabled is often cited as the decisive factor in the success of Turbo Pascal.</p>
+
+<p><em>From <a href="https://en.wikipedia.org/wiki/Turbo_Pascal">Wikipedia</a>:</em></p>
+
+<blockquote>
+  <p>Bill Gates saw the success of Turbo Pascal
+  &#8220;in very personal terms, and &#8216;couldn&#8217;t understand why
+  [Microsoft&#8217;s] stuff was so slow.
+  He would bring in Greg Whitten
+  [programming director of Microsoft languages]
+  and yell at him for half an hour.&#8217;
+  He couldn&#8217;t understand why Kahn had been able to
+  beat an established competitor like Microsoft<span><span style="position: absolute">.</span>&rdquo;</span></p>
+</blockquote>
+
+<h2>Compiler</h2>
+
+<p>Let&#8217;s make a simple one-pass compiler.
+Not for a whole programming language, but just for simple arithmetic expressions, like the following:</p>
+
+<p><center><code>4 + 2 &#42; 10 + 3 &#42; (5 + 1)</code></center></p>
+
+<p>We&#8217;ll target x86-64 and will use <a href="https://en.wikipedia.org/wiki/Flex_(lexical_analyser_generator">flex</a> and <a href="https://en.wikipedia.org/wiki/GNU_Bison">bison</a> for generating
+our lexer and parser, respectively.
+I&#8217;ve used the Wikipedia bison example as an inspiration.</p>
+
+<p>We start with defining our token type in the &#8220;yacc&#8221; file:</p>
+
+<pre>%token TOKEN_LPAREN <em>"("</em>
+%token TOKEN_RPAREN <em>")"</em>
+%token TOKEN_PLUS   <em>"+"</em>
+%token TOKEN_STAR   <em>"*"</em>
+%token &lt;int> TOKEN_NUMBER <em>"number"</em>
+</pre>
+
+<p>Then we go onto defining our simple lexer in the &#8220;lex&#8221; file:</p>
+
+<pre>[ \r\n\t]*   { continue; /* Skip blanks. */ }
+[0-9]+       { sscanf(yytext, <em>"<b>%d</b>"</em>&#8288;, &yylval->value);
+               return TOKEN_NUMBER; }
+<em>"*"</em>          { return TOKEN_STAR; }
+<em>"+"</em>          { return TOKEN_PLUS; }
+<em>"("</em>          { return TOKEN_LPAREN; }
+<em>")"</em>          { return TOKEN_RPAREN; }
+.            { continue; /* Skip unexpected characters. */ }
+</pre>
+
+<p>And now, the grammar for our expression language.
+Let&#8217;s leave out the semantic actions, for now.</p>
+
+<pre>input:
+  expr
+
+expr:
+    <em>"number"</em>
+  | expr <em>"+"</em> expr
+  | expr <em>"*"</em> expr
+  | <em>"("</em> expr <em>")"</em>
+</pre>
+
+<p>Above the grammar we specify the operators in order of increasing precedence:</p>
+
+<pre>%left <em>"+"</em>
+%left <em>"*"</em>
+</pre>
+
+<p>They are both left-associative:
+2 + 3 + 4 means ((2 + 3) + 4).
+This is not a very important
+property for addition and multiplication, since the operations themselves are associative.</p>
+
+<p>We need to directly emit some assembly code in each semantic action that we add to our grammar.
+We can get fancier later if we need to, but for now, let&#8217;s define our emit function as an alias to <code>printf</code>.</p>
+
+<pre><em>#define emit printf
+</em></pre>
+
+Thus, we'll spit assembly instructions directly to the standard output channel, which we can pipe to a file if needed.
+
+And now, onto the semantic actions.
+
+Each time we encounter a number, we push it onto the stack:
+
+<pre>    <em>"number"</em> { emit(<em>"  push $<b>%d</b>\n"</em>&#8288;, $1); }
+</pre>
+
+<p>The order of when each semantic action is firing matters.
+So, when we encounter an operation, like addition,
+the two inner expressions have already been emitted.
+Thus, we can expect their values to be at the top of the stack.
+What we can do is, pop the values into some registers,
+perform the addition (in this case), and push the resulting value back onto the stack:</p>
+
+<pre>  | expr <em>"+"</em> expr  { emit(<em>"  pop %%rax\n"</em>);
+                     emit(<em>"  pop %%rbx\n"</em>);
+                     emit(<em>"  add %%rbx, %%rax\n"</em>);
+                     emit(<em>"  push %%rax\n"</em>); }
+</pre>
+
+<p>We need to use double percent signs for registers since this is a <code>printf</code> format string.</p>
+
+<p>We do the same for multiplication, except that the accumulator register <code>%rax</code> is an implicit parameter of the <code>mul</code> instruction.</p>
+
+<pre>  | expr <em>"*"</em> expr  { emit(<em>"  pop %%rax\n"</em>);
+                     emit(<em>"  pop %%rbx\n"</em>);
+                     emit(<em>"  mul %%rbx\n"</em>);
+                     emit(<em>"  push %%rax\n"</em>); }
+</pre>
+
+<p>What do we do when we encounter parethesis?
+We do nothing, since the inner expression is already emitted.</p>
+
+<pre>  | <em>"("</em> expr <em>")"</em>   { /* No action. */ }
+</pre>
+
+<p>Now, we can generate assembly snippets given an arithmetic expression.
+However, a bunch of pushes and pops don&#8217;t make for a complete assembly listing.
+We need a <code>main</code> (assuming we link to <code>libc</code>) or a <code>_start</code>.</p>
+
+<p>We can use a <a href="https://www.gnu.org/software/bison/manual/html_node/Mid_002dRule-Actions.html">mid-rule</a> semantic action to generate our <code>main</code> label:</p>
+
+<pre>  input:
+                     { emit(<em>"&#46;global main\n"</em>);
+                       emit(<em>"main:\n"</em>); }
+    expr             { emit(<em>"  pop %%rax\n"</em>);
+                       emit(<em>"  ret\n"</em>); }
+</pre>
+
+<p>As the final semantic action, we pop the only expected value and return it from <code>main</code> as the exit code of our program.</p>
+
+<p>Now, if we feed this parser our original expression:</p>
+
+<p><center><code>4 + 2 &#42; 10 + 3 &#42; (5 + 1)</code></center></p>
+
+<p>It will emit the following assembly listing:</p>
+
+<pre>.global main
+main:
+  push $4
+  push $2
+  push $10
+  pop %rax
+  pop %rbx
+  mul %rbx
+  push %rax
+  pop %rax
+  pop %rbx
+  add %rbx, %rax
+  push %rax
+  push $3
+  push $5
+  push $1
+  pop %rax
+  pop %rbx
+  add %rbx, %rax
+  push %rax
+  pop %rax
+  pop %rbx
+  mul %rbx
+  push %rax
+  pop %rax
+  pop %rbx
+  add %rbx, %rax
+  push %rax
+  pop %rax
+  ret
+</pre>
+
+<p>If we pipe it into a file called <code>test.s</code>, assemble it and execute it, the program will produce no output, however, we can check the exit code:</p>
+
+<pre>$ cc test.s -o test
+$ ./test
+$ echo $?
+42
+</pre>
+
+<p>Which is the result of our arithmetic expression!</p>
+
+<p>This is pretty much all we can cover in a short blog post.</p>
+
+<p>I can imagine implementing variables by pushing their values onto the stack and remembering their stack offsets in a hash table… Something similar for functions&#8217; signatures… It looks like a lot of global mutable state is needed for a one-pass compiler to work.</p>
+
+<p>How do you optimize something like this?
+An optimizing compiler would constant-fold our expression into a single number ahead of time. Still, in one-pass case you only get a very myopic view of the code.</p>
+
+<!--The outcome of this experiment, I guess, is, don't make a
+one-pass compiler?!-->
+
+<!--
+<center>⁂</center>
+
+This blog post was inspired by a [question on Quora](https://www.quora.com/What-is-Single-Pass-Compiler-and-its-example/answer/Vladimir-Keleshev-1).
+-->
+
+<h2>The Code</h2>
+
+<p>The complete code, including lexer, parser, and a makefile is available on GitHub <a href="https://gist.github.com/keleshev/cdd6d3d46437284b2a0c2fc42cf90e0f">as a gist</a>. <a href="/" title="Home">&#9632;</a></p>
+
+<p><center>⁂</center></p>
+
+<p><em>Did you know, I&#8217;m writing a book about compilers?
+Unfortunately, the compiler described in the book is not one-pass.
+I know, right?
+But it&#8217;s a two-pass compiler that produces ARM assembly code.
+The book even teaches you enough assembly programming to get going.
+The examples are written in TypeScript, but it can be followed in any language, so check it out!</em></p>
+
+<p><br/></p>
+
+<p><center></p>
+
+<p><style>
+#cover {
+  border: 1px solid black;
+  width: 500px;
+  color: black;
+  display: block;
+}</p>
+
+<p></style></p>
+
+<div id=cover >
+<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
+
+<br/>
+
+<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
+
+— the book —<br/>
+<br/>
+<br/>
+
+<img src=/dragon.png width=256 height=260 />
+
+<br/>
+<br/>
+<br/>
+
+
+<p>Vladimir Keleshev</p>
+
+<em>TypeScript — ARM — Summer 2020</em>
+<br/>
+<br/>
+
+</a>
+</div>
+
+<p></center></p>
+
+    </body>
+</html>
