@@ -155,7 +155,7 @@ We do the same for multiplication, except that the accumulator register `%rax` i
                      emit("  push %%rax\n"); }
 ```
 
-What do we do when we encounter parethesis?
+What do we do when we encounter parenthesis?
 We do nothing, since the inner expression is already emitted.
 
 ```txt
