@@ -48,14 +48,8 @@ Blog
 * 2010
   * [YAML: Quick Introduction](/yaml-quick-introduction)
 
-Social
-------
 
-* Twitter: [@keleshev](http://twitter.com/keleshev)
-* GitHub: [@keleshev](http://github.com/keleshev)
-
-<!--* [Résumé](/about) -->
-
+<!--
 
 Talks
 -----
@@ -72,6 +66,25 @@ In 2010 I made a series of videos about Boolean Algebra.
 * [Karnaugh Maps](/boolean-algebra-karnaugh-maps)
 * [DeMorgan’s Theorem](/boolean-algebra-demorgans-theorem)
 * [Standard Forms](/boolean-algebra-standard-sop-pos-forms)
+
+-->
+
+<center><img src=./keleshev.jpg width=200 height=200 style=float:right /></center>
+About me
+--------
+
+My name is Vladimir Keleshev.
+I am a software developer living and working just outside of Copenhagen.
+I have worked with embedded systems, safety-critical systems,
+compilers, and now with finance.
+I'm writing a book called *[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)*.
+
+* Twitter: [@keleshev](http://twitter.com/keleshev)
+* GitHub: [@keleshev](http://github.com/keleshev)
+* Mailto: [vladimir@keleshev.com](mailto:vladimir@keleshev.com)
+
+<!--* [Résumé](/about) -->
+
 
 <code>
 :wq
