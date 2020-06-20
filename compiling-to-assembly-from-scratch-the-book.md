@@ -2,7 +2,7 @@
 title: Compiling to Assembly from Scratch
 ---
 
-<style> #home { position: absolute; line-height: inherit; } </style>
+<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } </style>
 
 <span id=home><a title=Home href=/>☰</a></span>
 <h1></h1>
@@ -11,15 +11,13 @@ title: Compiling to Assembly from Scratch
 
 
 
-<center><img src=./dragon.png width=256 height=260 /></center>
+<center><img id=cover src=./compiling-to-assembly-from-scratch.jpg width=200 height=300 /></center>
 
 Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small>
 ==================================
 
 
-<center>— the book —<br/>
-
-<em>TypeScript — ARM  — Summer 2020</em></center>
+<center><em>TypeScript — ARM  — August 2020</em></center>
 
 
 
@@ -292,6 +290,6 @@ be available even sooner.
 
 
 <br/>
-<center><img src=./dragon.jpg width=168 height=228 /></center>
+<center><img src=./dragon.png width=256 height=260 /></center>
 
 <center><em>Illustrations by [@PbKatiuska](https://twitter.com/PbKatiuska)</em></center>
