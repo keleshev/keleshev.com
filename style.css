@@ -71,6 +71,113 @@ a[href^="http"]:after
 content: '⤴'; '⇗';
 }
 
+.sellfy-buy-button:after {
+  content: '' !important;
+}
+.sellfy-buy-button:hover {
+  border-bottom: 0;
+}
+.sellfy-buy-button {
+  font-size: 20px;
+}
+
+.pre-order:hover {
+  border-bottom: 0;
+}
+.pre-order:after {
+  content: '' !important;
+}
+.pre-order {
+  border: 0px solid black;
+  border-radius: 20px;
+  padding: 20px;
+  background: green;
+  color: white;
+}
+
+
+.btn {
+  color: #fff !important;
+  background-color: #000; #2ea44f;
+  //border-color: rgba(27,31,35,.1);
+  //box-shadow: 0 0px 0 rgba(27,31,35,.1),inset 0 1px 0 hsla(0,0%,100%,.03);
+  position: relative;
+  display: inline-block;
+  padding: 12px 12px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  //border: 1px solid;
+  border-radius: 10px;
+  text-decoration: none;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
+  //box-shadow: 0px 0px 46px -23px;
+  //box-shadow: 0 0 18px -3px black
+}
+.btn:after {
+  content: '' !important;
+}
+.btn:hover {
+  background-color: #444; //#c82a28;//#2c974b;
+  border-bottom: 0;
+}
+
+
+
+
+.btn-dis {
+  top: 310px;
+  position: relative !important;
+  color: white !important;
+  //background-color: #2ea44f;
+  background-color: #dc131d; red;
+  //border-color: rgba(27,31,35,.1);
+  //box-shadow: 0 0px 0 rgba(27,31,35,.1),inset 0 1px 0 hsla(0,0%,100%,.03);
+  position: relative;
+  display: inline-block;
+  padding: 12px 12px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+  //cursor: not-allowed;
+  cursor: default;
+  //border: 1px solid;
+  border-radius: 10px;
+  text-decoration: none;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
+  //box-shadow: 0px 0px 46px -23px;
+  box-shadow: 0 0 18px -3px black
+}
+.btn-dis:after {
+  content: '' !important;
+}
+.btn-dis:hover {
+  //background-color: #2c974b;
+  border-bottom: 0;
+}
+.btn-dis {
+
+}
+
+.h2-card {
+  margin-top: 0.9em;
+  text-align: center;
+}
+
+
+.formkit-submit {
+flex: initial !important;
+}
+.formkit-field {
+flex: 1 !important;
+margin-right: 10px !important;
+}
+
 #home {
     //text-align: center;
     line-height: 1.0;
