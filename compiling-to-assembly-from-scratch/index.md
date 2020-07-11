@@ -64,7 +64,7 @@ The book describes the design and implementation of a compiler that emits
 >  * Source code *(link in the book)*
 >  * Discourse forum: book's private community *(invite in the book)*
 >
-> ***You get later*** *(ETA–Autumn 2020)****:***
+> ***You get later*** *(ETA–August 2020)****:***
 >
 >  * Complete book
 >  * All future revisions
