@@ -39,11 +39,9 @@ That's where the rubber hits the road. That's where it gets hot.
 And, oh-so-many resources are hesitant to cover this part.
 But not this book.
 
-<big>
 This ebook will show you in detail
 how you can build a compiler from scratch
 that goes all the way from *source* to *assembly*.
-</big>
 
 The example code is written in **TypeScript**, a dialect of **JavaScript**.
 The book describes the design and implementation of a compiler that emits

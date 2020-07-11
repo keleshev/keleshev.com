@@ -13,11 +13,18 @@ title: Compiling to Assembly from Scratch: Resources
 
 <center><img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></center>
 
+<!--
 Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small>
 ==================================
+-->
+
+Thank you!
+=========
 
 
-<center><em>Resources</em></center>
+Thank you for your pre-order! You will receive an email with a download link shortly.
+
+<center><em>— Resources —</em></center>
 
 This is a permalink for the book's resources.
 Services like GitHub and Discourse come and go out of fashion, so I wanted to make sure that the link that I put in the book is under my control, so you, the reader, can reach it even if I switch repository or forum hosting services.
@@ -36,6 +43,7 @@ The book's discussion forum is available here:
  * <https://discourse.keleshev.com>
 
 To sign up you need an *invitation code*, which is available in the book's *Preface*.
+Looking forward to see you join the discussion!
 
 <center>⁂</center>
 
