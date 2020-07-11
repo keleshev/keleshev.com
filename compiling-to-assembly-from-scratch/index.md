@@ -2,22 +2,24 @@
 title: Compiling to Assembly from Scratch
 ---
 
-<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } </style>
+<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
 
 <span id=home><a title=Home href=/>☰</a></span>
 <h1></h1>
 
 
+<!--
 
-
+<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em> <sup><center><em>— e-book —</em></center></sup> </small> </small> </h1>
+-->
 
 <center><img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></center>
 
-Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small>
-==================================
+<center><p> <a class=btn href=https://transactions.sendowl.com/products/78310234/604B9EF1/purchase rel=nofollow> Pre-order •  <b>$27</b> </a></p></center>
 
 
-<center><em>TypeScript — ARM  — Autumn 2020</em></center>
+
+<center><em>TypeScript — ARM  — August 2020</em></center>
 
 
 
@@ -38,7 +40,7 @@ And, oh-so-many resources are hesitant to cover this part.
 But not this book.
 
 <big>
-This *small* book will show you in detail
+This ebook will show you in detail
 how you can build a compiler from scratch
 that goes all the way from *source* to *assembly*.
 </big>
@@ -69,7 +71,7 @@ The book describes the design and implementation of a compiler that emits
 >  * PDF, EPUB *(other formats on request)*
 >  * DRM-free
 >
-> $27 is pre-order–only price with 40% discount. When the book is out it will be $45.
+> *Note, $27 is pre-order–only price with 40% discount. When the book is out it will be $45.*
 > <br/>
 
 <a href=https://sellfy.com/p/bkz0pv/ id=bkz0pv class=sellfy-buy-button data-text=Pre-order></a>
@@ -161,7 +163,7 @@ It is, in fact, how I wrote it first.
 
 </style>
 
-## The Contents
+## Book Contents
 
 
 The book consists of two parts. Part I
@@ -242,43 +244,11 @@ Part II talks about *more advanced* topics in *less details*.
 It explores several different (often mutually exclusive)
 directions in which you can take your compiler.
 
-## Draft Table of Content
+<center>⁂</center>
 
-Introduction
+<center><a id=excerpt href=./excerpt-compiling-to-assembly-from-scratch.pdf><img id=excerpt src=./book-preview.png width=400 height=300 /></a></center>
 
-Part I
-
-* Compiler structure overview
-* Representing programs using AST
-* Lexing and parsing
-* Introduction to ARM assembly
-* Emitting assembly from an AST
-
-Part II
-
-* Static type checking
-* Dynamic typing
-* More primitive types: null, bool, char
-* Foreign calls
-* System calls
-* Heap allocation: arrays, strings, records
-* Garbage collector
-
-Appendix: Running ARM code
-
-* Linux
-  * Running ARM code natively on Raspberry Pi
-  * Running ARM code natively on a cloud VM instance
-  * Emulating ARM with QEMU on Linux
-  * Emulating ARM with Android NDK
-* Windows
-  * Emulating ARM with QEMU on Windows
-  * Emulating ARM with QEMU on WSL
-  * Emulating ARM with QEMU on Cygwin
-  * Emulating ARM with Android NDK
-  * Visual Studio workflow
-* macOS
-  * Emulating ARM with QEMU on macOS
+<center><a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read Excerpt </a></center>
 
 
 <center><img src=/keleshev.jpg width=200 height=200 style=float:right /></center>
@@ -295,7 +265,7 @@ I'm [@keleshev](https://twitter.com/keleshev) on Twitter.
 
 <br />
 
-> <h2 class=h2-card >Be the first to know when the book is out!</h2>
+> <h2 class=h2-card >Be the first to know when the book is finalized!</h2>
 
 > <center>Reading a draft is not your style? I get it. Subscribe to be notified when the book is finalized (and related news about the book and compilers).</center>
 >
