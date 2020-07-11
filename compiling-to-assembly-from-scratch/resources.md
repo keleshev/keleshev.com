@@ -42,7 +42,7 @@ The book's discussion forum is available here:
 
  * <https://discourse.keleshev.com>
 
-To sign up you need an *invitation code*, which is available in the book's *Preface*.
+To sign up use invitation code `COM2ASM` (also available in the book's *Preface*).
 Looking forward to see you join the discussion!
 
 <center>⁂</center>
