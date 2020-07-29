@@ -248,6 +248,16 @@ directions in which you can take your compiler.
 
 <center><a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read Excerpt </a></center>
 
+## Print edition?
+
+There's no print edition of the book at the moment.
+But there will be.
+However, there's no timeline for it yet.
+The print is a bit harder than digital.
+I need to be 100% confident about each word in the book before it is sent to the press.
+However, I know that nobody likes buying the same book twice.
+So, if you pre-order the ebook today, I make a promise to give you a discount, once the print edition is out.
+
 
 <center><img src=/keleshev.jpg width=200 height=200 style=float:right /></center>
 ## About me
@@ -259,7 +269,11 @@ My fondness of ARM assembly stems from
 my previous work in embedded systems.
 Currently, I work in finance
 with domain-specific languages.
-I'm [@keleshev](https://twitter.com/keleshev) on Twitter.
+<!-- I'm [@keleshev](https://twitter.com/keleshev) on Twitter. -->
+
+## Questions?
+
+Contact me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com) or on Twitter at [@keleshev](https://twitter.com/keleshev).
 
 <br />
 
@@ -273,21 +287,6 @@ I'm [@keleshev](https://twitter.com/keleshev) on Twitter.
 > <script async data-uid="f6381e8cdd" src="https://motivated-writer-7421.ck.page/f6381e8cdd/index.js"></script>
 >
 > <center><small>You can unsubscribe at any time</small></center>
-
-<!--
-## It's coming summer 2020
-
-When I write blog posts I usually spent the first half
-of the time writing the code and develoing the idea, and
-the second half on the prose.
-This book will be no exception.
-
-At the moment I have finished writing
-the code, and I am very happy with the results.
-I expect the book to be ready early summer 2020, and a draft to
-be available even sooner.
-
--->
 
 
 
