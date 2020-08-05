@@ -1,9 +1,13 @@
+---
+title: Composable Error Handling in OCaml
+---
 
+<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
 
-Composable Error Handling in OCaml
-==================================
+<span id=home><a title=Home href=/>☰</a></span>
+<h1>Composable Error Handling<br/><small><small>in OCaml</small></small></h1>
 
-<center>2018-02-12</center>
+<center>Vladimir Keleshev • 2018-02-12</center>
 
 Let's discuss common ways to handle errors in OCaml, their shortcomings
 and, finally, how polymorphic variants may help. The discussion applies
@@ -489,16 +493,19 @@ familiarity with how polymorphic variants work. Here are a few resources:
 Big thanks to [Oskar Wickström](https://twitter.com/owickstrom)
 for giving feedback on a draft of this post. [&#9632;](/ "Home")
 
-<center markdown="1">
-<em>Discuss on <a href="https://www.reddit.com/r/ocaml/comments/7x4m0e/composable_error_handling_in_ocaml/">Reddit</a></em>
-<br/>
-<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
+
+<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
+<center><br/><br/> ⁂ </center>
+
+<center>
+<h2>Check out my upcoming book about compilers:</h2>
+<a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=300 height=450 /></a>
+<p><em>TypeScript — ARM — August 2020</em></p>
 </center>
 
-
-
-
-
-
-
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
