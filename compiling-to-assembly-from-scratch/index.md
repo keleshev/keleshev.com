@@ -19,7 +19,7 @@ title: Compiling to Assembly from Scratch
 
 
 
-<center><em>TypeScript — ARM  — August 2020</em></center>
+<center><em>TypeScript — ARM  — September 2020</em></center>
 
 
 
@@ -62,7 +62,7 @@ The book describes the design and implementation of a compiler that emits
 >  * Source code *(link in the book)*
 >  * Discourse forum: book's private community *(invite in the book)*
 >
-> ***You get later*** *(ETA–August 2020)****:***
+> ***You get later*** *(ETA–September 2020)****:***
 >
 >  * Complete book
 >  * All future revisions

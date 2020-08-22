@@ -17,7 +17,7 @@ Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></smal
 ==================================
 
 
-<center><em>TypeScript — ARM  — August 2020</em></center>
+<center><em>TypeScript — ARM  — September 2020</em></center>
 
 
 

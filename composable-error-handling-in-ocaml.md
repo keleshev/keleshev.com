@@ -500,7 +500,7 @@ for giving feedback on a draft of this post. [&#9632;](/ "Home")
 <center>
 <h2>Check out my upcoming book about compilers:</h2>
 <a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=300 height=450 /></a>
-<p><em>TypeScript — ARM — August 2020</em></p>
+<p><em>TypeScript — ARM — September 2020</em></p>
 </center>
 
 <br/>
