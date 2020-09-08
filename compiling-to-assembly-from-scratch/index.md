@@ -15,7 +15,7 @@ title: Compiling to Assembly from Scratch
 
 <center><img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></center>
 
-<center><p> <a class=btn href=https://transactions.sendowl.com/products/78310234/604B9EF1/purchase rel=nofollow> Pre-order •  <b>$27</b> </a></p></center>
+<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Pre-order •  <b>$27</b> </a></p></center>
 
 
 
@@ -51,7 +51,7 @@ The book describes the design and implementation of a compiler that emits
 
 > <h2 class=h2-card >Pre-order and get a draft!</h2>
 >
-> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/products/78310234/604B9EF1/purchase rel=nofollow> Pre-order •  <b>$27</b> </a> <br/> <small><em>excl. <span style=font-variant:all-small-caps>EU VAT</span></em></small> </p> </center></p> </div>
+> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Pre-order •  <b>$27</b> </a> <br/> <small><em>excl. <span style=font-variant:all-small-caps>EU VAT</span></em></small> </p> </center></p> </div>
 >
 >
 > ***You get now:***
