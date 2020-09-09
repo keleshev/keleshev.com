@@ -269,7 +269,6 @@ My fondness of ARM assembly stems from
 my previous work in embedded systems.
 Currently, I work in finance
 with domain-specific languages.
-<!-- I'm [@keleshev](https://twitter.com/keleshev) on Twitter. -->
 
 ## Questions?
 
