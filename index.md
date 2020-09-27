@@ -16,7 +16,7 @@ Vladimir Keleshev
 
 
 
-My upcoming book
+My book
 ----------------
 
 * [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)
