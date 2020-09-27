@@ -19,7 +19,7 @@ title: Compiling to Assembly from Scratch
 
 
 
-<center><em>TypeScript — ARM</em></center>
+<center><em>TypeScript — ARM — September 2020</em></center>
 
 
 
