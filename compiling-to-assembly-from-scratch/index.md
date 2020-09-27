@@ -15,11 +15,11 @@ title: Compiling to Assembly from Scratch
 
 <center><img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></center>
 
-<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Pre-order •  <b>$27</b> </a></p></center>
+<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook •  <b>$45</b> </a></p></center>
 
 
 
-<center><em>TypeScript — ARM  — September 2020</em></center>
+<center><em>TypeScript — ARM</em></center>
 
 
 
@@ -46,31 +46,33 @@ that goes all the way from *source* to *assembly*.
 The example code is written in **TypeScript**, a dialect of **JavaScript**.
 The book describes the design and implementation of a compiler that emits
 32-bit **ARM** assembly instructions.
+All you need to know is how to program, the book will teach you enough compiler theory and assembly programming to get going.
 
 <script src=https://transactions.sendowl.com/assets/sendowl.js></script>
 
-> <h2 class=h2-card >Pre-order and get a draft!</h2>
+> <h2 class=h2-card >Buy now and get the following:</h2>
 >
-> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Pre-order •  <b>$27</b> </a> <br/> <small><em>excl. <span style=font-variant:all-small-caps>EU VAT</span></em></small> </p> </center></p> </div>
+> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img id=cover src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook •  <b>$45</b> </a> <br/> <small><em>excl. <span style=font-variant:all-small-caps>EU VAT</span></em></small> </p> </center></p> </div>
 >
->
-> ***You get now:***
->
->  * Draft *(contains full Part I of the book)*
->  * PDF-only
->  * DRM-free
->  * Source code *(link in the book)*
->  * Discourse forum: book's private community *(invite in the book)*
->
-> ***You get later*** *(ETA–September 2020)****:***
+>  <br/>
 >
 >  * Complete book
+>
 >  * All future revisions
->  * PDF, EPUB *(other formats on request)*
+>
+>  * Formats: PDF, EPUB, MOBI
+>
 >  * DRM-free
 >
-> *Note, $27 is pre-order–only price with 40% discount. When the book is out it will be $45.*
-> <br/>
+>  * Source code *(link in the book)* 
+>
+>  * Access to the book's Discourse forum <br/> *(invite in the book)*<br/>
+>
+>  <br/>
+>  <br/>
+>  <br/>
+>
+
 
 <a href=https://sellfy.com/p/bkz0pv/ id=bkz0pv class=sellfy-buy-button data-text=Pre-order></a>
 
@@ -104,9 +106,9 @@ for moving to x86-64 or the new ARM64.
 
 *Will you be able to run the code your compiler produces?*
 
-I bet you will! The Appendix will contain a bazillion ways
+I bet you will! The Appendix contains numerous ways
 to execute ARM code, starting from Raspberry Pi,
-cloud VM, to various ways to emulate ARM on Linux, Windows, and macOS.
+cloud VM, to emulating ARM on Linux and Windows.
 
 ## Why TypeScript?
 
@@ -256,7 +258,7 @@ However, there's no timeline for it yet.
 The print is a bit harder than digital.
 I need to be 100% confident about each word in the book before it is sent to the press.
 However, I know that nobody likes buying the same book twice.
-So, if you pre-order the ebook today, I make a promise to give you a discount, once the print edition is out.
+So, if you buy the ebook today, I make a promise to give you a discount, once the print edition is out.
 
 
 <center><img src=/keleshev.jpg width=200 height=200 style=float:right /></center>
@@ -276,6 +278,7 @@ Contact me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com) or on Twitte
 
 <br />
 
+<!--
 > <h2 class=h2-card >Be the first to know when the book is finalized!</h2>
 
 > <center>Reading a draft is not your style? I get it. Subscribe to be notified when the book is finalized (and related news about the book and compilers).</center>
@@ -287,13 +290,12 @@ Contact me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com) or on Twitte
 >
 > <center><small>You can unsubscribe at any time</small></center>
 
-
+-->
 
 <!--script async data-uid="129429cd71" src="https://motivated-writer-7421.ck.page/129429cd71/index.js"></script-->
 
 
 
-<br/>
 <center><img src=/dragon.png width=256 height=260 /></center>
 
 <center><em>Illustrations by [@PbKatiuska](https://twitter.com/PbKatiuska)</em></center>
