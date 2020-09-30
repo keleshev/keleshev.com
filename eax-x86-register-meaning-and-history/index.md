@@ -10,7 +10,7 @@ title: EAX x86 Register: Meaning and History
 <h1>
 EAX x86 Register<br/><small><small>Meaning and History</small></small></h1>
 
-<center>2020-03-20</center>
+<center>Vladimir Keleshev • 2020-03-20</center>
 
 Usually, x86 tutorials
 don't spend much time explaining
@@ -57,7 +57,7 @@ That was the only available way to reference memory in 8008.
 
 So, `A` was an accumulator, `H` and `L` were also used for
 addressing memory. However, `B`, `C`, `D`, `E` were
-completely generic and interchange.
+completely generic and interchangeable.
 
 ## 8086
 
@@ -256,53 +256,22 @@ With his permission, I include the response:
 by Stephen Morse. [&#9632;](/ "Home")
 
 
+
+
+
+
+
+
+<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
+
+<center> ⁂ </center>
+
 <center>
-
-
-<br/>
-⁂
-<br/>
-
-<style>
-#cover {
-  border: 1px solid black;
-  width: 500px;
-  color: black;
-  display: block;
-}
-
-</style>
-
-
-
-<h2>Did you know, I’m writing a book about compilers?</h2>
-
-
-<div id=cover >
-<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
-
-<br/>
-
-<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
-
-— the book —<br/>
-<br/>
-<br/>
-
-<img src=/dragon.png width=256 height=260 />
-
-<br/>
-<br/>
-<br/>
-
-
-<p>Vladimir Keleshev</p>
-
-<em>TypeScript — ARM — Summer 2020</em>
-<br/>
-<br/>
-
-</a>
-</div>
-
+<p><em>If you liked this blog post, check out my book,<br/>Compiling to Assembly from Scratch:</em></p>
+<a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></a>
+<p><em>TypeScript — ARM — September 2020</em></p>
 </center>
+
+
+<center><br/><br/>  </center>
+

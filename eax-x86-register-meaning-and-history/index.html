@@ -14,7 +14,7 @@
 <h1>
 EAX x86 Register<br/><small><small>Meaning and History</small></small></h1>
 
-<p><center>2020-03-20</center></p>
+<p><center>Vladimir Keleshev • 2020-03-20</center></p>
 
 <p>Usually, x86 tutorials
 don&#8217;t spend much time explaining
@@ -63,7 +63,7 @@ That was the only available way to reference memory in 8008.</p>
 
 <p>So, <code>A</code> was an accumulator, <code>H</code> and <code>L</code> were also used for
 addressing memory. However, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> were
-completely generic and interchange.</p>
+completely generic and interchangeable.</p>
 
 <h2>8086</h2>
 
@@ -99,10 +99,10 @@ also be accessed by one of the eight 8-bit registers.</p>
   could be thought of as 8-bit registers on their own
   or as a way to access the <em>high-order</em> and the <em>low-order</em>
   bytes of <code>AX</code>.</p>
-  
+
   <p>The <code>X</code> in <code>AX</code> meant to be a placeholder that stood for both
   <code>H</code> and <code>L</code>.</p>
-  
+
   <p>This is in a way similar to how much later
   the &#8220;x&#8221; in x86 was meant to refer to 8086, 80186, 80286, etc.</p>
 </blockquote>
@@ -235,11 +235,11 @@ out to Dr. Stephen Morse, the architect of 8086.</p>
 
 <blockquote>
   <p><em>Vladimir,</em></p>
-  
+
   <p><em>Your question is certainly pushing my memory about decisions that were
   made over 40 years ago.  So the following is the best of my recollection
   and not necessarily 100% accurate.</em></p>
-  
+
   <p><em>Prior to the 8086 the registers were single letters, e.g., A, B, C, D.
   Each was an 8-bit register.   The 8086 had 16-bit registers that could
   be referenced either 8-bits at a time or all 16-bits at once. For
@@ -254,7 +254,7 @@ out to Dr. Stephen Morse, the architect of 8086.</p>
   anything) &#8211; it was just a letter that was needed to identify the
   General Registers (AX, BX, CX, DX), as opposed to the Pointer and Index
   Registers (SP, BP, SI, DI), and the Segment Registers (CS, DS, ES, SS).</em></p>
-  
+
   <p><em>&#8211; Steve Morse</em></p>
 </blockquote>
 
@@ -263,52 +263,21 @@ out to Dr. Stephen Morse, the architect of 8086.</p>
 <p><a href="https://stevemorse.org/8086history/8086history.pdf">Intel Microprocessors: 8008 to 8086</a>
 by Stephen Morse. <a href="/" title="Home">&#9632;</a></p>
 
+<p><style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style></p>
+
+<p><center> ⁂ </center></p>
+
 <p><center></p>
 
-<p><br/>
-⁂
-<br/></p>
+<p><em>If you liked this blog post, check out my book,<br/>Compiling to Assembly from Scratch:</em></p>
 
-<p><style>
-#cover {
-  border: 1px solid black;
-  width: 500px;
-  color: black;
-  display: block;
-}</p>
+<p><a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></a></p>
 
-<p></style></p>
-
-<h2>Did you know, I’m writing a book about compilers?</h2>
-
-<div id=cover >
-<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
-
-<br/>
-
-<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
-
-— the book —<br/>
-<br/>
-<br/>
-
-<img src=/dragon.png width=256 height=260 />
-
-<br/>
-<br/>
-<br/>
-
-
-<p>Vladimir Keleshev</p>
-
-<em>TypeScript — ARM — Summer 2020</em>
-<br/>
-<br/>
-
-</a>
-</div>
+<p><em>TypeScript — ARM — September 2020</em></p>
 
 <p></center></p>
+
+<p><center><br/><br/>  </center></p>
 
     </body>
 </html>
