@@ -1,6 +1,22 @@
+hr {
+    border: none;
+    color: #000;
+    text-align: center;
+}
+hr:after {
+    content: "⁂"; /* "§"; */
+    display: inline-block;
+    position: relative;
+    font-size: 1.5em;
+    padding: 0 0.25em;
+    background: white;
+    margin: 1em;
+}
+
 body {
     margin: auto;
-    padding: 0 30px;
+    padding: 0 0px;
+    /* padding-bottom: 100px; */
     width: 700px;
     font-size: 19.0px;
     font-family: Georgia, 'Times New Roman', Times, serif;
@@ -31,7 +47,9 @@ body {
  font-style: normal;
 }
 
-code {
+/* Hack to remove underline from pandoc code higlighting */
+code span.dt {
+  text-decoration: none !important;
 }
 
 pre {
@@ -183,6 +201,8 @@ margin-right: 10px !important;
     line-height: 1.0;
     //-webkit-animation: rotateWord 360s linear infinite 0s;
 }
+
+
 #home:hover {
     //-webkit-animation: rotateWord 0.5s linear 1 0s;
 }
@@ -194,6 +214,17 @@ margin-right: 10px !important;
     font-size: 48px; 72px;
     border: 0;
 }
+
+#home-menu {
+    line-height: 1.0;
+    font-size: 48px; 72px;
+    border: 0;
+position:absolute; line-height: inherit; }
+#home-menu a {
+    border: 0;
+}
+
+a[title="Home"] { border: 0; }
 
 ol, ul {
 }
@@ -232,3 +263,5 @@ h2 { margin-top: 2em }
   }
 }
 */
+
+
