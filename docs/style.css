@@ -12,6 +12,15 @@ hr:after {
     background: white;
     margin: 1em;
 }
+hr.fleuron:after {
+    content: "❦";
+    display: inline-block;
+    position: relative;
+    font-size: 1.5em;
+    padding: 0 0.25em;
+    background: white;
+    margin: 1em;
+}
 
 body {
     margin: auto;
@@ -264,4 +273,13 @@ h2 { margin-top: 2em }
 }
 */
 
-
+figure {
+  text-align: center;
+  display: table;
+  width: 100%;
+  margin: 0;
+}
+figcaption {
+  display: table-caption;
+  caption-side: top;
+}

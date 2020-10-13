@@ -24,7 +24,8 @@ My book
 Blog
 ----
 
-* 2020
+* 2020 🔥
+  * [LDM: My Favorite ARM Instruction](/ldm-my-favorite-arm-instruction)
   * [One-pass Compiler Primer](/one-pass-compiler-primer)
   * [Standard IO: Under the Hood](/standard-io-under-the-hood)
   * [Verbose Regular Expressions in JavaScript](/verbose-regular-expressions-in-javascript)
@@ -77,15 +78,12 @@ My name is Vladimir Keleshev.
 I am a software developer living and working just outside of Copenhagen.
 I have worked with embedded systems, safety-critical systems,
 compilers, and now with finance.
-I'm writing a book called *[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)*.
+I have just published an ebook called *[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)*.
 
-* Twitter: [@keleshev](http://twitter.com/keleshev)
-* GitHub: [@keleshev](http://github.com/keleshev)
+* Twitter: [\@keleshev](http://twitter.com/keleshev)
+* GitHub: [\@keleshev](http://github.com/keleshev)
 * Mailto: [vladimir@keleshev.com](mailto:vladimir@keleshev.com)
 
 <!--* [Résumé](/about) -->
 
 
-<code>
-:wq
-</code>

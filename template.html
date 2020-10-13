@@ -20,7 +20,7 @@ $endif$
 $for(css)$
   <link rel="stylesheet" href="$css$" />
 $endfor$
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/style.css" />
 $if(math)$
   $math$
 $endif$
@@ -65,22 +65,17 @@ $include-after$
 $endfor$
 
 $if(cta.book)$
-  <center>
-    <p>
+      <br/>
+  <div style="text-align: center; line-height: 0px">
       <a href="/compiling-to-assembly-from-scratch"
-         style="border-bottom: none">
+         style="border-bottom: none; font-size: 0">
        <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
             src="/compiling-to-assembly-from-scratch.jpg"
             style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
             width=200 height=300 />
       </a>
-    </p>
-    <p><em>Compiling to Assembly from Scratch</em></p>
-  </center>
-  <br/>
-  <br/>
-  <br/>
-  <br/>
+  </div>
 $endif$
+  <hr class="fleuron" />
 </body>
 </html>

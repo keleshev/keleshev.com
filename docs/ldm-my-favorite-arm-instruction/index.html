@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2020-10-13" />
+  <title>LDM: My Favorite ARM Instruction</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+  <h1>LDM<br/><small><small>My Favorite ARM Instruction</small></small></h1>
+
+<center style="margin: 25.46px;" >Vladimir Keleshev • 2020-10-13</center>
+
+<header id="title-block-header">
+</header>
+<p>LDM—or <em>load multiple</em>—is my favorite assembly instruction of the ARM instruction set. Here’s why.</p>
+<p>First, let’s discuss what LDM does. An example:</p>
+<pre><code>ldm r4, {r0, r1, r2, r3}</code></pre>
+<p>Here, it takes a <em>base register</em> (in this case, <code>r4</code>) and a <em>register set</em> (in this case, <code>{r0, r1, r2, r3}</code>). It loads consecutive words from the address in the base register into the registers in the set. In this example, the effect could be described using the following C-like pseudo-code:</p>
+<pre><code>r0 = r4[0];
+r1 = r4[1];
+r2 = r4[2];
+r3 = r4[3];</code></pre>
+<p>That’s quite a few assignments for a single instruction! And that’s why it’s called <em>load multiple</em>.</p>
+<p>The set notation also allows for ranges. We can rewrite the previous example as follows:</p>
+<pre><code>ldm r4, {r0-r3}</code></pre>
+<p>Any and all of the 16 ARM registers are allowed in the set. So, the following is legal:</p>
+<pre><code>ldm r0, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15}</code></pre>
+<p>The register set is encoded as a 16-bit mask in a 32-bit instruction. Here’s a simplified encoding of the original example:</p>
+<figure>
+<img src="./ldm-encoding-arm.svg" style="width:75.0%" alt="" /><figcaption>Simplified encoding of the LDM instruction</figcaption>
+</figure>
+<p>Such instruction is a perfect fit for a <a href="https://en.wikipedia.org/wiki/Load%E2%80%93store_architecture">load-store architecture</a> like ARM, where the primary workflow is:</p>
+<ul>
+<li>load many values from memory into registers,</li>
+<li>perform operations exclusively on registers,</li>
+<li>store results back from registers into memory.</li>
+</ul>
+<p>The opposite of LDM is STM—<em>store multiple</em>.</p>
+<!---Since both of them operate on *sets* of registers (which are implemented as bit masks), you can't directly select the order in which the values are loaded or stored.
+The set `{r0, r1, r2}` is the same as `{r2, r1, r0}`.
+That's why-->
+<h2 id="block-copy">Block copy</h2>
+<p>With these two, you can copy large blocks of memory fast. You can copy eight words (or 32 bytes!) of memory in just two instructions:</p>
+<pre><code>ldm r0, {r4-r11}
+stm r1, {r4-r11}</code></pre>
+<p>LDM and STM also have auto-increment variants (denoted with “!”) where the base register is incremented by the number of words loaded/stored so that you can do the copying in a fast loop:</p>
+<pre><code>ldm r0!, {r4-r11}
+stm r1!, {r4-r11}</code></pre>
+<h2 id="implementing-stacks">Implementing stacks</h2>
+<p>ARM’s POP instruction is simply an alias for LDM with a stack pointer (and auto-increment). The following two are exactly the same:</p>
+<pre><code>ldm sp!, {r0-r3}
+pop {r0-r3}</code></pre>
+<p>And the PUSH instruction is an alias for an STM variant (STMDB).</p>
+<p>You can push and pop large quantities to and from the stack in one go. And if you replace SP by another register you can implement efficient stacks in other regions of memory. For example, you can implement a <a href="https://en.wikipedia.org/wiki/Shadow_stack">shadow stack</a> in the heap.</p>
+<h2 id="saving-registers">Saving registers</h2>
+<p>Are you hesitating to use the call-preserved registers because you need to save them, and you might as well use a stack slot anyway? Not any more, because you can save all call-preserved registers you want to use in one go:</p>
+<pre><code>push {r4-r11}</code></pre>
+<h2 id="prologue-and-epilogue">Prologue and epilogue</h2>
+<p>On ARM, the first four arguments, the return address (LR) and the frame pointer (FP) are all passed in registers. That’s why it’s especially important to have efficient prologues and epilogues. Fortunately, you can save FP and LR in one go, using a fairly standard ARM prologue:</p>
+<pre><code>push {fp, lr}</code></pre>
+<p>And then restore both and return (for the epilogue):</p>
+<pre><code>pop {fp, lr}
+bx lr</code></pre>
+<p>Even better, you can restore both and return in one go!</p>
+<pre><code>pop {fp, pc}</code></pre>
+<p>This works by popping the return address value (LR) into the program counter register (PC), so you don’t need an explicit return!</p>
+<p>This is good enough in itself, but you can—<em>at the same time</em>—spill some arguments onto the stack (for example, if their address is taken):</p>
+<pre><code>push {r0-r3, fp, lr}</code></pre>
+<p>Or, you can save FP and LR and—<em>at the same time</em>—allocate some space on the stack:</p>
+<pre><code>push {r0-r3, fp, lr}</code></pre>
+<p>In this case, we push <code>r0-r3</code> not for their value but to advance the stack pointer by four words.</p>
+<h2 id="arm64">ARM64</h2>
+<p>I suspect it was a difficult trade-off, but when it was time to design the 64-bit version of the ARM instruction set, the decision was made to double the number of registers to 32. I remember reading a paper saying that this change improves the performance by about 6% across the board. With 32 registers it is no longer possible to encode a bitmask of all registers into a 32-bit long instruction. So, instead, ARM64 has LDP and STP: load pair and store pair, which are the spiritual successors of LDM and STM.</p>
+<hr />
+<p>This blog post started out originally as a <a href="https://twitter.com/keleshev/status/1285654345988673536">Twitter thread</a>. <a href="/" title="Home">■</a></p>
+<hr />
+<p><em>Did you like this blog post? If so, check out my new book:</em> Compiling to Assembly from Scratch. <em>It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. </em></p>
+
+
+      <br/>
+  <div style="text-align: center; line-height: 0px">
+      <a href="/compiling-to-assembly-from-scratch"
+         style="border-bottom: none; font-size: 0">
+       <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+            src="/compiling-to-assembly-from-scratch.jpg"
+            style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+            width=200 height=300 />
+      </a>
+  </div>
+  <hr class="fleuron" />
+</body>
+</html>
