@@ -22,7 +22,7 @@ Thank you!
 =========
 
 
-Thank you for your pre-order! You will receive an email with a download link shortly.
+Thank you for buying the book! You will receive an email with a download link shortly.
 
 <center><em>— Resources —</em></center>
 
