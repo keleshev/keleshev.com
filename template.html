@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+$if(twitter-card)$
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@keleshev">
+  <meta name="twitter:creator" content="@keleshev">
+  <meta name="twitter:title" content="$twitter-title$">
+  <meta name="twitter:description" content="$twitter-description$">
+  <meta name="twitter:image" content="$twitter-image$">
+$endif$
 $for(author-meta)$
   <meta name="author" content="$author-meta$" />
 $endfor$

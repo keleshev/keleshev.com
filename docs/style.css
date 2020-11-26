@@ -95,7 +95,9 @@ a:hover   { border-bottom: 0 ;   border-bottom: 1px solid black }
 
 a[href^="http"]:after
 {
-content: '⤴'; '⇗';
+content: '⤴';
+//'↗';
+//'⇗';
 }
 
 .sellfy-buy-button:after {
