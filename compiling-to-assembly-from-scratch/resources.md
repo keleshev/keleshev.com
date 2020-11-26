@@ -1,5 +1,5 @@
 ---
-title: Compiling to Assembly from Scratch: Resources
+title: "Compiling to Assembly from Scratch: Resources"
 ---
 
 <style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } </style>
@@ -45,16 +45,15 @@ The book's discussion forum is available here:
 To sign up use invitation code `COM2ASM` (also available in the book's *Preface*).
 Looking forward to see you join the discussion!
 
-<center>⁂</center>
+* * *
 
 Reach out to me for any comments or questions:
 
  * Mailto: [vladimir@keleshev.com](mailto:vladimir@keleshev.com)
- * Twitter: [@keleshev](https://twitter.com/keleshev)
+ * Twitter: <a href="https://twitter.com/keleshev">@keleshev</a>
 
 
 
 <br/>
 <center><img src=/dragon.png width=256 height=260 /></center>
 
-<center><em>Illustrations by [@PbKatiuska](https://twitter.com/PbKatiuska)</em></center>
