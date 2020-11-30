@@ -18,7 +18,7 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-fr
 
 
 <!--<center><em>TypeScript — ARM — September 2020</em></center>-->
-<center><em>Black Friday Sale — 40% off</em></center>
+<center><em>Cyber Monday Sale — 40% off</em></center>
 
 
 
