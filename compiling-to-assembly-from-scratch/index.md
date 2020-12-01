@@ -13,12 +13,11 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-fr
 
 
 
-<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy Ebook <strike>$45</strike> <b>$27</b> </a></p></center>
+<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy Ebook • <b>$45</b> </a></p></center>
 
 
 
-<!--<center><em>TypeScript — ARM — September 2020</em></center>-->
-<center><em>Cyber Monday Sale — 40% off</em></center>
+<center><em>TypeScript — ARM — Lots of fun!</em></center>
 
 
 
@@ -50,7 +49,7 @@ All you need to know is how to program, the book will teach you enough compiler 
 
 > <h2 class=h2-card >Buy now and get the following:</h2>
 >
-> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook <strike>$45</strike> <b>$27</b> </a> <br/> <small><small><em>Excl. <span >EU VAT</span></em></small></small> </p> </center></p> </div>
+> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b> </a> <br/> <small><small><em>Excl. <span >EU VAT</span></em></small></small> </p> </center></p> </div>
 >
 >  <br/>
 >
@@ -261,7 +260,7 @@ So, if you buy the ebook today, I make a promise to give you a discount, once th
 
 ## Can't afford it?
 
-If due to some circumstances you can't afford to buy the book—write me an email at [vladimir@keleshev.com](mailto:vladimir@keleshev.com), and I'm sure we can figure something out!
+If due to circumstances you can't afford to buy the book—write me an email at [vladimir@keleshev.com](mailto:vladimir@keleshev.com), and I'm sure we can figure something out!
 
 <center><img src=/keleshev.jpg width=200 height=200 style=float:right /></center>
 
