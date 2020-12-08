@@ -89,9 +89,11 @@ let handle_errors source =
     | Parser.(GrammarError {line; message}) ->
         eprintf "Grammar error at line %d: %s" line message
     | Validation.LengthError length ->
-        eprintf "Validation error: length %d is out of bounds" length
+        eprintf "Validation error: ";
+        eprintf "length %d is out of bounds" length
     | Validation.HeightError height ->
-        eprintf "Validation error: height %d is out of bounds" height
+        eprintf "Validation error: ";
+        eprintf "height %d is out of bounds" height
     | Display.Error message ->
         eprintf "Display error: %s" message
 ```
@@ -283,13 +285,17 @@ let main source =
   | Ok tree ->
       match Validation.perform tree with
       | Error Parser.(LengthError length) ->
-          eprintf "Validation error: Length %d is out of bounds" length
+          eprintf "Validation error: ";
+          eprintf "length %d is out of bounds" length
       | Error Parser.(HeightError height) ->
-          eprintf "Validation error: Height %d is out of bounds" height
+          eprintf "Validation error: ";
+          eprintf "height %d is out of bounds" height
       | Ok tree ->
           match Display.render tree with
-          | Error message -> eprintf "Display error: %s" message
-          | Ok output -> printf "%s" output
+          | Error message ->
+              eprintf "Display error: %s" message
+          | Ok output ->
+              printf "%s" output
 ```
 
 However, if we try to compose the three functions monadically (like we
@@ -436,9 +442,11 @@ let handle_errors source =
   | Error (`ParserGrammarError (line, message)) ->
       eprintf "Grammar error at line %d: %s" line message
   | Error (`ValidationLengthError length) ->
-      eprintf "Validation error: length %d is out of bounds" length
+      eprintf "Validation error: ";
+      eprintf "length %d is out of bounds" length
   | Error (`ValidationHeightError height) ->
-      eprintf "Validation error: height %d is out of bounds" height
+      eprintf "Validation error: ";
+      eprintf "height %d is out of bounds" height
   | Error (`DisplayError message) ->
       eprintf "Display error: %s" message
 ```

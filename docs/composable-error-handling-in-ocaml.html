@@ -138,11 +138,13 @@ Result type with polymorphic variants for errors</i>
 <span id="cb3-9"><a href="#cb3-9"></a>    | Parser.(GrammarError {line; message}) -&gt;</span>
 <span id="cb3-10"><a href="#cb3-10"></a>        eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
 <span id="cb3-11"><a href="#cb3-11"></a>    | Validation.LengthError length -&gt;</span>
-<span id="cb3-12"><a href="#cb3-12"></a>        eprintf <span class="st">&quot;Validation error: length %d is out of bounds&quot;</span> length</span>
-<span id="cb3-13"><a href="#cb3-13"></a>    | Validation.HeightError height -&gt;</span>
-<span id="cb3-14"><a href="#cb3-14"></a>        eprintf <span class="st">&quot;Validation error: height %d is out of bounds&quot;</span> height</span>
-<span id="cb3-15"><a href="#cb3-15"></a>    | Display.Error message -&gt;</span>
-<span id="cb3-16"><a href="#cb3-16"></a>        eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
+<span id="cb3-12"><a href="#cb3-12"></a>        eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb3-13"><a href="#cb3-13"></a>        eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
+<span id="cb3-14"><a href="#cb3-14"></a>    | Validation.HeightError height -&gt;</span>
+<span id="cb3-15"><a href="#cb3-15"></a>        eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb3-16"><a href="#cb3-16"></a>        eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
+<span id="cb3-17"><a href="#cb3-17"></a>    | Display.Error message -&gt;</span>
+<span id="cb3-18"><a href="#cb3-18"></a>        eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
 <p><em>Upsides:</em></p>
 <ul>
 <li><strong>Composition</strong>. Functions compose freely.</li>
@@ -261,13 +263,17 @@ Result type with polymorphic variants for errors</i>
 <span id="cb13-7"><a href="#cb13-7"></a>  | Ok tree -&gt;</span>
 <span id="cb13-8"><a href="#cb13-8"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
 <span id="cb13-9"><a href="#cb13-9"></a>      | Error Parser.(LengthError length) -&gt;</span>
-<span id="cb13-10"><a href="#cb13-10"></a>          eprintf <span class="st">&quot;Validation error: Length %d is out of bounds&quot;</span> length</span>
-<span id="cb13-11"><a href="#cb13-11"></a>      | Error Parser.(HeightError height) -&gt;</span>
-<span id="cb13-12"><a href="#cb13-12"></a>          eprintf <span class="st">&quot;Validation error: Height %d is out of bounds&quot;</span> height</span>
-<span id="cb13-13"><a href="#cb13-13"></a>      | Ok tree -&gt;</span>
-<span id="cb13-14"><a href="#cb13-14"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
-<span id="cb13-15"><a href="#cb13-15"></a>          | Error message -&gt; eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
-<span id="cb13-16"><a href="#cb13-16"></a>          | Ok <span class="dt">output</span> -&gt; printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
+<span id="cb13-10"><a href="#cb13-10"></a>          eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb13-11"><a href="#cb13-11"></a>          eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
+<span id="cb13-12"><a href="#cb13-12"></a>      | Error Parser.(HeightError height) -&gt;</span>
+<span id="cb13-13"><a href="#cb13-13"></a>          eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb13-14"><a href="#cb13-14"></a>          eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
+<span id="cb13-15"><a href="#cb13-15"></a>      | Ok tree -&gt;</span>
+<span id="cb13-16"><a href="#cb13-16"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
+<span id="cb13-17"><a href="#cb13-17"></a>          | Error message -&gt;</span>
+<span id="cb13-18"><a href="#cb13-18"></a>              eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
+<span id="cb13-19"><a href="#cb13-19"></a>          | Ok <span class="dt">output</span> -&gt;</span>
+<span id="cb13-20"><a href="#cb13-20"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
 <p>However, if we try to compose the three functions monadically (like we did in the previous example), we discover that it is not possible because the bind operator requires the <code>'error</code> type parameters of different functions to unify (notably, unlike the <code>'success</code> type parameter):</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">val</span> (bind) : (&#39;a, &#39;error) result</span>
 <span id="cb14-2"><a href="#cb14-2"></a>          -&gt; (&#39;a -&gt; (&#39;b, &#39;error) result)</span>
@@ -354,11 +360,13 @@ Result type with polymorphic variants for errors</i>
 <span id="cb20-7"><a href="#cb20-7"></a>  | Error (`ParserGrammarError (line, message)) -&gt;</span>
 <span id="cb20-8"><a href="#cb20-8"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
 <span id="cb20-9"><a href="#cb20-9"></a>  | Error (`ValidationLengthError length) -&gt;</span>
-<span id="cb20-10"><a href="#cb20-10"></a>      eprintf <span class="st">&quot;Validation error: length %d is out of bounds&quot;</span> length</span>
-<span id="cb20-11"><a href="#cb20-11"></a>  | Error (`ValidationHeightError height) -&gt;</span>
-<span id="cb20-12"><a href="#cb20-12"></a>      eprintf <span class="st">&quot;Validation error: height %d is out of bounds&quot;</span> height</span>
-<span id="cb20-13"><a href="#cb20-13"></a>  | Error (`DisplayError message) -&gt;</span>
-<span id="cb20-14"><a href="#cb20-14"></a>      eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
+<span id="cb20-10"><a href="#cb20-10"></a>      eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb20-11"><a href="#cb20-11"></a>      eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
+<span id="cb20-12"><a href="#cb20-12"></a>  | Error (`ValidationHeightError height) -&gt;</span>
+<span id="cb20-13"><a href="#cb20-13"></a>      eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb20-14"><a href="#cb20-14"></a>      eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
+<span id="cb20-15"><a href="#cb20-15"></a>  | Error (`DisplayError message) -&gt;</span>
+<span id="cb20-16"><a href="#cb20-16"></a>      eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
 <p><em>Summary:</em></p>
 <ul>
 <li><strong>Composition</strong>. Functions compose monadically by unifying the <code>'error</code> branch of the result type.</li>
