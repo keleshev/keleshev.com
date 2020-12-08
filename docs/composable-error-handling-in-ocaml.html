@@ -1,508 +1,405 @@
-<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Composable Error Handling in OCaml</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="icon" sizes="109x109" href="/favicon.gif" />
-    </head>
-    <body>
-        <p><style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style></p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2018-02-12" />
+  <title>Composable Error Handling in OCaml</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
-<p><span id=home><a title=Home href=/>☰</a></span></p>
 
-<h1>Composable Error Handling<br/><small><small>in OCaml</small></small></h1>
+  <h1>Composable Error Handling<br/><small><small>in OCaml</small></small></h1>
 
-<p><center>Vladimir Keleshev • 2018-02-12</center></p>
+<center style="margin: 25.46px;" >Vladimir Keleshev • 2018-02-12</center>
 
-<p>Let&#8217;s discuss common ways to handle errors in OCaml, their shortcomings
-and, finally, how polymorphic variants may help. The discussion applies
-equally well to <a href="https://reasonml.github.io/">Reason ML</a>.</p>
-
-<p>If you need an introduction to the topic, I recommend
-Real World OCaml chapter on <a href="https://realworldocaml.org/v1/en/html/error-handling.html">Error Handling</a>.</p>
-
-<p>As a reference point we&#8217;ll take three hypothetical functions which can return
-errors and which we want to compose:</p>
-
+<header id="title-block-header">
+</header>
+<p>Let’s discuss common ways to handle errors in OCaml, their shortcomings, and finally, how polymorphic variants may help. The discussion applies equally well to <a href="https://reasonml.github.io/">Reason ML</a>.</p>
+<p>If you need an introduction to the topic, I recommend Real World OCaml chapter on <a href="https://realworldocaml.org/v1/en/html/error-handling.html">Error Handling</a>.</p>
+<p>As a reference point, we’ll take three hypothetical functions which can return errors and which we want to compose:</p>
 <ul>
-<li><code>Parser.parse</code> which can yield a &#8220;syntax error&#8221; or a &#8220;grammar error<span><span style="position: absolute">.</span>&rdquo;</span></li>
-<li><code>Validation.perform</code> which can yield a &#8220;length error&#8221; or a &#8220;height error<span><span style="position: absolute">.</span>&rdquo;</span></li>
-<li><code>Display.render</code> which can yield a &#8220;display error<span><span style="position: absolute">.</span>&rdquo;</span></li>
+<li><code>Parser.parse</code>, which can yield a “syntax error” or a “grammar error”.</li>
+<li><code>Validation.perform</code>, which can yield a “length error” or a “height error”.</li>
+<li><code>Display.render</code>, which can yield a “display error”.</li>
 </ul>
-
 <p>We will cover the following error-handling approaches:</p>
-
 <ol type="A">
-  <li>Exceptions for errors</li>
-  <li>Result type with strings for errors</i>
-  <li>Result type with custom variants for errors</i>
-  <li>Result type with polymorphic variants for errors</i>
+<li>
+Exceptions for errors
+</li>
+<li>
+Result type with strings for errors</i>
+<li>
+Result type with custom variants for errors</i>
+<li>
+Result type with polymorphic variants for errors</i>
 </ol>
-
-<h2>A. Exceptions for errors</h2>
-
-<p>First, let us consider a version of our interface where the above functions
-use exceptions to signal errors.</p>
-
-<pre><b>type </b>tree
-
-<b>module </b>Parser : <b>sig
-  </b><b>exception </b>SyntaxError <b>of </b>int
-  <b>exception </b>GrammarError <b>of </b>{line: int; message: string}
-
-  <em>(** Can raise [Parser.SyntaxError]
-      or [Parser.GrammarError] *)</em>
-  <b>val </b>parse : string -> tree
-<b>end
-
-</b><b>module </b>Validation : <b>sig
-  </b><b>exception </b>LengthError <b>of </b>int
-  <b>exception </b>HeightError <b>of </b>int
-
-  <em>(** Can raise [Validation.LengthError]
-      or [Validation.HeightError *)</em>]
-  <b>val </b>perform : tree -> tree
-<b>end
-
-</b><b>module </b>Display : <b>sig
-  </b><b>exception </b>Error <b>of </b>string
-
-  <em>(** Can raise [Display.Error] *)</em>
-  <b>val </b>render : tree -> string
-<b>end
-</b></pre>
-
-Here is how we can write code that composes these functions, while
-ignoring the errors:
-
-<pre><b>let </b>main source =
-  <b>let </b>tree = Parser.parse source <b>in
-  </b><b>let </b>tree = Validation.perform tree <b>in
-  </b>Display.render tree
-</pre>
-
+<h2 id="a.-exceptions-for-errors">A. Exceptions for errors</h2>
+<p>First, let us consider a version of our interface where the above functions use exceptions to signal errors.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">type</span> tree</span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>  <span class="kw">exception</span> SyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>  <span class="kw">exception</span> GrammarError <span class="kw">of</span> {line: <span class="dt">int</span>; message: <span class="dt">string</span>}</span>
+<span id="cb1-6"><a href="#cb1-6"></a></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Parser.SyntaxError<span class="ot">]</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="co">      or </span><span class="ot">[</span>Parser.GrammarError<span class="ot">]</span><span class="co"> *)</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; tree</span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="kw">end</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a>  <span class="kw">exception</span> LengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a>  <span class="kw">exception</span> HeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a></span>
+<span id="cb1-16"><a href="#cb1-16"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Validation.LengthError<span class="ot">]</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="co">      or </span><span class="ot">[</span>Validation.HeightError<span class="ot">]</span><span class="co"> *)</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a>  <span class="kw">val</span> perform : tree -&gt; tree</span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="kw">end</span></span>
+<span id="cb1-20"><a href="#cb1-20"></a></span>
+<span id="cb1-21"><a href="#cb1-21"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb1-22"><a href="#cb1-22"></a>  <span class="kw">exception</span> Error <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Display.Error<span class="ot">]</span><span class="co"> *)</span></span>
+<span id="cb1-25"><a href="#cb1-25"></a>  <span class="kw">val</span> render : tree -&gt; <span class="dt">string</span></span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="kw">end</span></span></code></pre></div>
+<p>Here is how we can write code that composes these functions while ignoring the errors:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  <span class="kw">let</span> tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="kw">let</span> tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>  Display.render tree</span></code></pre></div>
 <p>And here is how we can write code that handles and reports each error:</p>
-
-<pre><b>open </b>Printf
-
-<b>let </b>handle_errors source =
-  <b>try
-    </b>printf (main source)
-  <b>with
-    </b>| Parser.SyntaxError line ->
-        eprintf <em>"Syntax error at line <b>%d</b>"</em> line
-    | Parser.(GrammarError {line; message}) ->
-        eprintf <em>"Grammar error at line <b>%d</b>: <b>%s</b>"</em> line message
-    | Validation.LengthError length ->
-        eprintf <em>"Validation error: length <b>%d</b> is out of bounds"</em> length
-    | Validation.HeightError height ->
-        eprintf <em>"Validation error: height <b>%d</b> is out of bounds"</em> height
-    | Display.Error message ->
-        eprintf <em>"Display error: <b>%s</b>"</em> message
-</pre>
-
+<div class="sourceCode" id="cb3"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">open</span> <span class="dt">Printf</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">let</span> handle_errors source =</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="kw">try</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>    printf <span class="st">&quot;%s&quot;</span> (main source)</span>
+<span id="cb3-6"><a href="#cb3-6"></a>  <span class="kw">with</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>    | Parser.SyntaxError line -&gt;</span>
+<span id="cb3-8"><a href="#cb3-8"></a>        eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
+<span id="cb3-9"><a href="#cb3-9"></a>    | Parser.(GrammarError {line; message}) -&gt;</span>
+<span id="cb3-10"><a href="#cb3-10"></a>        eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
+<span id="cb3-11"><a href="#cb3-11"></a>    | Validation.LengthError length -&gt;</span>
+<span id="cb3-12"><a href="#cb3-12"></a>        eprintf <span class="st">&quot;Validation error: length %d is out of bounds&quot;</span> length</span>
+<span id="cb3-13"><a href="#cb3-13"></a>    | Validation.HeightError height -&gt;</span>
+<span id="cb3-14"><a href="#cb3-14"></a>        eprintf <span class="st">&quot;Validation error: height %d is out of bounds&quot;</span> height</span>
+<span id="cb3-15"><a href="#cb3-15"></a>    | Display.Error message -&gt;</span>
+<span id="cb3-16"><a href="#cb3-16"></a>        eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
 <p><em>Upsides:</em></p>
-
 <ul>
 <li><strong>Composition</strong>. Functions compose freely.</li>
 <li><strong>Concern separation</strong>. Happy path and error handling are separated.</li>
-<li><strong>Distinguishable errors</strong>. We can reliably distinguish one kind of
-error from another. For example, a <code>SyntaxError</code> from a <code>GrammarError</code>.</li>
-<li>Also, in OCaml the exception mechanism is fast and fits well
-with performance-critical sections of code.</li>
+<li><strong>Distinguishable errors</strong>. We can reliably distinguish one kind of error from another–for example, a <code>SyntaxError</code> from a <code>GrammarError</code>.</li>
+<li>Also, in OCaml, the exception mechanism is fast and fits well with performance-critical sections of code.</li>
 </ul>
-
 <p><em>Downsides:</em></p>
-
 <ul>
-<li>No <strong>error contract</strong>.
-Comment on a function signature is our only hope to know
-that a function can raise as well as which exact exceptions it can raise.
-Nothing can save us from a comment that is missing, incorrect, or out-of-date.
-We could use a popular naming convention and name
-our function <code>Parser.parse_exn</code>. This is definitely worthwhile, but
-similar shortcomings apply.</li>
-<li>No <strong>exhaustiveness checking</strong>. We cannot be sure that we handled all the
-error cases at a relevant call site,
-or that the cases we are covering are relevant at all.
-If we change one of the called functions to return a new kind of
-error, then the compiler will not inform us about the call sites that are
-affected.</li>
+<li>No <strong>error contract</strong>. Comment on a function signature is our only hope to know that a function can raise as well as which exact exceptions it can raise. Nothing can save us from a comment that is missing, incorrect, or out-of-date. We could use a popular naming convention and name our function <code>Parser.parse_exn</code>. This is definitely worthwhile, but similar shortcomings apply.</li>
+<li>No <strong>exhaustiveness checking</strong>. We cannot be sure that we handled all the error cases at a relevant call site or that the cases we are covering are relevant at all. If we change one of the called functions to return a new kind of error, then the compiler will not inform us about the call sites that are affected.</li>
 </ul>
-
-<p>Although the flaws of exception-based approach are very real and dire,
-it is important to recognize the upsides to adequately compare
-this approach with the other.</p>
-
-<h2>B. Result type with strings for errors</h2>
-
-<p>The OCaml built-in result type provides a reusable way to express
-and distinguish a success value and an error value.</p>
-
-<pre><b>type </b>('success, 'error) result = ('success, 'error) Pervasives.result =
-  | Ok <b>of </b>'success
-  | Error <b>of </b>'error
-</pre>
-
-<p>It is most often used with a combinator library like <a href="https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/index.html"><code>Base.Result</code></a> of Jane Street.</p>
-
-<p>Below we&#8217;ll talk about using strings for the <code>'error</code> type parameter, however,
-same applies, for example, to <a href="https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Error/index.html"><code>Base.Error</code></a> type, which is a lazy
-string specifically designed to be used together with the result type.</p>
-
-<pre><b>module </b>Parser : <b>sig
-  </b><b>val </b>parse : string -> (tree, string) result
-<b>end
-
-</b><b>module </b>Validation : <b>sig
-  </b><b>val </b>perform : tree -> (tree, string) result
-<b>end
-
-</b><b>module </b>Display : <b>sig
-  </b><b>val </b>render : tree -> (string, string) result
-<b>end
-</b></pre>
-
-We could handle errors by manually matching on the result type:
-
-<pre><b>let </b>main source =
-  <b>match </b>Parser.parse source <b>with
-  </b>| Error message ->
-      eprintf <em>"Parser error: <b>%s</b>"</em> message
-  | Ok tree ->
-      <b>match </b>Validation.perform tree <b>with
-      </b>| Error message ->
-          eprintf <em>"Validation error: <b>%s</b>"</em> message
-      | Ok tree ->
-          <b>match </b>Display.render tree <b>with
-          </b>| Error message ->
-              eprintf <em>"Display error: <b>%s</b>"</em> message
-          | Ok output ->
-              printf output
-</pre>
-
-<p>Or we could use the bind operator (<code>&gt;&gt;=</code>)
-to monadically compose the
-result-returning functions and thus separate error handling from the happy path.</p>
-
-<pre><b>let </b>main source =
-  <b>let </b><b>open </b>Result <b>in
-  </b>Parser.parse source >>= <b>fun </b>tree ->
-  Validation.perform tree >>= <b>fun </b>tree ->
-  Display.render tree
-</pre>
-
-<p>Or even better, we could use the <a href="https://github.com/janestreet/ppx_let"><code>ppx_let</code></a> preprocessor to
-accomplish the equivalent, but in a more readable way:</p>
-
-<pre><b>let </b>main source =
-  <b>let </b><b>open </b>Result.Let_syntax <b>in
-  </b><b>let</b>%bind tree = Parser.parse source <b>in
-  </b><b>let</b>%bind tree = Validation.perform tree <b>in
-  </b>Display.render tree
-</pre>
-
-<p>Notice how similar this looks to our original version based on exceptions.
-In both cases we can handle the errors separately:</p>
-
-<pre><b>let </b>handle_errors source =
-  <b>match </b>main source <b>with
-  </b>| Error message -> eprintf <em>"Error: <b>%s</b>"</em> message
-  | Ok output -> printf output
-</pre>
-
+<p>Although the flaws of the exception-based approach are real and dire, it is important to recognize the upsides to adequately compare this approach with the other.</p>
+<h2 id="b.-result-type-with-strings-for-errors">B. Result type with strings for errors</h2>
+<p>The OCaml built-in <code>Stdlib.result</code> type provides a reusable way to express and distinguish a success value and an error value.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">type</span> (&#39;success, &#39;error) result =</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  | Ok <span class="kw">of</span> &#39;success</span>
+<span id="cb4-3"><a href="#cb4-3"></a>  | Error <span class="kw">of</span> &#39;error</span></code></pre></div>
+<p>Since version 4.08, OCaml contains a <code>Result</code> module that contains helper functions to operate on the result type.</p>
+<p>One way to use the result type is to use a string for the <code>'error</code> parameter, that describes the error textually. This way, our interface will look like this:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, <span class="dt">string</span>) result</span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">end</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, <span class="dt">string</span>) result</span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="kw">end</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, <span class="dt">string</span>) result</span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="kw">end</span></span></code></pre></div>
+<p>We could handle errors by manually matching on the result type:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb6-2"><a href="#cb6-2"></a>  <span class="kw">match</span> Parser.parse source <span class="kw">with</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a>  | Error message -&gt;</span>
+<span id="cb6-4"><a href="#cb6-4"></a>      eprintf <span class="st">&quot;Parser error: %s&quot;</span> message</span>
+<span id="cb6-5"><a href="#cb6-5"></a>  | Ok tree -&gt;</span>
+<span id="cb6-6"><a href="#cb6-6"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a>      | Error message -&gt;</span>
+<span id="cb6-8"><a href="#cb6-8"></a>          eprintf <span class="st">&quot;Validation error: %s&quot;</span> message</span>
+<span id="cb6-9"><a href="#cb6-9"></a>      | Ok tree -&gt;</span>
+<span id="cb6-10"><a href="#cb6-10"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a>          | Error message -&gt;</span>
+<span id="cb6-12"><a href="#cb6-12"></a>              eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
+<span id="cb6-13"><a href="#cb6-13"></a>          | Ok <span class="dt">output</span> -&gt;</span>
+<span id="cb6-14"><a href="#cb6-14"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
+<p>Or we could use <code>Result.bind</code> to monadically compose the result-returning functions and thus separate error handling from the happy path.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb7-2"><a href="#cb7-2"></a>  Result.bind (Parser.parse source) (<span class="kw">fun</span> tree -&gt;</span>
+<span id="cb7-3"><a href="#cb7-3"></a>    Result.bind (Validation.perform tree) (<span class="kw">fun</span> tree -&gt;</span>
+<span id="cb7-4"><a href="#cb7-4"></a>      Display.render tree))</span></code></pre></div>
+<p>However, it is more common to use an infix operator <code>(&gt;&gt;=)</code> for <code>bind</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">let</span> (&gt;&gt;=) = Result.bind</span>
+<span id="cb8-2"><a href="#cb8-2"></a></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="kw">let</span> main source =</span>
+<span id="cb8-4"><a href="#cb8-4"></a>  Parser.parse source &gt;&gt;= <span class="kw">fun</span> tree -&gt;</span>
+<span id="cb8-5"><a href="#cb8-5"></a>  Validation.perform tree &gt;&gt;= <span class="kw">fun</span> tree -&gt;</span>
+<span id="cb8-6"><a href="#cb8-6"></a>  Display.render tree</span></code></pre></div>
+<p>Since OCaml 4.08 you can also use binding operators:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">let</span> (<span class="kw">let</span><span class="er">*)</span> = Result.bind</span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="kw">let</span> main source =</span>
+<span id="cb9-4"><a href="#cb9-4"></a>  <span class="kw">let</span>* tree = Parse.parse source <span class="kw">in</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a>  <span class="kw">let</span>* tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a>  Display.render tree</span></code></pre></div>
+<p>Notice how similar this looks to our original version based on exceptions:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb10-2"><a href="#cb10-2"></a>  <span class="kw">let</span> tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="kw">let</span> tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a>  Display.render tree</span></code></pre></div>
+<p>In both cases we can handle the errors separately from the happy path:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">let</span> handle_errors source =</span>
+<span id="cb11-2"><a href="#cb11-2"></a>  <span class="kw">match</span> main source <span class="kw">with</span></span>
+<span id="cb11-3"><a href="#cb11-3"></a>  | Error message -&gt; eprintf <span class="st">&quot;Error: %s&quot;</span> message</span>
+<span id="cb11-4"><a href="#cb11-4"></a>  | Ok <span class="dt">output</span> -&gt; printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
 <p><em>Upsides:</em></p>
-
 <ul>
 <li><strong>Composition</strong>. Functions compose using the result monad.</li>
 <li><strong>Concern separation</strong>. The error handling and the happy-path code can be separated.</li>
-<li><strong><em>Weak</em> error contract</strong>. The fact that a function can return an error is
-part of the type signature, however, we can&#8217;t infer which exact errors are
-part of the contract.</li>
+<li><strong><em>Weak</em> error contract</strong>. The fact that a function can return an error is part of the type signature. However, we can’t infer which exact errors are part of the contract.</li>
 </ul>
-
 <p><em>Downsides:</em></p>
-
 <ul>
-<li>Not <strong>distinguishable errors</strong>. At the site where we handle errors we can&#8217;t
-distinguish two errors, for example, a &#8220;length error&#8221; from a &#8220;height error<span><span style="position: absolute">.</span>&rdquo;</span></li>
-<li>No <strong>exhaustiveness checking</strong>. When a new error case is introduced the
-compiler will not help us find the call sites where a change would be relevant.</li>
+<li>Non-<strong>distinguishable errors</strong>. At the site where we handle errors we can’t distinguish two errors, for example, a “length error” from a “height error”.</li>
+<li>No <strong>exhaustiveness checking</strong>. When a new error case is introduced, the compiler will not help us find the call sites where a change would be relevant.</li>
 </ul>
-
-<p>Compared with the <em>A. Exceptions for errors</em> approach, we lose the ability to distinguish
-errors, maintain the ability to compose functions, and gain the ability
-to know from a type signature that a function can return an error.</p>
-
-<h2>C. Result type with custom variants for errors</h2>
-
-<p>A natural way to improve upon the previous example would to use the result type
-with a custom variant type for the <code>'error</code> type parameter instead of string:</p>
-
-<pre><b>module </b>Parser : <b>sig
-  </b><b>type </b>error =
-    | SyntaxError <b>of </b>int
-    | GrammarError <b>of </b>{line: int; message: string}
-
-  <b>val </b>parse : string -> (tree, error) result
-<b>end
-
-</b><b>module </b>Validation : <b>sig
-  </b><b>type </b>error =
-    | LengthError <b>of </b>int
-    | HeightError <b>of </b>int
-
-  <b>val </b>perform : tree -> (tree, error) result
-<b>end
-
-</b><b>module </b>Display : <b>sig
-  </b><b>val </b>render : tree -> (string, string) result
-<b>end
-</b></pre>
-
-We can handle errors by manually matching on the result type:
-
-<pre><b>let </b>main source =
-  <b>match </b>Parser.parse source <b>with
-  </b>| Error Parser.(SyntaxError message) ->
-      eprintf <em>"Syntax error: <b>%s</b>"</em> message
-  | Error Parser.(GrammarError {line; message}) ->
-      eprintf <em>"Grammar error at line <b>%d</b>: <b>%s</b>"</em> line message
-  | Ok tree ->
-      <b>match </b>Validation.perform tree <b>with
-      </b>| Error Parser.(LengthError length) ->
-          eprintf <em>"Validation error: Length <b>%d</b> is out of bounds"</em> length
-      | Error Parser.(HeightError height) ->
-          eprintf <em>"Validation error: Height <b>%d</b> is out of bounds"</em> height
-      | Ok tree ->
-          <b>match </b>Display.render tree <b>with
-          </b>| Error message -> eprintf <em>"Display error: <b>%s</b>"</em> message
-          | Ok output -> printf output
-</pre>
-
-<p>However, if we try to compose the three functions monadically (like we
-did in the previous example), we discover that it is not possible
-because the bind operator requires the <code>'error</code> type parameters of different
-functions to unify (notably, unlike the <code>'success</code> type parameter):</p>
-
-<pre><b>val </b>(>>=) : ('a, 'error) result
-         -> ('a -> ('b, 'error) result)
-         -> ('b, 'error) result
-</pre>
-
+<p>Compared with <em>A. Exceptions for errors</em> approach, we lose the ability to distinguish errors, maintain the ability to compose functions, and gain the ability to know from a type signature that a function can return an error.</p>
+<h2 id="c.-result-type-with-custom-variants-for-errors">C. Result type with custom variants for errors</h2>
+<p>A natural way to improve upon the previous example would be to use the result type with a custom variant type for the <code>'error</code> type parameter instead of string:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="kw">type</span> error =</span>
+<span id="cb12-3"><a href="#cb12-3"></a>    | SyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a>    | GrammarError <span class="kw">of</span> {line: <span class="dt">int</span>; message: <span class="dt">string</span>}</span>
+<span id="cb12-5"><a href="#cb12-5"></a></span>
+<span id="cb12-6"><a href="#cb12-6"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, error) result</span>
+<span id="cb12-7"><a href="#cb12-7"></a><span class="kw">end</span></span>
+<span id="cb12-8"><a href="#cb12-8"></a></span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb12-10"><a href="#cb12-10"></a>  <span class="kw">type</span> error =</span>
+<span id="cb12-11"><a href="#cb12-11"></a>    | LengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a>    | HeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb12-13"><a href="#cb12-13"></a></span>
+<span id="cb12-14"><a href="#cb12-14"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, error) result</span>
+<span id="cb12-15"><a href="#cb12-15"></a><span class="kw">end</span></span>
+<span id="cb12-16"><a href="#cb12-16"></a></span>
+<span id="cb12-17"><a href="#cb12-17"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb12-18"><a href="#cb12-18"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, <span class="dt">string</span>) result</span>
+<span id="cb12-19"><a href="#cb12-19"></a><span class="kw">end</span></span></code></pre></div>
+<p>We can handle errors by manually matching on the result type:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  <span class="kw">match</span> Parser.parse source <span class="kw">with</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a>  | Error Parser.(SyntaxError line) -&gt;</span>
+<span id="cb13-4"><a href="#cb13-4"></a>      eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
+<span id="cb13-5"><a href="#cb13-5"></a>  | Error Parser.(GrammarError {line; message}) -&gt;</span>
+<span id="cb13-6"><a href="#cb13-6"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
+<span id="cb13-7"><a href="#cb13-7"></a>  | Ok tree -&gt;</span>
+<span id="cb13-8"><a href="#cb13-8"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
+<span id="cb13-9"><a href="#cb13-9"></a>      | Error Parser.(LengthError length) -&gt;</span>
+<span id="cb13-10"><a href="#cb13-10"></a>          eprintf <span class="st">&quot;Validation error: Length %d is out of bounds&quot;</span> length</span>
+<span id="cb13-11"><a href="#cb13-11"></a>      | Error Parser.(HeightError height) -&gt;</span>
+<span id="cb13-12"><a href="#cb13-12"></a>          eprintf <span class="st">&quot;Validation error: Height %d is out of bounds&quot;</span> height</span>
+<span id="cb13-13"><a href="#cb13-13"></a>      | Ok tree -&gt;</span>
+<span id="cb13-14"><a href="#cb13-14"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
+<span id="cb13-15"><a href="#cb13-15"></a>          | Error message -&gt; eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
+<span id="cb13-16"><a href="#cb13-16"></a>          | Ok <span class="dt">output</span> -&gt; printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
+<p>However, if we try to compose the three functions monadically (like we did in the previous example), we discover that it is not possible because the bind operator requires the <code>'error</code> type parameters of different functions to unify (notably, unlike the <code>'success</code> type parameter):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">val</span> (bind) : (&#39;a, &#39;error) result</span>
+<span id="cb14-2"><a href="#cb14-2"></a>          -&gt; (&#39;a -&gt; (&#39;b, &#39;error) result)</span>
+<span id="cb14-3"><a href="#cb14-3"></a>          -&gt; (&#39;b, &#39;error) result</span></code></pre></div>
 <p><em>Upsides:</em></p>
-
 <ul>
 <li><strong>Error contract</strong>. The type—not a comment—reflects the relevant error cases.</li>
 <li><strong>Distinguishable errors</strong>. We can pattern-match to distinguish errors.</li>
-<li><strong>Exhaustiveness checking</strong>. When the called function gets an additional error case
-the compiler will show all the call sites that need to be updated.</li>
+<li><strong>Exhaustiveness checking</strong>. When the called function gets an additional error case, the compiler will show all the call sites that need to be updated.</li>
 </ul>
-
 <p><em>Downsides:</em></p>
-
 <ul>
-<li>No <strong>composition</strong>. We can&#8217;t compose the functions directly,
-monadically, or otherwise.</li>
-<li>No <strong>concern separation</strong>. We are forced to deal with
-the error branch, using pattern matching or combinators.</li>
+<li>No <strong>composition</strong>. We can’t compose the functions directly, monadically, or otherwise.</li>
+<li>No <strong>concern separation</strong>. We are forced to deal with the error branch using pattern matching or combinators.</li>
 </ul>
-
-<p>There is a way to work around the two downsides. You can lift each function
-you want to compose to a result type where <code>'error</code> can encompass all the
-possible errors in your combined expression.
-However, that adds boilerplate per each function and requires
-to manage the new &#8220;large&#8221; error type.</p>
-
-<p>Compared with <em>B. Result type with strings for errors</em> approach, we lose
-composition (wich is a big deal), mix up the happy path with error handling,
-but regain the ability to distinguish and exhaustively check error cases,
-while having a strong error contract.</p>
-
-<p>Seems like you can&#8217;t have the cake and eat it too.
-This is also usually the point where best practices of other
-statically-typed functional languages stop and you have to deal with the
-trade-offs.</p>
-
-<h2>D. Result type with polymorphic variants for errors</h2>
-
-<p>Polymorphic variants allow you to have the cake and eat it too. Here&#8217;s how.</p>
-
-<p>Let&#8217;s port our previous example to use polymorphic variants instead of the
-nominal variants.</p>
-
-<pre><b>module </b>Parser : <b>sig
-  </b><b>type </b>error = [
-    | `ParserSyntaxError <b>of </b>int
-    | `ParserGrammarError <b>of </b>int * string
-  ]
-
-  <b>val </b>parse : string -> (tree, [> error]) result
-<b>end
-
-</b><b>module </b>Validation : <b>sig
-  </b><b>type </b>error = [
-    | `ValidationLengthError <b>of </b>int
-    | `ValidationHeightError <b>of </b>int
-  ]
-
-  <b>val </b>perform : tree -> (tree, [> error]) result
-<b>end
-
-</b><b>module </b>Display : <b>sig
-  </b><b>type </b>error = [
-    | `DisplayError <b>of </b>string
-  ]
-
-  <b>val </b>render : tree -> (string, [> error]) result
-<b>end
-</b></pre>
-<pre>
-</pre>
-
-<p>The key feature of polymorphic variants is that
-they unify with other polymorphic variants.
-We specifically annotated
-our functions with <code>[&gt; error]</code> to signify that this
-error type can unify with &#8220;larger&#8221; polymorphic variants.</p>
-
+<p>There is a way to work around the two downsides. You can lift each function you want to compose to a result type where <code>'error</code> can encompass all the possible errors in your combined expression. However, that adds boilerplate per each function and requires to manage the new “large” error type.</p>
+<p>Compared with <em>B. Result type with strings for errors</em> approach, we lose composition (wich is a big deal), mix up the happy path with error handling, but regain the ability to distinguish and exhaustively check error cases, while having a strong error contract.</p>
+<p>Seems like you can’t have the cake and eat it too. This is also usually the point where best practices of other statically-typed functional languages stop, and you have to deal with the trade-offs.</p>
+<h2 id="d.-result-type-with-polymorphic-variants-for-errors">D. Result type with polymorphic variants for errors</h2>
+<p>Polymorphic variants allow you to have the cake and eat it too. Here’s how.</p>
+<p>Let’s port our previous example to use polymorphic variants instead of the nominal variants.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb15-2"><a href="#cb15-2"></a>  <span class="kw">type</span> error = [</span>
+<span id="cb15-3"><a href="#cb15-3"></a>    | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a>    | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
+<span id="cb15-5"><a href="#cb15-5"></a>  ]</span>
+<span id="cb15-6"><a href="#cb15-6"></a></span>
+<span id="cb15-7"><a href="#cb15-7"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, [&gt; error]) result</span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="kw">end</span></span>
+<span id="cb15-9"><a href="#cb15-9"></a></span>
+<span id="cb15-10"><a href="#cb15-10"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb15-11"><a href="#cb15-11"></a>  <span class="kw">type</span> error = [</span>
+<span id="cb15-12"><a href="#cb15-12"></a>    | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb15-13"><a href="#cb15-13"></a>    | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb15-14"><a href="#cb15-14"></a>  ]</span>
+<span id="cb15-15"><a href="#cb15-15"></a></span>
+<span id="cb15-16"><a href="#cb15-16"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, [&gt; error]) result</span>
+<span id="cb15-17"><a href="#cb15-17"></a><span class="kw">end</span></span>
+<span id="cb15-18"><a href="#cb15-18"></a></span>
+<span id="cb15-19"><a href="#cb15-19"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb15-20"><a href="#cb15-20"></a>  <span class="kw">type</span> error = [</span>
+<span id="cb15-21"><a href="#cb15-21"></a>    | `DisplayError <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb15-22"><a href="#cb15-22"></a>  ]</span>
+<span id="cb15-23"><a href="#cb15-23"></a></span>
+<span id="cb15-24"><a href="#cb15-24"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, [&gt; error]) result</span>
+<span id="cb15-25"><a href="#cb15-25"></a><span class="kw">end</span></span></code></pre></div>
+<p>The key feature of polymorphic variants is that they unify with other polymorphic variants. We specifically annotated our functions with <code>[&gt; error]</code> to signify that this error type can unify with “larger” polymorphic variants.</p>
 <blockquote>
-  <p><em>There’s more to polymorphic variants, but it’s outside of scope for this
-  article. You will find links to resources about polymorphic variants below.</em></p>
+<p><em>There’s more to polymorphic variants, but it’s outside of scope for this article. You will find links to resources about polymorphic variants below.</em></p>
 </blockquote>
-
 <p>Now look, if you compose just two functions, parser and validator:</p>
-
-<pre><b>let </b>parse_and_validate source =
-  <b>let </b><b>open </b>Result.Let_syntax <b>in
-  </b><b>let</b>%bind tree = Parser.parse source <b>in
-  </b>Validation.perform tree
-</pre>
-
-<p>Then not only will this work, but the type of such a function will be:</p>
-
-<pre><b>val </b>parse_and_validate : string -> (tree, [>
-  | `ParserSyntaxError <b>of </b>int
-  | `ParserGrammarError <b>of </b>int * string
-  | `ValidationLengthError <b>of </b>int
-  | `ValidationHeightError <b>of </b>int
-]) result
-</pre>
-
-<p>As you can see, the error branch of the result type is a union of the two
-variants of the parser errors <em>and</em> the two variants of the validator errors!</p>
-
+<div class="sourceCode" id="cb16"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">let</span> parse_and_validate source =</span>
+<span id="cb16-2"><a href="#cb16-2"></a>  <span class="kw">let</span>* tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  Validation.perform tree</span></code></pre></div>
+<p>Then not only will this work, but the type of such a function will be as follows:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">val</span> parse_and_validate : <span class="dt">string</span> -&gt; (tree, [&gt;</span>
+<span id="cb17-2"><a href="#cb17-2"></a>  | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb17-3"><a href="#cb17-3"></a>  | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
+<span id="cb17-4"><a href="#cb17-4"></a>  | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb17-5"><a href="#cb17-5"></a>  | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb17-6"><a href="#cb17-6"></a>]) result</span></code></pre></div>
+<p>As you can see, the error branch of the result type is a union of the two variants of the parser errors <em>and</em> the two variants of the validator errors!</p>
 <p>Let us now throw in our render function:</p>
-
-<pre><b>let </b>main source =
-  <b>let </b><b>open </b>Result.Let_syntax <b>in
-  </b><b>let</b>%bind tree = Parser.parse source <b>in
-  </b><b>let</b>%bind tree = Validation.perform tree <b>in
-  </b>Display.render tree
-</pre>
-
+<div class="sourceCode" id="cb18"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb18-2"><a href="#cb18-2"></a>  <span class="kw">let</span>* tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="kw">let</span>* tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb18-4"><a href="#cb18-4"></a>  Display.render tree</span></code></pre></div>
 <p>The inferred function type will reflect all the relevant error cases:</p>
-
-<pre><b>val </b>main : string -> (tree, [>
-  | `ParserSyntaxError <b>of </b>int
-  | `ParserGrammarError <b>of </b>int * string
-  | `ValidationLengthError <b>of </b>int
-  | `ValidationHeightError <b>of </b>int
-  | `DisplayError <b>of </b>string
-]) result
-</pre>
-
-<p>This way, if your error-returning functions use polymorphic variants for
-error branches, then you can compose as many of them as you want and the
-resulting type that will be infered will reflect the exact error cases
-that the composed function can exibit.</p>
-
+<div class="sourceCode" id="cb19"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb19-1"><a href="#cb19-1"></a><span class="kw">val</span> main : <span class="dt">string</span> -&gt; (<span class="dt">string</span>, [&gt;</span>
+<span id="cb19-2"><a href="#cb19-2"></a>  | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb19-3"><a href="#cb19-3"></a>  | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
+<span id="cb19-4"><a href="#cb19-4"></a>  | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb19-5"><a href="#cb19-5"></a>  | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb19-6"><a href="#cb19-6"></a>  | `DisplayError <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb19-7"><a href="#cb19-7"></a>]) result</span></code></pre></div>
+<p>This way, if your error-returning functions use polymorphic variants for error branches, then you can compose as many of them as you want and the resulting type that will be infered will reflect the exact error cases that the composed function can exibit.</p>
 <p>You handle the errors by pattern matching on the result type:</p>
-
-<pre><b>let </b>handle_errors source =
-  <b>match </b>main source <b>with
-  </b>| Ok output ->
-      printf output
-  | Error (`ParserSyntaxError line) ->
-      eprintf <em>"Syntax error at line <b>%d</b>"</em> line
-  | Error (`ParserGrammarError (line, message)) ->
-      eprintf <em>"Grammar error at line <b>%d</b>: <b>%s</b>"</em> line message
-  | Error (`ValidationLengthError length) ->
-      eprintf <em>"Validation error: length <b>%d</b> is out of bounds"</em> length
-  | Error (`ValidationHeightError height) ->
-      eprintf <em>"Validation error: height <b>%d</b> is out of bounds"</em> height
-  | Error (`DisplayError message) ->
-      eprintf <em>"Display error: <b>%s</b>"</em> message
-</pre>
-
+<div class="sourceCode" id="cb20"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">let</span> handle_errors source =</span>
+<span id="cb20-2"><a href="#cb20-2"></a>  <span class="kw">match</span> main source <span class="kw">with</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a>  | Ok <span class="dt">output</span> -&gt;</span>
+<span id="cb20-4"><a href="#cb20-4"></a>      printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span>
+<span id="cb20-5"><a href="#cb20-5"></a>  | Error (`ParserSyntaxError line) -&gt;</span>
+<span id="cb20-6"><a href="#cb20-6"></a>      eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
+<span id="cb20-7"><a href="#cb20-7"></a>  | Error (`ParserGrammarError (line, message)) -&gt;</span>
+<span id="cb20-8"><a href="#cb20-8"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
+<span id="cb20-9"><a href="#cb20-9"></a>  | Error (`ValidationLengthError length) -&gt;</span>
+<span id="cb20-10"><a href="#cb20-10"></a>      eprintf <span class="st">&quot;Validation error: length %d is out of bounds&quot;</span> length</span>
+<span id="cb20-11"><a href="#cb20-11"></a>  | Error (`ValidationHeightError height) -&gt;</span>
+<span id="cb20-12"><a href="#cb20-12"></a>      eprintf <span class="st">&quot;Validation error: height %d is out of bounds&quot;</span> height</span>
+<span id="cb20-13"><a href="#cb20-13"></a>  | Error (`DisplayError message) -&gt;</span>
+<span id="cb20-14"><a href="#cb20-14"></a>      eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
 <p><em>Summary:</em></p>
-
 <ul>
-<li><strong>Composition</strong>. Functions compose monadically by unifying the <code>'error</code>
-branch of the result type.</li>
+<li><strong>Composition</strong>. Functions compose monadically by unifying the <code>'error</code> branch of the result type.</li>
 <li><strong>Concern separation</strong>. Happy path and error handling can be separated.</li>
 <li><strong>Error contract</strong>. Polymorphic variant type reflects the relevant error cases.</li>
 <li><strong>Distinguishable errors</strong>. We can pattern-match to distinguish errors.</li>
-<li><strong>Exhaustiveness checking</strong>. When the called function gets an additional error case
-the compiler will show all the call sites that need to be updated.</li>
+<li><strong>Exhaustiveness checking</strong>. When the called function gets an additional error case, the compiler will show all the call sites that need to be updated.</li>
 </ul>
-
-<p>There are no downsides to this approach that I can think of. However, it is
-worth noting that the names of each polymorphic variant should be globally
-distinguishable. So you need a descriptive name, for example,
-<code>&#96;MyModuleNameErrorName</code>
-as opposed to <code>&#96;ErrorName</code>.</p>
-
-<h2>Conclusion</h2>
-
-<p>Polymorphic variants in OCaml have many use cases. But just this one use case
-makes the language stand out from the others.
-I often miss higher-kinded types, or type classes, but I have hard time imagining
-my daily work without being able to handle error this way:
-composing error-returning functions effortlessly and with full type safety.</p>
-
-<p>I would like to encourage library authors (including standard library authors)
-to use this error-handling approach as the default one, so we can take
-error-returning functions from different libraries and compose them freely.</p>
-
-<p>In a follow-up article I will talk in detail about this
-approach and introduce a few useful patterns around it.</p>
-
-<h2>Resources</h2>
-
-<p>This approach to error handling scales well. However, it requires good
-familiarity with how polymorphic variants work. Here are a few resources:</p>
-
+<p>There are no downsides to this approach that I can think of. However, it is worth noting that the names of each polymorphic variant should be globally distinguishable. So you need a descriptive name, for example, <code>`MyModuleNameErrorName</code> as opposed to <code>`ErrorName</code>.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Polymorphic variants in OCaml have many use cases. But just this one use case makes the language stand out from the others. I often miss higher-kinded types or type classes. Still, I have hard time imagining my daily work without being able to handle error this way: composing error-returning functions effortlessly and with full type safety.</p>
+<p>I would like to encourage library authors (including standard library authors) to use this error-handling approach as the default one, so we can take error-returning functions from different libraries and compose them freely.</p>
+<p>In a follow-up article I will discuss this approach futher and introduce a few useful patterns around it.</p>
+<h2 id="resources">Resources</h2>
+<p>This approach to error handling scales well. However, it requires good familiarity with how polymorphic variants work. Here are a few resources:</p>
 <ul>
 <li>Chapter of Real World OCaml on <a href="https://realworldocaml.org/v1/en/html/variants.html#polymorphic-variants">Polymorhic Variants</a></li>
-<li>Axel Rauschmayer&#8217;s <a href="http://2ality.com/2018/01/polymorphic-variants-reasonml.html">ReasonML: polymorphic variant types</a>,
-which has a further list of valuable resources</li>
+<li>Axel Rauschmayer’s <a href="http://2ality.com/2018/01/polymorphic-variants-reasonml.html">ReasonML: polymorphic variant types</a>, which has a further list of valuable resources</li>
 </ul>
+<h2 id="code"><a href="https://gist.github.com/keleshev/c8d6d8adac646839fdc6664d44cb91c6">Code</a></h2>
+<!--Code from this article is available in a [gist](https://gist.github.com/keleshev/c8d6d8adac646839fdc6664d44cb91c6).-->
+<h2 id="update">Update</h2>
+<ul>
+<li>2020-12-08: The article was updated to use the new <a href="stdlib-result"><code>Stdlib.Result</code></a> module and <code>let*</code> syntax. Previously it used <a href="base-result"><code>Base.Result</code></a> and <a href="ppx_let"><code>ppx_let</code></a>.</li>
+</ul>
+<h2 id="acknowledgments">Acknowledgments</h2>
+<p>Big thanks to <a href="https://twitter.com/owickstrom">Oskar Wickström</a> for giving feedback on a draft of this post. <a href="/" title="Home">■</a></p>
+<hr />
+<p><em>Did you like this blog post? If so, check out my new book:</em> Compiling to Assembly from Scratch. <em>It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. </em></p>
 
-<h2>Acknowledgements</h2>
 
-<p>Big thanks to <a href="https://twitter.com/owickstrom">Oskar Wickström</a>
-for giving feedback on a draft of this post. <a href="/" title="Home">&#9632;</a></p>
-
-<p><style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
-<center><br/><br/> ⁂ </center></p>
-
-<p><center></p>
-
-<h2>Check out my upcoming book about compilers:</h2>
-
-<p><a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=300 height=450 /></a></p>
-
-<p><em>TypeScript — ARM — September 2020</em></p>
-
-<p></center></p>
-
-<p><br/>
-<br/>
-<br/>
-<br/>
-<br/></p>
-
-    </body>
+      <br/>
+  <div style="text-align: center; line-height: 0px">
+      <a href="/compiling-to-assembly-from-scratch"
+         style="border-bottom: none; font-size: 0">
+       <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+            src="/compiling-to-assembly-from-scratch.jpg"
+            style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+            width=200 height=300 />
+      </a>
+  </div>
+  <hr class="fleuron" />
+</body>
 </html>

@@ -1,16 +1,12 @@
 ---
 title: Composable Error Handling in OCaml
+fancy-title: "Composable Error Handling<br/><small><small>in OCaml</small></small>"
+date: 2018-02-12
+cta: {book: yes}
 ---
 
-<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
-
-<span id=home><a title=Home href=/>☰</a></span>
-<h1>Composable Error Handling<br/><small><small>in OCaml</small></small></h1>
-
-<center>Vladimir Keleshev • 2018-02-12</center>
-
-Let's discuss common ways to handle errors in OCaml, their shortcomings
-and, finally, how polymorphic variants may help. The discussion applies
+Let's discuss common ways to handle errors in OCaml, their shortcomings,
+and finally, how polymorphic variants may help. The discussion applies
 equally well to [Reason ML][Reason].
 
 [Reason]: https://reasonml.github.io/
@@ -20,12 +16,12 @@ Real World OCaml chapter on [Error Handling][RWO-ER].
 
 [RWO-ER]: https://realworldocaml.org/v1/en/html/error-handling.html
 
-As a reference point we'll take three hypothetical functions which can return
+As a reference point, we'll take three hypothetical functions which can return
 errors and which we want to compose:
 
- * `Parser.parse` which can yield a "syntax error" or a "grammar error".
- * `Validation.perform` which can yield a "length error" or a "height error".
- * `Display.render` which can yield a "display error".
+ * `Parser.parse`, which can yield a "syntax error" or a "grammar error".
+ * `Validation.perform`, which can yield a "length error" or a "height error".
+ * `Display.render`, which can yield a "display error".
 
 We will cover the following error-handling approaches:
 
@@ -58,7 +54,7 @@ module Validation : sig
   exception HeightError of int
 
   (** Can raise [Validation.LengthError]
-      or [Validation.HeightError *)]
+      or [Validation.HeightError] *)
   val perform : tree -> tree
 end
 
@@ -70,8 +66,7 @@ module Display : sig
 end
 ```
 
-Here is how we can write code that composes these functions, while
-ignoring the errors:
+Here is how we can write code that composes these functions while ignoring the errors:
 
 ```ocaml
 let main source =
@@ -87,7 +82,7 @@ open Printf
 
 let handle_errors source =
   try
-    printf (main source)
+    printf "%s" (main source)
   with
     | Parser.SyntaxError line ->
         eprintf "Syntax error at line %d" line
@@ -106,8 +101,8 @@ let handle_errors source =
  * **Composition**. Functions compose freely.
  * **Concern separation**. Happy path and error handling are separated.
  * **Distinguishable errors**. We can reliably distinguish one kind of
-   error from another. For example, a `SyntaxError` from a `GrammarError`.
- * Also, in OCaml the exception mechanism is fast and fits well
+   error from another–for example, a `SyntaxError` from a `GrammarError`.
+ * Also, in OCaml, the exception mechanism is fast and fits well
    with performance-critical sections of code.
 
 *Downsides:*
@@ -120,36 +115,32 @@ let handle_errors source =
    our function `Parser.parse_exn`. This is definitely worthwhile, but
    similar shortcomings apply.
  * No **exhaustiveness checking**. We cannot be sure that we handled all the
-   error cases at a relevant call site,
+   error cases at a relevant call site
    or that the cases we are covering are relevant at all.
    If we change one of the called functions to return a new kind of
    error, then the compiler will not inform us about the call sites that are
    affected.
 
-Although the flaws of exception-based approach are very real and dire,
+Although the flaws of the exception-based approach are real and dire,
 it is important to recognize the upsides to adequately compare
 this approach with the other.
 
 
 ## B. Result type with strings for errors
 
-The OCaml built-in result type provides a reusable way to express
+The OCaml built-in `Stdlib.result` type provides a reusable way to express
 and distinguish a success value and an error value.
 
 ```ocaml
-type ('success, 'error) result = ('success, 'error) Pervasives.result =
+type ('success, 'error) result =
   | Ok of 'success
   | Error of 'error
 ```
 
-It is most often used with a combinator library like [`Base.Result`][Base.Result] of Jane Street.
+Since version 4.08, OCaml contains a `Result` module that contains helper functions to operate on the result type.
 
-Below we'll talk about using strings for the `'error` type parameter, however,
-same applies, for example, to [`Base.Error`][Base.Error] type, which is a lazy
-string specifically designed to be used together with the result type.
-
-[Base.Error]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Error/index.html
-[Base.Result]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/index.html
+One way to use the result type is to use a string for the `'error` parameter, that describes the error textually.
+This way, our interface will look like this:
 
 ```ocaml
 module Parser : sig
@@ -181,42 +172,56 @@ let main source =
           | Error message ->
               eprintf "Display error: %s" message
           | Ok output ->
-              printf output
+              printf "%s" output
 ```
 
-Or we could use the bind operator (`>>=`)
-to monadically compose the
-result-returning functions and thus separate error handling from the happy path.
+Or we could use `Result.bind` to monadically compose the result-returning functions and thus separate error handling from the happy path.
 
 ```ocaml
 let main source =
-  let open Result in
+  Result.bind (Parser.parse source) (fun tree ->
+    Result.bind (Validation.perform tree) (fun tree ->
+      Display.render tree))
+```
+
+However, it is more common to use an infix operator `(>>=)` for `bind`:
+
+```ocaml
+let (>>=) = Result.bind
+
+let main source =
   Parser.parse source >>= fun tree ->
   Validation.perform tree >>= fun tree ->
   Display.render tree
 ```
 
-Or even better, we could use the [`ppx_let`][ppx_let] preprocessor to
-accomplish the equivalent, but in a more readable way:
-
-[ppx_let]: https://github.com/janestreet/ppx_let
+Since OCaml 4.08 you can also use binding operators:
 
 ```ocaml
+let (let*) = Result.bind
+
 let main source =
-  let open Result.Let_syntax in
-  let%bind tree = Parser.parse source in
-  let%bind tree = Validation.perform tree in
+  let* tree = Parse.parse source in
+  let* tree = Validation.perform tree in
   Display.render tree
 ```
 
-Notice how similar this looks to our original version based on exceptions.
-In both cases we can handle the errors separately:
+Notice how similar this looks to our original version based on exceptions:
+
+```ocaml
+let main source =
+  let tree = Parser.parse source in
+  let tree = Validation.perform tree in
+  Display.render tree
+```
+
+In both cases we can handle the errors separately from the happy path:
 
 ```ocaml
 let handle_errors source =
   match main source with
   | Error message -> eprintf "Error: %s" message
-  | Ok output -> printf output
+  | Ok output -> printf "%s" output
 ```
 
 
@@ -225,23 +230,23 @@ let handle_errors source =
  * **Composition**. Functions compose using the result monad.
  * **Concern separation**. The error handling and the happy-path code can be separated.
  * **_Weak_ error contract**. The fact that a function can return an error is
-   part of the type signature, however, we can't infer which exact errors are
+   part of the type signature. However, we can't infer which exact errors are
    part of the contract.
 
 *Downsides:*
 
- * Not **distinguishable errors**. At the site where we handle errors we can't
+ * Non-**distinguishable errors**. At the site where we handle errors we can't
    distinguish two errors, for example, a "length error" from a "height error".
- * No **exhaustiveness checking**. When a new error case is introduced the
+ * No **exhaustiveness checking**. When a new error case is introduced, the
    compiler will not help us find the call sites where a change would be relevant.
 
-Compared with the _A. Exceptions for errors_ approach, we lose the ability to distinguish
+Compared with _A. Exceptions for errors_ approach, we lose the ability to distinguish
 errors, maintain the ability to compose functions, and gain the ability
 to know from a type signature that a function can return an error.
 
 ## C. Result type with custom variants for errors
 
-A natural way to improve upon the previous example would to use the result type
+A natural way to improve upon the previous example would be to use the result type
 with a custom variant type for the `'error` type parameter instead of string:
 
 ```ocaml
@@ -271,8 +276,8 @@ We can handle errors by manually matching on the result type:
 ```ocaml
 let main source =
   match Parser.parse source with
-  | Error Parser.(SyntaxError message) ->
-      eprintf "Syntax error: %s" message
+  | Error Parser.(SyntaxError line) ->
+      eprintf "Syntax error at line %d" line
   | Error Parser.(GrammarError {line; message}) ->
       eprintf "Grammar error at line %d: %s" line message
   | Ok tree ->
@@ -284,7 +289,7 @@ let main source =
       | Ok tree ->
           match Display.render tree with
           | Error message -> eprintf "Display error: %s" message
-          | Ok output -> printf output
+          | Ok output -> printf "%s" output
 ```
 
 However, if we try to compose the three functions monadically (like we
@@ -293,24 +298,23 @@ because the bind operator requires the `'error` type parameters of different
 functions to unify (notably, unlike the `'success` type parameter):
 
 ```ocaml
-val (>>=) : ('a, 'error) result
-         -> ('a -> ('b, 'error) result)
-         -> ('b, 'error) result
+val (bind) : ('a, 'error) result
+          -> ('a -> ('b, 'error) result)
+          -> ('b, 'error) result
 ```
 
 *Upsides:*
 
  * **Error contract**. The type—not a comment—reflects the relevant error cases.
  * **Distinguishable errors**. We can pattern-match to distinguish errors.
- * **Exhaustiveness checking**. When the called function gets an additional error case
+ * **Exhaustiveness checking**. When the called function gets an additional error case,
    the compiler will show all the call sites that need to be updated.
 
 *Downsides:*
 
- * No **composition**. We can't compose the functions directly,
-   monadically, or otherwise.
+ * No **composition**. We can't compose the functions directly, monadically, or otherwise.
  * No **concern separation**. We are forced to deal with
-   the error branch, using pattern matching or combinators.
+   the error branch using pattern matching or combinators.
 
 There is a way to work around the two downsides. You can lift each function
 you want to compose to a result type where `'error` can encompass all the
@@ -325,7 +329,7 @@ while having a strong error contract.
 
 Seems like you can't have the cake and eat it too.
 This is also usually the point where best practices of other
-statically-typed functional languages stop and you have to deal with the
+statically-typed functional languages stop, and you have to deal with the
 trade-offs.
 
 ## D. Result type with polymorphic variants for errors
@@ -362,9 +366,7 @@ module Display : sig
   val render : tree -> (string, [> error]) result
 end
 ```
-```ocaml
 
-```
 The key feature of polymorphic variants is that
 they unify with other polymorphic variants.
 We specifically annotated
@@ -378,12 +380,11 @@ Now look, if you compose just two functions, parser and validator:
 
 ```ocaml
 let parse_and_validate source =
-  let open Result.Let_syntax in
-  let%bind tree = Parser.parse source in
+  let* tree = Parser.parse source in
   Validation.perform tree
 ```
 
-Then not only will this work, but the type of such a function will be:
+Then not only will this work, but the type of such a function will be as follows:
 
 ```ocaml
 val parse_and_validate : string -> (tree, [>
@@ -401,16 +402,15 @@ Let us now throw in our render function:
 
 ```ocaml
 let main source =
-  let open Result.Let_syntax in
-  let%bind tree = Parser.parse source in
-  let%bind tree = Validation.perform tree in
+  let* tree = Parser.parse source in
+  let* tree = Validation.perform tree in
   Display.render tree
 ```
 
 The inferred function type will reflect all the relevant error cases:
 
 ```ocaml
-val main : string -> (tree, [>
+val main : string -> (string, [>
   | `ParserSyntaxError of int
   | `ParserGrammarError of int * string
   | `ValidationLengthError of int
@@ -430,7 +430,7 @@ You handle the errors by pattern matching on the result type:
 let handle_errors source =
   match main source with
   | Ok output ->
-      printf output
+      printf "%s" output
   | Error (`ParserSyntaxError line) ->
       eprintf "Syntax error at line %d" line
   | Error (`ParserGrammarError (line, message)) ->
@@ -450,7 +450,7 @@ let handle_errors source =
  * **Concern separation**. Happy path and error handling can be separated.
  * **Error contract**. Polymorphic variant type reflects the relevant error cases.
  * **Distinguishable errors**. We can pattern-match to distinguish errors.
- * **Exhaustiveness checking**. When the called function gets an additional error case
+ * **Exhaustiveness checking**. When the called function gets an additional error case,
    the compiler will show all the call sites that need to be updated.
 
 There are no downsides to this approach that I can think of. However, it is
@@ -465,16 +465,15 @@ as opposed to <code>&#96;ErrorName</code>.
 
 Polymorphic variants in OCaml have many use cases. But just this one use case
 makes the language stand out from the others.
-I often miss higher-kinded types, or type classes, but I have hard time imagining
-my daily work without being able to handle error this way:
+I often miss higher-kinded types or type classes.
+Still, I have hard time imagining my daily work without being able to handle error this way:
 composing error-returning functions effortlessly and with full type safety.
 
 I would like to encourage library authors (including standard library authors)
 to use this error-handling approach as the default one, so we can take
 error-returning functions from different libraries and compose them freely.
 
-In a follow-up article I will talk in detail about this
-approach and introduce a few useful patterns around it.
+In a follow-up article I will discuss this approach futher and introduce a few useful patterns around it.
 
 ## Resources
 
@@ -488,24 +487,30 @@ familiarity with how polymorphic variants work. Here are a few resources:
 [RWO-POLY]: https://realworldocaml.org/v1/en/html/variants.html#polymorphic-variants
 [Axel]: http://2ality.com/2018/01/polymorphic-variants-reasonml.html
 
-## Acknowledgements
+## [Code](https://gist.github.com/keleshev/c8d6d8adac646839fdc6664d44cb91c6)
+
+<!--Code from this article is available in a [gist](https://gist.github.com/keleshev/c8d6d8adac646839fdc6664d44cb91c6).-->
+
+## Update
+
+* 2020-12-08: The article was updated to use the new
+  [`Stdlib.Result`](stdlib-result) module and `let*` syntax.
+  Previously it used
+  [`Base.Result`](base-result) and [`ppx_let`](ppx_let).
+
+## Acknowledgments
 
 Big thanks to [Oskar Wickström](https://twitter.com/owickstrom)
 for giving feedback on a draft of this post. [&#9632;](/ "Home")
 
 
-<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
-<center><br/><br/> ⁂ </center>
+[base-result]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/index.html
+[ppx_let]: https://github.com/janestreet/ppx_let
+[stdlib-result]: https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
 
-<center>
-<h2>Check out my upcoming book about compilers:</h2>
-<a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=300 height=450 /></a>
-<p><em>TypeScript — ARM — September 2020</em></p>
-</center>
+* * *
 
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
+*Did you like this blog post? If so, check out my new book:* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language.
+*
+
 
