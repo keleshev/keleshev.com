@@ -304,9 +304,9 @@ because the bind operator requires the `'error` type parameters of different
 functions to unify (notably, unlike the `'success` type parameter):
 
 ```ocaml
-val (bind) : ('a, 'error) result
-          -> ('a -> ('b, 'error) result)
-          -> ('b, 'error) result
+val bind : ('a, 'error) result
+        -> ('a -> ('b, 'error) result)
+        -> ('b, 'error) result
 ```
 
 *Upsides:*

@@ -275,9 +275,9 @@ Result type with polymorphic variants for errors</i>
 <span id="cb13-19"><a href="#cb13-19"></a>          | Ok <span class="dt">output</span> -&gt;</span>
 <span id="cb13-20"><a href="#cb13-20"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
 <p>However, if we try to compose the three functions monadically (like we did in the previous example), we discover that it is not possible because the bind operator requires the <code>'error</code> type parameters of different functions to unify (notably, unlike the <code>'success</code> type parameter):</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">val</span> (bind) : (&#39;a, &#39;error) result</span>
-<span id="cb14-2"><a href="#cb14-2"></a>          -&gt; (&#39;a -&gt; (&#39;b, &#39;error) result)</span>
-<span id="cb14-3"><a href="#cb14-3"></a>          -&gt; (&#39;b, &#39;error) result</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">val</span> bind : (&#39;a, &#39;error) result</span>
+<span id="cb14-2"><a href="#cb14-2"></a>        -&gt; (&#39;a -&gt; (&#39;b, &#39;error) result)</span>
+<span id="cb14-3"><a href="#cb14-3"></a>        -&gt; (&#39;b, &#39;error) result</span></code></pre></div>
 <p><em>Upsides:</em></p>
 <ul>
 <li><strong>Error contract</strong>. The type—not a comment—reflects the relevant error cases.</li>
