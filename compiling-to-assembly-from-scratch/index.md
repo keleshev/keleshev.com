@@ -1,9 +1,9 @@
 ---
 title: Compiling to Assembly from Scratch
-twitter-card: true
-twitter-title: Compiling to Assembly from Scratch
-twitter-description: Black Friday Sale — 40% off
-twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-friday-card.png"
+#twitter-card: false
+#twitter-title: Compiling to Assembly from Scratch
+#twitter-description: Black Friday Sale — 40% off
+#twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-friday-card.png"
 ---
 
 
@@ -13,7 +13,7 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-fr
 
 
 
-<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy Ebook • <b>$45</b> </a></p></center>
+<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b> </a></p></center>
 
 
 
