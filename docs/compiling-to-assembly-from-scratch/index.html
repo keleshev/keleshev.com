@@ -15,6 +15,7 @@
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
     div.sourceCode { margin: 1em 0; }
     pre.sourceCode { margin: 0; }
@@ -56,6 +57,7 @@
     code span.kw { font-weight: bold; } /* Keyword */
     code span.pp { font-weight: bold; } /* Preprocessor */
     code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="/style.css" />
   <!--[if lt IE 9]>
@@ -68,10 +70,11 @@
 
 
 
+
 <header id="title-block-header">
 </header>
 <h1>
-Compiling to Assembly<br/><small>from Scratch </small>
+Compiling to Assembly<br/><small><small>from Scratch </small></small>
 </h1>
 <center>
 <img id=cover style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 />
@@ -81,15 +84,13 @@ Compiling to Assembly<br/><small>from Scratch </small>
 <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b> </a>
 </p>
 </center>
-<center>
-<em>TypeScript — ARM — Lots of fun!</em>
-</center>
+<!--<center><em>TypeScript — ARM — Lots of fun!</em></center> -->
 <p><big><em>So, you’ve been trying to learn how compilers and programming languages work?</em> </big></p>
 <p>Perhaps, you’ve learned about compiling to JavaScript, or about building an interpreter? Or, maybe, about compiling to bytecode? All good steps.</p>
 <p><em>But there’s a tension building up.</em></p>
 <p>Because it feels a bit like cheating. Because you know that somewhere, somehow, the code you write is translated to assembly instructions. To the machine language. That’s where the rubber hits the road. That’s where it gets hot. And, oh-so-many resources are hesitant to cover this part. But not this book.</p>
 <p>This ebook will show you in detail how you can build a compiler from scratch that goes all the way from <em>source</em> to <em>assembly</em>.</p>
-<p>The example code is written in <strong>TypeScript</strong>, a dialect of <strong>JavaScript</strong>. The book describes the design and implementation of a compiler that emits 32-bit <strong>ARM</strong> assembly instructions. All you need to know is how to program, the book will teach you enough compiler theory and assembly programming to get going.</p>
+<p>The example code is written in a subset of <strong>TypeScript</strong> that reads like pseudocode. The book describes the design and implementation of a compiler that emits 32-bit <strong>ARM</strong> assembly instructions. All you need to know is how to program, the book will teach you enough compiler theory and assembly programming to get going.</p>
 <script src=https://transactions.sendowl.com/assets/sendowl.js></script>
 <blockquote>
 <h2 class="h2-card">
@@ -137,18 +138,18 @@ Buy now and get the following:
 <li>If you’re coming from Java or C#, then you will feel right at home, since TypeScript is brought to you by the same people who brought you C# <em>(and Turbo Pascal!)</em>.</li>
 </ul>
 <p>Don’t worry if you’ve never seen TypeScript code before. If you can read the following, you will most likely be able to pick it up, as the book goes <em>(real code from the book here!)</em>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">class</span> Label {</span>
-<span id="cb1-2"><a href="#cb1-2"></a>  <span class="kw">static</span> counter <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a>  <span class="dt">value</span><span class="op">:</span> number<span class="op">;</span> <span class="co">// Type annotation</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a></span>
-<span id="cb1-5"><a href="#cb1-5"></a>  constructor() {</span>
-<span id="cb1-6"><a href="#cb1-6"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> Label<span class="op">.</span><span class="at">counter</span><span class="op">++;</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a>  }</span>
-<span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a>  toString() {</span>
-<span id="cb1-10"><a href="#cb1-10"></a>    <span class="cf">return</span> <span class="st">&#39;.L&#39;</span> <span class="op">+</span> <span class="kw">this</span><span class="op">.</span><span class="at">value</span><span class="op">;</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a>  }</span>
-<span id="cb1-12"><a href="#cb1-12"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Label {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> counter <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">value</span><span class="op">:</span> number<span class="op">;</span> <span class="co">// Type annotation</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>() {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> Label<span class="op">.</span><span class="at">counter</span><span class="op">++;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">toString</span>() {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;.L&#39;</span> <span class="op">+</span> <span class="kw">this</span><span class="op">.</span><span class="at">value</span><span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>I avoided using any TypeScript- or JavaScript-specific language features in the code.</p>
 <p>If you’re into statically-typed functional programming languages (Haskell, OCaml, or Reason ML), you will find that the class structure I used has a nice translation to an algebraic data type. It is, in fact, how I wrote it first.</p>
 <style>
@@ -183,13 +184,13 @@ function gcd(a, b) {
 </td>
 </tr>
 </table-->
-<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">function</span> <span class="fu">factorial</span>(n) {</span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="cf">if</span> (n <span class="op">==</span> <span class="dv">0</span>) {</span>
-<span id="cb2-3"><a href="#cb2-3"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a>  } <span class="cf">else</span> {</span>
-<span id="cb2-5"><a href="#cb2-5"></a>    <span class="cf">return</span> n <span class="op">*</span> factorial(n <span class="op">-</span> <span class="dv">1</span>)<span class="op">;</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a>  }</span>
-<span id="cb2-7"><a href="#cb2-7"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">factorial</span>(n) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="op">==</span> <span class="dv">0</span>) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n <span class="op">*</span> <span class="fu">factorial</span>(n <span class="op">-</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Into ARM assembly code like this:</p>
 <pre class="arm"><code>.global factorial
 factorial:
@@ -228,7 +229,7 @@ factorial:
 </center>
 <br/>
 <center>
-<a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read Excerpt </a>
+<a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read excerpt </a>
 </center>
 <h2 id="print-edition">Print edition?</h2>
 <p>There’s no print edition of the book at the moment. But there will be. However, there’s no timeline for it yet. The print is a bit harder than digital. I need to be 100% confident about each word in the book before it is sent to the press. However, I know that nobody likes buying the same book twice. So, if you buy the ebook today, I make a promise to give you a discount, once the print edition is out.</p>

@@ -15,7 +15,8 @@ publish: phony
 
 docs/%.html: %.md template.html Makefile
 	mkdir -p $(@D)
-	pandoc $< -o $@ --template=template.html --highlight-style=monochrome
+	pandoc $< -o $@ --template=template.html --highlight-style=monochrome \
+		-M document-css=false
 
 docs/%.svg: %.svg Makefile
 	mkdir -p $(@D)

@@ -16,6 +16,7 @@
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
     div.sourceCode { margin: 1em 0; }
     pre.sourceCode { margin: 0; }
@@ -57,6 +58,7 @@
     code span.kw { font-weight: bold; } /* Keyword */
     code span.pp { font-weight: bold; } /* Preprocessor */
     code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="/style.css" />
   <!--[if lt IE 9]>
@@ -68,6 +70,7 @@
 
 
   <h1>Composable Error Handling<br/><small><small>in OCaml</small></small></h1>
+
 
 <center style="margin: 25.46px;" >Vladimir Keleshev • 2018-02-12</center>
 
@@ -95,56 +98,56 @@ Result type with polymorphic variants for errors</i>
 </ol>
 <h2 id="a.-exceptions-for-errors">A. Exceptions for errors</h2>
 <p>First, let us consider a version of our interface where the above functions use exceptions to signal errors.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">type</span> tree</span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a>  <span class="kw">exception</span> SyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>  <span class="kw">exception</span> GrammarError <span class="kw">of</span> {line: <span class="dt">int</span>; message: <span class="dt">string</span>}</span>
-<span id="cb1-6"><a href="#cb1-6"></a></span>
-<span id="cb1-7"><a href="#cb1-7"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Parser.SyntaxError<span class="ot">]</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="co">      or </span><span class="ot">[</span>Parser.GrammarError<span class="ot">]</span><span class="co"> *)</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; tree</span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="kw">end</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
-<span id="cb1-13"><a href="#cb1-13"></a>  <span class="kw">exception</span> LengthError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a>  <span class="kw">exception</span> HeightError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a></span>
-<span id="cb1-16"><a href="#cb1-16"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Validation.LengthError<span class="ot">]</span></span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="co">      or </span><span class="ot">[</span>Validation.HeightError<span class="ot">]</span><span class="co"> *)</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a>  <span class="kw">val</span> perform : tree -&gt; tree</span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="kw">end</span></span>
-<span id="cb1-20"><a href="#cb1-20"></a></span>
-<span id="cb1-21"><a href="#cb1-21"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
-<span id="cb1-22"><a href="#cb1-22"></a>  <span class="kw">exception</span> Error <span class="kw">of</span> <span class="dt">string</span></span>
-<span id="cb1-23"><a href="#cb1-23"></a></span>
-<span id="cb1-24"><a href="#cb1-24"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Display.Error<span class="ot">]</span><span class="co"> *)</span></span>
-<span id="cb1-25"><a href="#cb1-25"></a>  <span class="kw">val</span> render : tree -&gt; <span class="dt">string</span></span>
-<span id="cb1-26"><a href="#cb1-26"></a><span class="kw">end</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> tree</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">exception</span> SyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">exception</span> GrammarError <span class="kw">of</span> {line: <span class="dt">int</span>; message: <span class="dt">string</span>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Parser.SyntaxError<span class="ot">]</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">      or </span><span class="ot">[</span>Parser.GrammarError<span class="ot">]</span><span class="co"> *)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; tree</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">exception</span> LengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">exception</span> HeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Validation.LengthError<span class="ot">]</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">      or </span><span class="ot">[</span>Validation.HeightError<span class="ot">]</span><span class="co"> *)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> perform : tree -&gt; tree</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">exception</span> Error <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">(** Can raise </span><span class="ot">[</span>Display.Error<span class="ot">]</span><span class="co"> *)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> render : tree -&gt; <span class="dt">string</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
 <p>Here is how we can write code that composes these functions while ignoring the errors:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">let</span> main source =</span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="kw">let</span> tree = Parser.parse source <span class="kw">in</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a>  <span class="kw">let</span> tree = Validation.perform tree <span class="kw">in</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a>  Display.render tree</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  Display.render tree</span></code></pre></div>
 <p>And here is how we can write code that handles and reports each error:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">open</span> <span class="dt">Printf</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a></span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">let</span> handle_errors source =</span>
-<span id="cb3-4"><a href="#cb3-4"></a>  <span class="kw">try</span></span>
-<span id="cb3-5"><a href="#cb3-5"></a>    printf <span class="st">&quot;%s&quot;</span> (main source)</span>
-<span id="cb3-6"><a href="#cb3-6"></a>  <span class="kw">with</span></span>
-<span id="cb3-7"><a href="#cb3-7"></a>    | Parser.SyntaxError line -&gt;</span>
-<span id="cb3-8"><a href="#cb3-8"></a>        eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
-<span id="cb3-9"><a href="#cb3-9"></a>    | Parser.(GrammarError {line; message}) -&gt;</span>
-<span id="cb3-10"><a href="#cb3-10"></a>        eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
-<span id="cb3-11"><a href="#cb3-11"></a>    | Validation.LengthError length -&gt;</span>
-<span id="cb3-12"><a href="#cb3-12"></a>        eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
-<span id="cb3-13"><a href="#cb3-13"></a>        eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
-<span id="cb3-14"><a href="#cb3-14"></a>    | Validation.HeightError height -&gt;</span>
-<span id="cb3-15"><a href="#cb3-15"></a>        eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
-<span id="cb3-16"><a href="#cb3-16"></a>        eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
-<span id="cb3-17"><a href="#cb3-17"></a>    | Display.Error message -&gt;</span>
-<span id="cb3-18"><a href="#cb3-18"></a>        eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="dt">Printf</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> handle_errors source =</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">try</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    printf <span class="st">&quot;%s&quot;</span> (main source)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">with</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    | Parser.SyntaxError line -&gt;</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    | Parser.(GrammarError {line; message}) -&gt;</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    | Validation.LengthError length -&gt;</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    | Validation.HeightError height -&gt;</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    | Display.Error message -&gt;</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
 <p><em>Upsides:</em></p>
 <ul>
 <li><strong>Composition</strong>. Functions compose freely.</li>
@@ -160,66 +163,66 @@ Result type with polymorphic variants for errors</i>
 <p>Although the flaws of the exception-based approach are real and dire, it is important to recognize the upsides to adequately compare this approach with the other.</p>
 <h2 id="b.-result-type-with-strings-for-errors">B. Result type with strings for errors</h2>
 <p>The OCaml built-in <code>Stdlib.result</code> type provides a reusable way to express and distinguish a success value and an error value.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">type</span> (&#39;success, &#39;error) result =</span>
-<span id="cb4-2"><a href="#cb4-2"></a>  | Ok <span class="kw">of</span> &#39;success</span>
-<span id="cb4-3"><a href="#cb4-3"></a>  | Error <span class="kw">of</span> &#39;error</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> (&#39;success, &#39;error) result =</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  | Ok <span class="kw">of</span> &#39;success</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  | Error <span class="kw">of</span> &#39;error</span></code></pre></div>
 <p>Since version 4.08, OCaml contains a <code>Result</code> module that contains helper functions to operate on the result type.</p>
 <p>One way to use the result type is to use a string for the <code>'error</code> parameter, that describes the error textually. This way, our interface will look like this:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, <span class="dt">string</span>) result</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">end</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
-<span id="cb5-6"><a href="#cb5-6"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, <span class="dt">string</span>) result</span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="kw">end</span></span>
-<span id="cb5-8"><a href="#cb5-8"></a></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
-<span id="cb5-10"><a href="#cb5-10"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, <span class="dt">string</span>) result</span>
-<span id="cb5-11"><a href="#cb5-11"></a><span class="kw">end</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, <span class="dt">string</span>) result</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, <span class="dt">string</span>) result</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, <span class="dt">string</span>) result</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
 <p>We could handle errors by manually matching on the result type:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">let</span> main source =</span>
-<span id="cb6-2"><a href="#cb6-2"></a>  <span class="kw">match</span> Parser.parse source <span class="kw">with</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a>  | Error message -&gt;</span>
-<span id="cb6-4"><a href="#cb6-4"></a>      eprintf <span class="st">&quot;Parser error: %s&quot;</span> message</span>
-<span id="cb6-5"><a href="#cb6-5"></a>  | Ok tree -&gt;</span>
-<span id="cb6-6"><a href="#cb6-6"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a>      | Error message -&gt;</span>
-<span id="cb6-8"><a href="#cb6-8"></a>          eprintf <span class="st">&quot;Validation error: %s&quot;</span> message</span>
-<span id="cb6-9"><a href="#cb6-9"></a>      | Ok tree -&gt;</span>
-<span id="cb6-10"><a href="#cb6-10"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a>          | Error message -&gt;</span>
-<span id="cb6-12"><a href="#cb6-12"></a>              eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
-<span id="cb6-13"><a href="#cb6-13"></a>          | Ok <span class="dt">output</span> -&gt;</span>
-<span id="cb6-14"><a href="#cb6-14"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">match</span> Parser.parse source <span class="kw">with</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  | Error message -&gt;</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Parser error: %s&quot;</span> message</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  | Ok tree -&gt;</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      | Error message -&gt;</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>          eprintf <span class="st">&quot;Validation error: %s&quot;</span> message</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      | Ok tree -&gt;</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>          | Error message -&gt;</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>              eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>          | Ok <span class="dt">output</span> -&gt;</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
 <p>Or we could use <code>Result.bind</code> to monadically compose the result-returning functions and thus separate error handling from the happy path.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">let</span> main source =</span>
-<span id="cb7-2"><a href="#cb7-2"></a>  Result.bind (Parser.parse source) (<span class="kw">fun</span> tree -&gt;</span>
-<span id="cb7-3"><a href="#cb7-3"></a>    Result.bind (Validation.perform tree) (<span class="kw">fun</span> tree -&gt;</span>
-<span id="cb7-4"><a href="#cb7-4"></a>      Display.render tree))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  Result.bind (Parser.parse source) (<span class="kw">fun</span> tree -&gt;</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    Result.bind (Validation.perform tree) (<span class="kw">fun</span> tree -&gt;</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>      Display.render tree))</span></code></pre></div>
 <p>However, it is more common to use an infix operator <code>(&gt;&gt;=)</code> for <code>bind</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">let</span> (&gt;&gt;=) = Result.bind</span>
-<span id="cb8-2"><a href="#cb8-2"></a></span>
-<span id="cb8-3"><a href="#cb8-3"></a><span class="kw">let</span> main source =</span>
-<span id="cb8-4"><a href="#cb8-4"></a>  Parser.parse source &gt;&gt;= <span class="kw">fun</span> tree -&gt;</span>
-<span id="cb8-5"><a href="#cb8-5"></a>  Validation.perform tree &gt;&gt;= <span class="kw">fun</span> tree -&gt;</span>
-<span id="cb8-6"><a href="#cb8-6"></a>  Display.render tree</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (&gt;&gt;=) = Result.bind</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  Parser.parse source &gt;&gt;= <span class="kw">fun</span> tree -&gt;</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  Validation.perform tree &gt;&gt;= <span class="kw">fun</span> tree -&gt;</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  Display.render tree</span></code></pre></div>
 <p>Since OCaml 4.08 you can also use binding operators:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">let</span> (<span class="kw">let</span><span class="er">*)</span> = Result.bind</span>
-<span id="cb9-2"><a href="#cb9-2"></a></span>
-<span id="cb9-3"><a href="#cb9-3"></a><span class="kw">let</span> main source =</span>
-<span id="cb9-4"><a href="#cb9-4"></a>  <span class="kw">let</span>* tree = Parse.parse source <span class="kw">in</span></span>
-<span id="cb9-5"><a href="#cb9-5"></a>  <span class="kw">let</span>* tree = Validation.perform tree <span class="kw">in</span></span>
-<span id="cb9-6"><a href="#cb9-6"></a>  Display.render tree</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">let</span><span class="er">*)</span> = Result.bind</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span>* tree = Parse.parse source <span class="kw">in</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span>* tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  Display.render tree</span></code></pre></div>
 <p>Notice how similar this looks to our original version based on exceptions:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">let</span> main source =</span>
-<span id="cb10-2"><a href="#cb10-2"></a>  <span class="kw">let</span> tree = Parser.parse source <span class="kw">in</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a>  <span class="kw">let</span> tree = Validation.perform tree <span class="kw">in</span></span>
-<span id="cb10-4"><a href="#cb10-4"></a>  Display.render tree</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  Display.render tree</span></code></pre></div>
 <p>In both cases we can handle the errors separately from the happy path:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">let</span> handle_errors source =</span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="kw">match</span> main source <span class="kw">with</span></span>
-<span id="cb11-3"><a href="#cb11-3"></a>  | Error message -&gt; eprintf <span class="st">&quot;Error: %s&quot;</span> message</span>
-<span id="cb11-4"><a href="#cb11-4"></a>  | Ok <span class="dt">output</span> -&gt; printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> handle_errors source =</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">match</span> main source <span class="kw">with</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  | Error message -&gt; eprintf <span class="st">&quot;Error: %s&quot;</span> message</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  | Ok <span class="dt">output</span> -&gt; printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
 <p><em>Upsides:</em></p>
 <ul>
 <li><strong>Composition</strong>. Functions compose using the result monad.</li>
@@ -234,50 +237,50 @@ Result type with polymorphic variants for errors</i>
 <p>Compared with <em>A. Exceptions for errors</em> approach, we lose the ability to distinguish errors, maintain the ability to compose functions, and gain the ability to know from a type signature that a function can return an error.</p>
 <h2 id="c.-result-type-with-custom-variants-for-errors">C. Result type with custom variants for errors</h2>
 <p>A natural way to improve upon the previous example would be to use the result type with a custom variant type for the <code>'error</code> type parameter instead of string:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
-<span id="cb12-2"><a href="#cb12-2"></a>  <span class="kw">type</span> error =</span>
-<span id="cb12-3"><a href="#cb12-3"></a>    | SyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb12-4"><a href="#cb12-4"></a>    | GrammarError <span class="kw">of</span> {line: <span class="dt">int</span>; message: <span class="dt">string</span>}</span>
-<span id="cb12-5"><a href="#cb12-5"></a></span>
-<span id="cb12-6"><a href="#cb12-6"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, error) result</span>
-<span id="cb12-7"><a href="#cb12-7"></a><span class="kw">end</span></span>
-<span id="cb12-8"><a href="#cb12-8"></a></span>
-<span id="cb12-9"><a href="#cb12-9"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
-<span id="cb12-10"><a href="#cb12-10"></a>  <span class="kw">type</span> error =</span>
-<span id="cb12-11"><a href="#cb12-11"></a>    | LengthError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb12-12"><a href="#cb12-12"></a>    | HeightError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb12-13"><a href="#cb12-13"></a></span>
-<span id="cb12-14"><a href="#cb12-14"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, error) result</span>
-<span id="cb12-15"><a href="#cb12-15"></a><span class="kw">end</span></span>
-<span id="cb12-16"><a href="#cb12-16"></a></span>
-<span id="cb12-17"><a href="#cb12-17"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
-<span id="cb12-18"><a href="#cb12-18"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, <span class="dt">string</span>) result</span>
-<span id="cb12-19"><a href="#cb12-19"></a><span class="kw">end</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> error =</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    | SyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    | GrammarError <span class="kw">of</span> {line: <span class="dt">int</span>; message: <span class="dt">string</span>}</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, error) result</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> error =</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    | LengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    | HeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, error) result</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, <span class="dt">string</span>) result</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
 <p>We can handle errors by manually matching on the result type:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">let</span> main source =</span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="kw">match</span> Parser.parse source <span class="kw">with</span></span>
-<span id="cb13-3"><a href="#cb13-3"></a>  | Error Parser.(SyntaxError line) -&gt;</span>
-<span id="cb13-4"><a href="#cb13-4"></a>      eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
-<span id="cb13-5"><a href="#cb13-5"></a>  | Error Parser.(GrammarError {line; message}) -&gt;</span>
-<span id="cb13-6"><a href="#cb13-6"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
-<span id="cb13-7"><a href="#cb13-7"></a>  | Ok tree -&gt;</span>
-<span id="cb13-8"><a href="#cb13-8"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
-<span id="cb13-9"><a href="#cb13-9"></a>      | Error Parser.(LengthError length) -&gt;</span>
-<span id="cb13-10"><a href="#cb13-10"></a>          eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
-<span id="cb13-11"><a href="#cb13-11"></a>          eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
-<span id="cb13-12"><a href="#cb13-12"></a>      | Error Parser.(HeightError height) -&gt;</span>
-<span id="cb13-13"><a href="#cb13-13"></a>          eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
-<span id="cb13-14"><a href="#cb13-14"></a>          eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
-<span id="cb13-15"><a href="#cb13-15"></a>      | Ok tree -&gt;</span>
-<span id="cb13-16"><a href="#cb13-16"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
-<span id="cb13-17"><a href="#cb13-17"></a>          | Error message -&gt;</span>
-<span id="cb13-18"><a href="#cb13-18"></a>              eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
-<span id="cb13-19"><a href="#cb13-19"></a>          | Ok <span class="dt">output</span> -&gt;</span>
-<span id="cb13-20"><a href="#cb13-20"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">match</span> Parser.parse source <span class="kw">with</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  | Error Parser.(SyntaxError line) -&gt;</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  | Error Parser.(GrammarError {line; message}) -&gt;</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  | Ok tree -&gt;</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">match</span> Validation.perform tree <span class="kw">with</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>      | Error Parser.(LengthError length) -&gt;</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>          eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>          eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>      | Error Parser.(HeightError height) -&gt;</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>          eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>          eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>      | Ok tree -&gt;</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>          <span class="kw">match</span> Display.render tree <span class="kw">with</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>          | Error message -&gt;</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>              eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>          | Ok <span class="dt">output</span> -&gt;</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>              printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span></code></pre></div>
 <p>However, if we try to compose the three functions monadically (like we did in the previous example), we discover that it is not possible because the bind operator requires the <code>'error</code> type parameters of different functions to unify (notably, unlike the <code>'success</code> type parameter):</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">val</span> bind : (&#39;a, &#39;error) result</span>
-<span id="cb14-2"><a href="#cb14-2"></a>        -&gt; (&#39;a -&gt; (&#39;b, &#39;error) result)</span>
-<span id="cb14-3"><a href="#cb14-3"></a>        -&gt; (&#39;b, &#39;error) result</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> bind : (&#39;a, &#39;error) result</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>        -&gt; (&#39;a -&gt; (&#39;b, &#39;error) result)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>        -&gt; (&#39;b, &#39;error) result</span></code></pre></div>
 <p><em>Upsides:</em></p>
 <ul>
 <li><strong>Error contract</strong>. The type—not a comment—reflects the relevant error cases.</li>
@@ -295,78 +298,78 @@ Result type with polymorphic variants for errors</i>
 <h2 id="d.-result-type-with-polymorphic-variants-for-errors">D. Result type with polymorphic variants for errors</h2>
 <p>Polymorphic variants allow you to have the cake and eat it too. Here’s how.</p>
 <p>Let’s port our previous example to use polymorphic variants instead of the nominal variants.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
-<span id="cb15-2"><a href="#cb15-2"></a>  <span class="kw">type</span> error = [</span>
-<span id="cb15-3"><a href="#cb15-3"></a>    | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb15-4"><a href="#cb15-4"></a>    | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
-<span id="cb15-5"><a href="#cb15-5"></a>  ]</span>
-<span id="cb15-6"><a href="#cb15-6"></a></span>
-<span id="cb15-7"><a href="#cb15-7"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, [&gt; error]) result</span>
-<span id="cb15-8"><a href="#cb15-8"></a><span class="kw">end</span></span>
-<span id="cb15-9"><a href="#cb15-9"></a></span>
-<span id="cb15-10"><a href="#cb15-10"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
-<span id="cb15-11"><a href="#cb15-11"></a>  <span class="kw">type</span> error = [</span>
-<span id="cb15-12"><a href="#cb15-12"></a>    | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb15-13"><a href="#cb15-13"></a>    | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb15-14"><a href="#cb15-14"></a>  ]</span>
-<span id="cb15-15"><a href="#cb15-15"></a></span>
-<span id="cb15-16"><a href="#cb15-16"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, [&gt; error]) result</span>
-<span id="cb15-17"><a href="#cb15-17"></a><span class="kw">end</span></span>
-<span id="cb15-18"><a href="#cb15-18"></a></span>
-<span id="cb15-19"><a href="#cb15-19"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
-<span id="cb15-20"><a href="#cb15-20"></a>  <span class="kw">type</span> error = [</span>
-<span id="cb15-21"><a href="#cb15-21"></a>    | `DisplayError <span class="kw">of</span> <span class="dt">string</span></span>
-<span id="cb15-22"><a href="#cb15-22"></a>  ]</span>
-<span id="cb15-23"><a href="#cb15-23"></a></span>
-<span id="cb15-24"><a href="#cb15-24"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, [&gt; error]) result</span>
-<span id="cb15-25"><a href="#cb15-25"></a><span class="kw">end</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Parser : <span class="kw">sig</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> error = [</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> parse : <span class="dt">string</span> -&gt; (tree, [&gt; error]) result</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Validation : <span class="kw">sig</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> error = [</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> perform : tree -&gt; (tree, [&gt; error]) result</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Display : <span class="kw">sig</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> error = [</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    | `DisplayError <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> render : tree -&gt; (<span class="dt">string</span>, [&gt; error]) result</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
 <p>The key feature of polymorphic variants is that they unify with other polymorphic variants. We specifically annotated our functions with <code>[&gt; error]</code> to signify that this error type can unify with “larger” polymorphic variants.</p>
 <blockquote>
 <p><em>There’s more to polymorphic variants, but it’s outside of scope for this article. You will find links to resources about polymorphic variants below.</em></p>
 </blockquote>
 <p>Now look, if you compose just two functions, parser and validator:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">let</span> parse_and_validate source =</span>
-<span id="cb16-2"><a href="#cb16-2"></a>  <span class="kw">let</span>* tree = Parser.parse source <span class="kw">in</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a>  Validation.perform tree</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> parse_and_validate source =</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span>* tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  Validation.perform tree</span></code></pre></div>
 <p>Then not only will this work, but the type of such a function will be as follows:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">val</span> parse_and_validate : <span class="dt">string</span> -&gt; (tree, [&gt;</span>
-<span id="cb17-2"><a href="#cb17-2"></a>  | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb17-3"><a href="#cb17-3"></a>  | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
-<span id="cb17-4"><a href="#cb17-4"></a>  | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb17-5"><a href="#cb17-5"></a>  | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb17-6"><a href="#cb17-6"></a>]) result</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> parse_and_validate : <span class="dt">string</span> -&gt; (tree, [&gt;</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>]) result</span></code></pre></div>
 <p>As you can see, the error branch of the result type is a union of the two variants of the parser errors <em>and</em> the two variants of the validator errors!</p>
 <p>Let us now throw in our render function:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">let</span> main source =</span>
-<span id="cb18-2"><a href="#cb18-2"></a>  <span class="kw">let</span>* tree = Parser.parse source <span class="kw">in</span></span>
-<span id="cb18-3"><a href="#cb18-3"></a>  <span class="kw">let</span>* tree = Validation.perform tree <span class="kw">in</span></span>
-<span id="cb18-4"><a href="#cb18-4"></a>  Display.render tree</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> main source =</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span>* tree = Parser.parse source <span class="kw">in</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span>* tree = Validation.perform tree <span class="kw">in</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  Display.render tree</span></code></pre></div>
 <p>The inferred function type will reflect all the relevant error cases:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb19-1"><a href="#cb19-1"></a><span class="kw">val</span> main : <span class="dt">string</span> -&gt; (<span class="dt">string</span>, [&gt;</span>
-<span id="cb19-2"><a href="#cb19-2"></a>  | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb19-3"><a href="#cb19-3"></a>  | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
-<span id="cb19-4"><a href="#cb19-4"></a>  | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb19-5"><a href="#cb19-5"></a>  | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
-<span id="cb19-6"><a href="#cb19-6"></a>  | `DisplayError <span class="kw">of</span> <span class="dt">string</span></span>
-<span id="cb19-7"><a href="#cb19-7"></a>]) result</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> main : <span class="dt">string</span> -&gt; (<span class="dt">string</span>, [&gt;</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  | `ParserSyntaxError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  | `ParserGrammarError <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  | `ValidationLengthError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  | `ValidationHeightError <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  | `DisplayError <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>]) result</span></code></pre></div>
 <p>This way, if your error-returning functions use polymorphic variants for error branches, then you can compose as many of them as you want and the resulting type that will be infered will reflect the exact error cases that the composed function can exibit.</p>
 <p>You handle the errors by pattern matching on the result type:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">let</span> handle_errors source =</span>
-<span id="cb20-2"><a href="#cb20-2"></a>  <span class="kw">match</span> main source <span class="kw">with</span></span>
-<span id="cb20-3"><a href="#cb20-3"></a>  | Ok <span class="dt">output</span> -&gt;</span>
-<span id="cb20-4"><a href="#cb20-4"></a>      printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span>
-<span id="cb20-5"><a href="#cb20-5"></a>  | Error (`ParserSyntaxError line) -&gt;</span>
-<span id="cb20-6"><a href="#cb20-6"></a>      eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
-<span id="cb20-7"><a href="#cb20-7"></a>  | Error (`ParserGrammarError (line, message)) -&gt;</span>
-<span id="cb20-8"><a href="#cb20-8"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
-<span id="cb20-9"><a href="#cb20-9"></a>  | Error (`ValidationLengthError length) -&gt;</span>
-<span id="cb20-10"><a href="#cb20-10"></a>      eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
-<span id="cb20-11"><a href="#cb20-11"></a>      eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
-<span id="cb20-12"><a href="#cb20-12"></a>  | Error (`ValidationHeightError height) -&gt;</span>
-<span id="cb20-13"><a href="#cb20-13"></a>      eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
-<span id="cb20-14"><a href="#cb20-14"></a>      eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
-<span id="cb20-15"><a href="#cb20-15"></a>  | Error (`DisplayError message) -&gt;</span>
-<span id="cb20-16"><a href="#cb20-16"></a>      eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> handle_errors source =</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">match</span> main source <span class="kw">with</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  | Ok <span class="dt">output</span> -&gt;</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>      printf <span class="st">&quot;%s&quot;</span> <span class="dt">output</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  | Error (`ParserSyntaxError line) -&gt;</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Syntax error at line %d&quot;</span> line</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  | Error (`ParserGrammarError (line, message)) -&gt;</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Grammar error at line %d: %s&quot;</span> line message</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  | Error (`ValidationLengthError length) -&gt;</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;length %d is out of bounds&quot;</span> length</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  | Error (`ValidationHeightError height) -&gt;</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Validation error: &quot;</span>;</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;height %d is out of bounds&quot;</span> height</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  | Error (`DisplayError message) -&gt;</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>      eprintf <span class="st">&quot;Display error: %s&quot;</span> message</span></code></pre></div>
 <p><em>Summary:</em></p>
 <ul>
 <li><strong>Composition</strong>. Functions compose monadically by unifying the <code>'error</code> branch of the result type.</li>

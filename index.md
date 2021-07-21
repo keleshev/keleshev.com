@@ -24,6 +24,8 @@ My book
 Blog
 ----
 
+* 2021
+  * [Advanced Error Handling in OCaml](/advanced-error-handling-in-ocaml)
 * 2020 🔥
   * [LDM: My Favorite ARM Instruction](/ldm-my-favorite-arm-instruction)
   * [One-pass Compiler Primer](/one-pass-compiler-primer)

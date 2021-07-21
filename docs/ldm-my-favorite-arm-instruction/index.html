@@ -13,6 +13,7 @@
     div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="/style.css" />
   <!--[if lt IE 9]>
@@ -24,6 +25,7 @@
 
 
   <h1>LDM<br/><small><small>My Favorite ARM Instruction</small></small></h1>
+
 
 <center style="margin: 25.46px;" >Vladimir Keleshev • 2020-10-13</center>
 
@@ -44,7 +46,7 @@ r3 = r4[3];</code></pre>
 <pre><code>ldm r0, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15}</code></pre>
 <p>The register set is encoded as a 16-bit mask in a 32-bit instruction. Here’s a simplified encoding of the original example:</p>
 <figure>
-<img src="./ldm-encoding-arm.svg" style="width:75.0%" alt="" /><figcaption>Simplified encoding of the LDM instruction</figcaption>
+<img src="./ldm-encoding-arm.svg" style="width:75.0%" alt="Simplified encoding of the LDM instruction" /><figcaption aria-hidden="true">Simplified encoding of the LDM instruction</figcaption>
 </figure>
 <p>Such instruction is a perfect fit for a <a href="https://en.wikipedia.org/wiki/Load%E2%80%93store_architecture">load-store architecture</a> like ARM, where the primary workflow is:</p>
 <ul>

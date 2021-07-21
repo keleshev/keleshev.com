@@ -7,7 +7,7 @@ title: Compiling to Assembly from Scratch
 ---
 
 
-<h1>Compiling to Assembly<br/><small>from Scratch </small> </h1>
+<h1>Compiling to Assembly<br/><small><small>from Scratch </small></small> </h1>
 
 <center><img id=cover style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></center>
 
@@ -17,7 +17,7 @@ title: Compiling to Assembly from Scratch
 
 
 
-<center><em>TypeScript — ARM — Lots of fun!</em></center>
+<!--<center><em>TypeScript — ARM — Lots of fun!</em></center> -->
 
 
 
@@ -40,7 +40,7 @@ This ebook will show you in detail
 how you can build a compiler from scratch
 that goes all the way from *source* to *assembly*.
 
-The example code is written in **TypeScript**, a dialect of **JavaScript**.
+The example code is written in a subset of **TypeScript** that reads like pseudocode.
 The book describes the design and implementation of a compiler that emits
 32-bit **ARM** assembly instructions.
 All you need to know is how to program, the book will teach you enough compiler theory and assembly programming to get going.
@@ -148,7 +148,6 @@ you will find that the class structure I used
 has a nice translation to an algebraic data type.
 It is, in fact, how I wrote it first.
 
-
 <style>
   #home { float: left; }
   pre {
@@ -246,7 +245,7 @@ directions in which you can take your compiler.
 <center><a id=excerpt href=./excerpt-compiling-to-assembly-from-scratch.pdf><img style="box-shadow: black 0px 0px 46px -23px;"  src=./book-preview.png width=400 height=300 /></a></center>
 
 <br/>
-<center><a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read Excerpt </a></center>
+<center><a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read excerpt </a></center>
 
 ## Print edition?
 
