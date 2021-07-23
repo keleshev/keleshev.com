@@ -3,7 +3,7 @@ title: Advanced Error Handling in OCaml
 fancy-title: "Advanced Error Handling<br/><small><small>in OCaml</small></small>"
 subtitle: Multiple Errors, Error Recovery, Warnings
 date: 2021-07-21
-cta: {book: yes}
+cta: {}
 ---
 
 In a [previous blog post](/composable-error-handling-in-ocaml), we discussed using an OCaml feature called *polymorphic variants* for error handling.
@@ -427,6 +427,17 @@ Now, let's go and write some friendly programs that help presenting a comprehens
 * The OCaml Manual on [binding operators](https://ocaml.org/manual/bindingops.html)
 
 
-* * *
+<!-- * * * -->
 
+## Newsletter
+
+> Subscribe to receive an occasional email from me about compilers, functional programming, or my book [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
+>
+> <script async data-uid="8529ea38b4" src="https://motivated-writer-7421.ck.page/8529ea38b4/index.js"></script>
+>
+> Unsibscribe at any time.
+>
+
+<!--
 *Did you like this blog post? Cool! But did you know I wrote a whole book! It's called* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. From scratch. Check it out:*
+-->

@@ -19,7 +19,7 @@ Vladimir Keleshev
 My book
 ----------------
 
-* [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)
+* [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch)
 
 Blog
 ----
@@ -80,7 +80,7 @@ My name is Vladimir Keleshev.
 I am a software developer living and working just outside of Copenhagen.
 I have worked with embedded systems, safety-critical systems,
 compilers, and now with finance.
-I have just published an ebook called *[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book)*.
+I have just published an ebook called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the).
 
 * Twitter: [\@keleshev](http://twitter.com/keleshev)
 * GitHub: [\@keleshev](http://github.com/keleshev)
@@ -89,3 +89,11 @@ I have just published an ebook called *[Compiling to Assembly from Scratch](/com
 <!--* [Résumé](/about) -->
 
 
+## Newsletter
+
+> Subscribe to receive an occasional email from me about compilers, functional programming, or my book [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
+>
+> <script async data-uid="8529ea38b4" src="https://motivated-writer-7421.ck.page/8529ea38b4/index.js"></script>
+>
+> Unsibscribe at any time.
+>
