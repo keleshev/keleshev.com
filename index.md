@@ -80,7 +80,7 @@ My name is Vladimir Keleshev.
 I am a software developer living and working just outside of Copenhagen.
 I have worked with embedded systems, safety-critical systems,
 compilers, and now with finance.
-I have just published an ebook called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the).
+I have just published an ebook called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
 
 * Twitter: [\@keleshev](http://twitter.com/keleshev)
 * GitHub: [\@keleshev](http://github.com/keleshev)
