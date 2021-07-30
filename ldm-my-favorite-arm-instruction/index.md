@@ -2,7 +2,6 @@
 title: "LDM: My Favorite ARM Instruction"
 fancy-title: "LDM<br/><small><small>My Favorite ARM Instruction</small></small>"
 date: 2020-10-13
-cta: {book: yes}
 ---
 
 
@@ -125,16 +124,36 @@ I suspect it was a difficult trade-off, but when it was time to design the 64-bi
 I remember reading a paper saying that this change improves the performance by about 6% across the board.
 With 32 registers it is no longer possible to encode a bitmask of all registers into a 32-bit long instruction.
 So, instead, ARM64 has LDP and STP: load pair and store pair, which are the spiritual successors of LDM and STM.
+[☰](/ "Home")
 
+## BibTeX
 
-* * *
-
-This blog post started out originally as a [Twitter thread](https://twitter.com/keleshev/status/1285654345988673536). [&#9632;](/ "Home")
+<small> 
+```       
+@misc{Keleshev:2020-6,
+  title="LDM: My Favorite ARM Instruction",
+  author="Vladimir Keleshev",
+  year=2020,
+  howpublished=
+    "\url{https://keleshev.com/ldm-my-favorite-arm-instruction}",
+}     
+```
+</small>
 
 * * *
 
 *Did you like this blog post? If so, check out my new book:* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language.
 *
 
+<br/>
+<div style="text-align: center; line-height: 0px">
+  <a href="/compiling-to-assembly-from-scratch"
+       style="border-bottom: none; font-size: 0">
+    <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+          src="/compiling-to-assembly-from-scratch.jpg"
+          style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+          width=200 height=300 />
+  </a>
+</div>
 
 

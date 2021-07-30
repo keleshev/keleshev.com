@@ -237,7 +237,22 @@ This blog post was inspired by a [question on Quora](https://www.quora.com/What-
 
 ## The Code
 
-The complete code, including lexer, parser, and a makefile is available on GitHub [as a gist](https://gist.github.com/keleshev/cdd6d3d46437284b2a0c2fc42cf90e0f). [&#9632;](/ "Home")
+The complete code, including lexer, parser, and a makefile is available on GitHub [as a gist](https://gist.github.com/keleshev/cdd6d3d46437284b2a0c2fc42cf90e0f).
+[☰](/ "Home")
+
+## BibTeX
+
+<small>
+```       
+@misc{Keleshev:2020-5,
+  title="One-pass Compiler Primer",
+  author="Vladimir Keleshev",
+  year=2020,
+  howpublished=
+    "\url{https://keleshev.com/one-pass-compiler-primer}",
+}
+```
+</small>
 
 * * *
 

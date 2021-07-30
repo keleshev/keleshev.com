@@ -440,11 +440,11 @@ Now, let's go and write some friendly programs that help presenting a comprehens
 
 <small>
 ```
-@misc{Keleshev21a,
-  title = "Advanced Error Handling in OCaml",
-  author = "Vladimir Keleshev",
-  year = 2021,
-  howpublished =
+@misc{Keleshev:2021-1,
+  title="Advanced Error Handling in OCaml",
+  author="Vladimir Keleshev",
+  year=2021,
+  howpublished=
     "\url{https://keleshev.com/advanced-error-handling-in-ocaml}",
 }
 ```

@@ -96,23 +96,29 @@ bx lr</code></pre>
 <pre><code>push {r0-r3, fp, lr}</code></pre>
 <p>In this case, we push <code>r0-r3</code> not for their value but to advance the stack pointer by four words.</p>
 <h2 id="arm64">ARM64</h2>
-<p>I suspect it was a difficult trade-off, but when it was time to design the 64-bit version of the ARM instruction set, the decision was made to double the number of registers to 32. I remember reading a paper saying that this change improves the performance by about 6% across the board. With 32 registers it is no longer possible to encode a bitmask of all registers into a 32-bit long instruction. So, instead, ARM64 has LDP and STP: load pair and store pair, which are the spiritual successors of LDM and STM.</p>
-<hr />
-<p>This blog post started out originally as a <a href="https://twitter.com/keleshev/status/1285654345988673536">Twitter thread</a>. <a href="/" title="Home">■</a></p>
+<p>I suspect it was a difficult trade-off, but when it was time to design the 64-bit version of the ARM instruction set, the decision was made to double the number of registers to 32. I remember reading a paper saying that this change improves the performance by about 6% across the board. With 32 registers it is no longer possible to encode a bitmask of all registers into a 32-bit long instruction. So, instead, ARM64 has LDP and STP: load pair and store pair, which are the spiritual successors of LDM and STM. <a href="/" title="Home">☰</a></p>
+<h2 id="bibtex">BibTeX</h2>
+<p><small></p>
+<pre><code>@misc{Keleshev:2020-6,
+  title=&quot;LDM: My Favorite ARM Instruction&quot;,
+  author=&quot;Vladimir Keleshev&quot;,
+  year=2020,
+  howpublished=
+    &quot;\url{https://keleshev.com/ldm-my-favorite-arm-instruction}&quot;,
+}     </code></pre>
+<p></small></p>
 <hr />
 <p><em>Did you like this blog post? If so, check out my new book:</em> Compiling to Assembly from Scratch. <em>It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. </em></p>
+<br/>
+<div style="text-align: center; line-height: 0px">
+<p><a href="/compiling-to-assembly-from-scratch"
+       style="border-bottom: none; font-size: 0"> <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+          src="/compiling-to-assembly-from-scratch.jpg"
+          style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+          width=200 height=300 /> </a></p>
+</div>
 
 
-      <br/>
-  <div style="text-align: center; line-height: 0px">
-      <a href="/compiling-to-assembly-from-scratch"
-         style="border-bottom: none; font-size: 0">
-       <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
-            src="/compiling-to-assembly-from-scratch.jpg"
-            style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
-            width=200 height=300 />
-      </a>
-  </div>
   <hr class="fleuron" />
 </body>
 </html>

@@ -64,7 +64,8 @@ code span.dt {
 pre {
     border-left: 2.5px solid black;
     margin-left: 0;
-    font-family: 'Fira Code';
+    /*font-family: 'Fira Code';*/
+    font-family: monospace;
     line-height: 150%;
 }
 blockquote {

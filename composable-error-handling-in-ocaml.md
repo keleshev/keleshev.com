@@ -509,7 +509,24 @@ familiarity with how polymorphic variants work. Here are a few resources:
 ## Acknowledgments
 
 Big thanks to [Oskar Wickström](https://twitter.com/owickstrom)
-for giving feedback on a draft of this post. [&#9632;](/ "Home")
+for giving feedback on a draft of this post.
+[☰](/ "Home")
+
+## BibTeX
+
+<small>
+```       
+@misc{Keleshev:2018-1,
+  title="Composable Error Handling in OCaml",
+  author="Vladimir Keleshev",
+  year=2018,
+  howpublished=
+    "\url{http://keleshev.com/composable-error-handling-in-ocaml}",
+}
+```
+</small>
+
+
 
 
 [base-result]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/index.html
