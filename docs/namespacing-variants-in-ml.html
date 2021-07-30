@@ -1,174 +1,204 @@
-<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Namespacing Variants in ML</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="icon" sizes="109x109" href="/favicon.gif" />
-    </head>
-    <body>
-        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
-        <h1>Namespacing Variants in ML</h1>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
 
-<p><center>2015-04-12</center></p>
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
 
-<p>When reading code written in OCaml or Standard ML,
-I keep seeing variant constructors having ad-hoc prefixes
-or suffixes used for namespacing.</p>
+  <meta name="dcterms.date" content="2015-04-12" />
+  <title>Namespacing Variants in ML</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
-<p>Here&#8217;s an example from
-<a href="http://www.amazon.com/Modern-Compiler-Implementation-Andrew-Appel/dp/0521607647">Modern Compiler Implementation in ML</a> (page 98):</p>
 
-<pre><b>type </b>operator = PlusOp | MinusOp | TimesOp | DivideOp
-</pre>
+  <h1>Namespacing Variants in ML</h1>
 
-<p>And here&#8217;s just one of many examples from <a href="https://github.com/facebook/pfff/blob/master/lang_php/parsing/ast_php.ml#L138">Facebook pfff tool</a>:</p>
 
-<pre><b>type </b>hint_type =
-  | Hint <b>of </b>name * type_args option
-  | HintArray <b>of </b>tok
-  | HintQuestion <b>of </b>tok * hint_type
-  | HintTuple <b>of </b>hint_type comma_list paren
-</pre>
+<center style="margin: 25.46px;" >Vladimir Keleshev • 2015-04-12</center>
 
-<p>What you can do instead is to drop the prefix/suffix and use
-a small module as a namespace instead:</p>
-
-<pre><b>module </b>Operator = <b>struct
-  </b><b>type </b>t = Plus | Minus | Times | Divide
-<b>end
-</b></pre>
-
-<pre><b>module </b>Hint = <b>struct
-  </b><b>type </b>t =
-    | Name <b>of </b>name * type_args option
-    | Array <b>of </b>tok
-    | Question <b>of </b>tok * t
-    | Tuple <b>of </b>hint_type comma_list paren
-<b>end
-</b></pre>
-
-Now, at the use site you can select the most readable option depending
-on the context. You can spell it all out if the variants are only used
-briefly:
-
-<pre><b>let </b>operators = [Operator.Plus; Operator.Minus]
-</pre>
-
+<header id="title-block-header">
+</header>
+<p>When reading code written in OCaml or Standard ML, I keep seeing variant constructors having ad-hoc prefixes or suffixes used for namespacing.</p>
+<p>Here’s an example from <a href="http://www.amazon.com/Modern-Compiler-Implementation-Andrew-Appel/dp/0521607647">Modern Compiler Implementation in ML</a> (page 98):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> operator = PlusOp | MinusOp | TimesOp | DivideOp</span></code></pre></div>
+<p>And here’s just one of many examples from <a href="https://github.com/facebook/pfff/blob/master/lang_php/parsing/ast_php.ml#L138">Facebook pfff tool</a>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> hint_type =</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  | Hint <span class="kw">of</span> name * type_args <span class="dt">option</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  | HintArray <span class="kw">of</span> tok</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  | HintQuestion <span class="kw">of</span> tok * hint_type</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  | HintTuple <span class="kw">of</span> hint_type comma_list paren</span></code></pre></div>
+<p>What you can do instead is to drop the prefix/suffix and use a small module as a namespace instead:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Operator = <span class="kw">struct</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> t = Plus | Minus | Times | Divide</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Hint = <span class="kw">struct</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> t =</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    | Name <span class="kw">of</span> name * type_args <span class="dt">option</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    | <span class="dt">Array</span> <span class="kw">of</span> tok</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    | Question <span class="kw">of</span> tok * t</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    | Tuple <span class="kw">of</span> hint_type comma_list paren</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
+<p>Now, at the use site you can select the most readable option depending on the context. You can spell it all out if the variants are only used briefly:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> operators = [Operator.Plus; Operator.Minus]</span></code></pre></div>
 <p>Or you can create a module alias if you use the variants a lot:</p>
-
-<pre><b>module </b>Op = Operator
-
-<b>let </b>operators = [Op.Plus; Op.Minus]
-</pre>
-
-<p>Or you can locally open the module if you need to use them
-intensely in a particular scope:</p>
-
-<pre><b>let </b>operators =
-  <b>let </b><b>open </b>Operator <b>in
-  </b>[Plus; Minus; Times; Divide]
-
-<em>(* or *)</em>
-
-<b>let </b>operators =
-  Operator.([Plus; Minus; Times; Divide])
-</pre>
-
-<p>Or you can just open the module at the top of
-your file if that&#8217;s your thing:</p>
-
-<pre><b>open </b>Operators
-
-<b>let </b>operators = [Plus; Minus; Times; Divide]
-</pre>
-
-<h2>Modular Programming</h2>
-
-<p>Now that you have a module like <code>Operator</code> you
-suddenly realize that other definitions probably also
-belong to it.</p>
-
-<p>You might have functions with names such as <code>parse_operator</code> or
-<code>action_of_operator</code>:</p>
-
-<pre><b>type </b>operator = PlusOp | MinusOp | TimesOp | DivideOp
-
-<b>let </b>parse_operator = <b>function
-  </b>| <em>"+"</em> -> Some PlusOp
-  | <em>"-"</em> -> Some MinusOp
-  | <em>"*"</em> -> Some TimesOp
-  | <em>"/"</em> -> Some DivideOp
-  | _   -> None
-
-<b>let </b>action_of_operator = <b>function
-  </b>| PlusOp -> (+)
-  | MinusOp -> (-)
-  | TimesOp -> ( * )
-  | Divide -> (/)
-</pre>
-
-<p>Now you can group them all in the namespace module
-and give them more appropriate names (for module context):</p>
-
-<pre><b>module </b>Operator = <b>struct
-  </b><b>type </b>t = Plus | Minus | Times | Divide
-
-  <b>let </b>of_string = <b>function
-    </b>| <em>"+"</em> -> Some Plus
-    | <em>"-"</em> -> Some Minus
-    | <em>"*"</em> -> Some Times
-    | <em>"/"</em> -> Some Divide
-    | _   -> None
-
-  <b>let </b>to_action = <b>function
-    </b>| Plus   -> (+)
-    | Minus  -> (-)
-    | Times  -> ( * )
-    | Divide -> (/)
-<b>end
-</b></pre>
-
-Namespacing functions this way has same benefits to
-namespacing your original type. The new flexibility
-affords you better readability or shorter expressions
-at the call site.
-For example, you can write something like this now:
-
-<pre><b>let </b>action =
-  Operator.(source |> of_string |> to_action)
-</pre>
-
-<p>Another advantage is that such module
-visually groups related type and functions in your source
-file.</p>
-
-<p>Yet another advantage: you can use your new
-module in functor context, assuming it implements
-the required signature:</p>
-
-<pre><b>module </b>OperatorSet = Set.Make (Operator)
-</pre>
-
-<h2>Conclusion</h2>
-
-<p>One of my fist complains coming from object-oriented to
-functional programming was that so much functional code
-looks like big bags of functions and types with little
-structure. Well, ML <em>structures</em> to the rescue!</p>
-
-<p>Nowadays whenever I have a type and a bunch of related functions
-(sounds familiar?),
-I&#8217;m more inclined than not
-to group them in a namespace module. <a href="/" title="Home">&#9632;</a></p>
-
-<p><center markdown="1">
-<em>Comment on <a href="http://www.reddit.com/r/ocaml/comments/32cxmw/namespacing_variants_in_ml/">Reddit</a></em>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Op = Operator</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> operators = [Op.Plus; Op.Minus]</span></code></pre></div>
+<p>Or you can locally open the module if you need to use them intensely in a particular scope:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> operators =</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> <span class="kw">open</span> Operator <span class="kw">in</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  [Plus; Minus; Times; Divide]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">(* or *)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> operators =</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  Operator.[Plus; Minus; Times; Divide]</span></code></pre></div>
+<p>Or you can just open the module at the top of your file if that’s your thing:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> Operators</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> operators = [Plus; Minus; Times; Divide]</span></code></pre></div>
+<h2 id="modular-programming">Modular Programming</h2>
+<p>Now that you have a module like <code>Operator</code> you suddenly realize that other definitions probably also belong to it.</p>
+<p>You might have functions with names such as <code>parse_operator</code> or <code>action_of_operator</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> operator = PlusOp | MinusOp | TimesOp | DivideOp</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> parse_operator = <span class="kw">function</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  | <span class="st">&quot;+&quot;</span> -&gt; <span class="dt">Some</span> PlusOp</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  | <span class="st">&quot;-&quot;</span> -&gt; <span class="dt">Some</span> MinusOp</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  | <span class="st">&quot;*&quot;</span> -&gt; <span class="dt">Some</span> TimesOp</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  | <span class="st">&quot;/&quot;</span> -&gt; <span class="dt">Some</span> DivideOp</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  | _   -&gt; <span class="dt">None</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> action_of_operator = <span class="kw">function</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  | PlusOp -&gt; (+)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  | MinusOp -&gt; (-)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  | TimesOp -&gt; ( * )</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  | Divide -&gt; (/)</span></code></pre></div>
+<p>Now you can group them all in the namespace module and give them more appropriate names (for module context):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Operator = <span class="kw">struct</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> t = Plus | Minus | Times | Divide</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> of_string = <span class="kw">function</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    | <span class="st">&quot;+&quot;</span> -&gt; <span class="dt">Some</span> Plus</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    | <span class="st">&quot;-&quot;</span> -&gt; <span class="dt">Some</span> Minus</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    | <span class="st">&quot;*&quot;</span> -&gt; <span class="dt">Some</span> Times</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    | <span class="st">&quot;/&quot;</span> -&gt; <span class="dt">Some</span> Divide</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    | _   -&gt; <span class="dt">None</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> to_action = <span class="kw">function</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    | Plus   -&gt; (+)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    | Minus  -&gt; (-)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    | Times  -&gt; ( * )</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    | Divide -&gt; (/)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
+<p>Namespacing functions this way has same benefits to namespacing your original type. The new flexibility affords you better readability or shorter expressions at the call site. For example, you can write something like this now:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> action =</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  Operator.(source |&gt; of_string |&gt; to_action)</span></code></pre></div>
+<p>Another advantage is that such module visually groups related type and functions in your source file.</p>
+<p>Yet another advantage: you can use your new module in functor context, assuming it implements the required signature:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> OperatorSet = <span class="dt">Set</span>.Make (Operator)</span></code></pre></div>
+<h2 id="conclusion">Conclusion</h2>
+<p>One of my fist complains coming from object-oriented to functional programming was that so much functional code looks like big bags of functions and types with little structure. Well, ML <em>structures</em> to the rescue!</p>
+<p>Nowadays whenever I have a type and a bunch of related functions (sounds familiar?), I’m more inclined than not to group them in a namespace module. <a href="/" title="Home">☰</a></p>
+<h2 id="bibtex">BibTeX</h2>
+<p><small></p>
+<pre><code>@misc{Keleshev:2015-1,
+  title=&quot;Namespacing Variants in ML&quot;,
+  author=&quot;Vladimir Keleshev&quot;,
+  year=2015,
+  howpublished=
+    &quot;\url{https://keleshev.com/namespacing-variants-in-ml}&quot;,
+}</code></pre>
+<p></small></p>
+<!--
+<center markdown="1">
+*Comment on [Reddit](http://www.reddit.com/r/ocaml/comments/32cxmw/namespacing_variants_in_ml/)*
 <br/>
-<em>Comment on <a href="https://news.ycombinator.com/item?id=9364405">Hacker News</a></em>
+*Comment on [Hacker News](https://news.ycombinator.com/item?id=9364405)*
 <br/>
-<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
-</center></p>
+*Follow me on [Twitter](http://twitter.com/keleshev)*
+</center>
+-->
+<hr />
+<p><em>Did you like this blog post? If so, check out my new book:</em> Compiling to Assembly from Scratch. <em>It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. </em></p>
 
-    </body>
+
+      <br/>
+  <div style="text-align: center; line-height: 0px">
+      <a href="/compiling-to-assembly-from-scratch"
+         style="border-bottom: none; font-size: 0">
+       <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+            src="/compiling-to-assembly-from-scratch.jpg"
+            style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+            width=200 height=300 />
+      </a>
+  </div>
+  <hr class="fleuron" />
+</body>
 </html>

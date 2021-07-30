@@ -1,7 +1,9 @@
-Namespacing Variants in ML
-==========================
-
-<center>2015-04-12</center>
+---
+title: "Namespacing Variants in ML"
+fancy-title: "Namespacing Variants in ML"
+date: 2015-04-12
+cta: {book: yes}
+---
 
 When reading code written in OCaml or Standard ML,
 I keep seeing variant constructors having ad-hoc prefixes
@@ -35,9 +37,7 @@ a small module as a namespace instead:
 module Operator = struct
   type t = Plus | Minus | Times | Divide
 end
-```
 
-```ocaml
 module Hint = struct
   type t =
     | Name of name * type_args option
@@ -74,7 +74,7 @@ let operators =
 (* or *)
 
 let operators =
-  Operator.([Plus; Minus; Times; Divide])
+  Operator.[Plus; Minus; Times; Divide]
 ```
 
 Or you can just open the module at the top of
@@ -169,8 +169,25 @@ structure. Well, ML *structures* to the rescue!
 Nowadays whenever I have a type and a bunch of related functions
 (sounds familiar?),
 I'm more inclined than not
-to group them in a namespace module. [&#9632;](/ "Home")
+to group them in a namespace module.
+[☰](/ "Home")
 
+## BibTeX
+
+<small>
+```       
+@misc{Keleshev:2015-1,
+  title="Namespacing Variants in ML",
+  author="Vladimir Keleshev",
+  year=2015,
+  howpublished=
+    "\url{https://keleshev.com/namespacing-variants-in-ml}",
+}
+```
+</small>
+
+
+<!--
 <center markdown="1">
 *Comment on [Reddit](http://www.reddit.com/r/ocaml/comments/32cxmw/namespacing_variants_in_ml/)*
 <br/>
@@ -178,3 +195,10 @@ to group them in a namespace module. [&#9632;](/ "Home")
 <br/>
 *Follow me on [Twitter](http://twitter.com/keleshev)*
 </center>
+-->
+
+* * *
+
+*Did you like this blog post? If so, check out my new book:* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language.
+*
+
