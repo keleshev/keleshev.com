@@ -419,15 +419,8 @@ This way, we can, for example, issue a warning in case an `if` conditional is a 
              return ()
 ```
 
-Now, let's go and write some friendly programs that help presenting a comprehensive view of errors and warnings to the user, instead of bailing out at first sight of a problem. [&#9632;](/ "Home")
-
-## References
-
-* All code from this blog post in a runnable [gist](https://gist.github.com/keleshev/a153fa3ce9e3e341baa25d2b7cff6bac)
-* The OCaml Manual on [binding operators](https://ocaml.org/manual/bindingops.html)
-
-
-<!-- * * * -->
+Now, let's go and write some friendly programs that help presenting a comprehensive view of errors and warnings to the user, instead of bailing out at first sight of a problem.
+[☰](/ "Home")
 
 ## Newsletter
 
@@ -437,6 +430,28 @@ Now, let's go and write some friendly programs that help presenting a comprehens
 >
 > Unsibscribe at any time.
 >
+
+## References
+
+* All code from this blog post in a runnable [gist](https://gist.github.com/keleshev/a153fa3ce9e3e341baa25d2b7cff6bac)
+* The OCaml Manual on [binding operators](https://ocaml.org/manual/bindingops.html)
+
+## BibTeX
+
+<small>
+```
+@misc{Keleshev21a,
+  title = "Advanced Error Handling in OCaml",
+  author = "Vladimir Keleshev",
+  year = 2021,
+  howpublished =
+    "\url{https://keleshev.com/advanced-error-handling-in-ocaml}",
+}
+```
+</small>
+
+
+<!-- * * * -->
 
 <!--
 *Did you like this blog post? Cool! But did you know I wrote a whole book! It's called* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. From scratch. Check it out:*

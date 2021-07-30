@@ -1,0 +1,41 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+<!--<svg xmlns="http://www.w3.org/2000/svg" version="1.1">-->
+    <!-- made using vi of course -->
+<style>
+    .text { font: 512px serif; }
+  </style>
+<!--<rect x="0" y="0" width="100%" height="10%"/>-->
+<!--<rect x="0" y="0" width="100%" height="100%" fill="red" />
+<rect x="0" y="0" width="100%" height="50%" fill="blue" />-->
+
+<rect x="60" y="95" width="392" height="50" fill="#000" />
+<rect x="60" y="231" width="392" height="50" fill="#000" />
+<rect x="60" y="367" width="392" height="50" fill="#000" />
+
+<!--<text x="25" y="420" class="text">☰</text>-->
+<!--
+    <circle cx="100" cy="100" r="85" stroke="black" stroke-width="4" fill="#4145e8" />
+
+    <path id="thumb" stroke="black" stroke-width="3" fill="#ffc207"
+    d="M 78,152.5 Q 60,135 55,114 L 63,106 Z"/>
+
+    <path id="pinkie" stroke="black" stroke-width="3" fill="#ffc207" 
+    d="M 128,93.5 T 137,83.5 C 164,60 170,59 142,103 Z"/>
+
+    <path id="ring-finger" stroke="black" stroke-width="3" fill="#ffc207" 
+    d="M 111,87 L 112.5,78.5 Q 133,64 127.5,93 Z" />
+
+    <path id="middle-finger" stroke="black" stroke-width="3" fill="#ffc207" 
+    d="M 88,88 C 102.5,24 121,23 111,87 Z" />
+
+    <path id="index-finger" stroke="black" stroke-width="3" fill="#ffc207" 
+    d="M 67,95 Q 77.75,-12 86.5,88 " />
+
+    <path id="fist" stroke="black" stroke-width="3" fill="#ffc207" 
+    d="M 65,97 Q 114,73.5 141.5,103.5 Q 144,110 117.75,163.5 
+       Q 101,167 84,164 Q 59,116 65,97 Z" />
+-->
+    <!-- original image: -->
+    <!--image x="0" y="0" width="200" height="200" 
+         xlink:href="http://www.viemu.com/why-vi-img/vi-gang-sign.gif" opacity="0.5"/-->
+</svg> 

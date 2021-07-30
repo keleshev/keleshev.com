@@ -4,6 +4,13 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
   <meta name="dcterms.date" content="2021-07-21" />
   <title>Advanced Error Handling in OCaml</title>
   <style>
@@ -356,19 +363,29 @@ make sure that the two branches have the same type.
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>             warn (`Conditional_always value)</span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>         | _ -&gt;</span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>             return ()</span></code></pre></div>
-<p>Now, let’s go and write some friendly programs that help presenting a comprehensive view of errors and warnings to the user, instead of bailing out at first sight of a problem. <a href="/" title="Home">■</a></p>
-<h2 id="references">References</h2>
-<ul>
-<li>All code from this blog post in a runnable <a href="https://gist.github.com/keleshev/a153fa3ce9e3e341baa25d2b7cff6bac">gist</a></li>
-<li>The OCaml Manual on <a href="https://ocaml.org/manual/bindingops.html">binding operators</a></li>
-</ul>
-<!-- * * * -->
+<p>Now, let’s go and write some friendly programs that help presenting a comprehensive view of errors and warnings to the user, instead of bailing out at first sight of a problem. <a href="/" title="Home">☰</a></p>
 <h2 id="newsletter">Newsletter</h2>
 <blockquote>
 <p>Subscribe to receive an occasional email from me about compilers, functional programming, or my book <a href="/compiling-to-assembly-from-scratch">Compiling to Assembly from Scratch</a>.</p>
 <script async data-uid="8529ea38b4" src="https://motivated-writer-7421.ck.page/8529ea38b4/index.js"></script>
 <p>Unsibscribe at any time.</p>
 </blockquote>
+<h2 id="references">References</h2>
+<ul>
+<li>All code from this blog post in a runnable <a href="https://gist.github.com/keleshev/a153fa3ce9e3e341baa25d2b7cff6bac">gist</a></li>
+<li>The OCaml Manual on <a href="https://ocaml.org/manual/bindingops.html">binding operators</a></li>
+</ul>
+<h2 id="bibtex">BibTeX</h2>
+<p><small></p>
+<pre><code>@misc{Keleshev21a,
+  title = &quot;Advanced Error Handling in OCaml&quot;,
+  author = &quot;Vladimir Keleshev&quot;,
+  year = 2021,
+  howpublished =
+    &quot;\url{https://keleshev.com/advanced-error-handling-in-ocaml}&quot;,
+}</code></pre>
+<p></small></p>
+<!-- * * * -->
 <!--
 *Did you like this blog post? Cool! But did you know I wrote a whole book! It's called* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. From scratch. Check it out:*
 -->

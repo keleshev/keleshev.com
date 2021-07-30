@@ -64,7 +64,8 @@ code span.dt {
 pre {
     border-left: 2.5px solid black;
     margin-left: 0;
-    //font-family: 'Fira Code'
+    font-family: 'Fira Code';
+    line-height: 150%;
 }
 blockquote {
     border: 2.5px solid black;
@@ -83,8 +84,10 @@ pre em {
     font-weight: 100;
 }
 
+/* 
 ::-moz-selection { color: white; background: #323232; }
 ::selection      { color: white; background: #323232; }
+*/
 
 a { color: #045591; text-decoration: none; }
 //a:active  { color: yellow; text-decoration: none; }
