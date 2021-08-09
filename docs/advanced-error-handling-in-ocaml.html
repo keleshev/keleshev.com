@@ -280,7 +280,7 @@ make sure that the two branches have the same type.
 </blockquote>
 <p>Even though we find and report multiple errors, we have not considered the possibility of error recovery. For example, in case of an annotation we could detect and report a type mismatch, but then recover by assuming that the annotation is correct to continue type checking (and potentially uncover more errors). To achieve that, we need to change our approach slightly.</p>
 <h2 id="error-recovery">Error recovery</h2>
-<p>The <code>result</code> type can express either a success result on an error (or a list of errors, in our case). To express a result obtained after recovering from an error, we need to change the <code>result</code> type from a variant type to a sum type. For a lack of a better name, let’s call such type an <code>outcome</code>:</p>
+<p>The <code>result</code> type can express either a success result on an error (or a list of errors, in our case). To express a result obtained after recovering from an error, we need to change the <code>result</code> type from a sum type (variant) to a product type (record). For a lack of a better name, let’s call such type an <code>outcome</code>:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> (&#39;ok, &#39;error) outcome = {</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  result: &#39;ok <span class="dt">option</span>;</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  errors: &#39;error <span class="dt">list</span>;</span>
