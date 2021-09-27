@@ -1,9 +1,9 @@
 ---
 title: Compiling to Assembly from Scratch
-#twitter-card: false
-#twitter-title: Compiling to Assembly from Scratch
-#twitter-description: Black Friday Sale — 40% off
-#twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-friday-card.png"
+twitter-card: true
+twitter-title: Compiling to Assembly from Scratch
+twitter-description: Anniversary sale — 40% off
+twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/anniversary-sale-card.png"
 ---
 
 
@@ -13,7 +13,7 @@ title: Compiling to Assembly from Scratch
 
 
 
-<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b> </a></p></center>
+<center><p> <a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <strike>$45</strike> <b>$27</b> </a></p></center>
 
 
 
@@ -49,7 +49,7 @@ All you need to know is how to program, the book will teach you enough compiler 
 
 > <h2 class=h2-card >Buy now and get the following:</h2>
 >
-> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b> </a> <br/> <small><small><em>Excl. <span >EU VAT</span></em></small></small> </p> </center></p> </div>
+> <div style=float:right;margin-left:20px> <center> <!--a class=btn-dis><b>$45</b></a--><br/> <img style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->   <p><a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <strike>$45</strike> <b>$27</b> </a> <br/> <small><small><em>Excl. <span >EU VAT</span></em></small></small> </p> </center></p> </div>
 >
 >  <br/>
 >
@@ -249,10 +249,9 @@ directions in which you can take your compiler.
 
 ## Print edition?
 
-There's no print edition of the book at the moment.
-But there will be.
+At the moment, I'm working on bringing the print edition of the book to reality.
 However, there's no timeline for it yet.
-The print is a bit harder than digital.
+You know, print is a bit harder than digital.
 I need to be 100% confident about each word in the book before it is sent to the press.
 However, I know that nobody likes buying the same book twice.
 So, if you buy the ebook today, I make a promise to give you a discount, once the print edition is out.
