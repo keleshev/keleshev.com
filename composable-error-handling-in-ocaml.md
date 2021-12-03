@@ -502,9 +502,14 @@ familiarity with how polymorphic variants work. Here are a few resources:
 ## Update
 
 * 2020-12-08: The article was updated to use the new
-  [`Stdlib.Result`](stdlib-result) module and `let*` syntax.
+  [`Stdlib.Result`][stdlib-result] module and `let*` syntax.
   Previously it used
-  [`Base.Result`](base-result) and [`ppx_let`](ppx_let).
+  [`Base.Result`][base-result] and [`ppx_let`][ppx_let].
+
+[base-result]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/index.html
+[ppx_let]: https://github.com/janestreet/ppx_let
+[stdlib-result]: https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
+
 
 ## Acknowledgments
 
@@ -528,10 +533,6 @@ for giving feedback on a draft of this post.
 
 
 
-
-[base-result]: https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/Result/index.html
-[ppx_let]: https://github.com/janestreet/ppx_let
-[stdlib-result]: https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
 
 * * *
 
