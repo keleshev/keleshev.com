@@ -1,6 +1,6 @@
 ---
 title: Compiling to Assembly from Scratch
-twitter-card: false
+twitter-card: true
 twitter-title: Compiling to Assembly from Scratch
 twitter-description: Saint Valentine's Day Sale — 40% off
 twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/valentines-day-sale.png"
