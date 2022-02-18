@@ -18,8 +18,6 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/valentin
 
 
 <!--<center><em>TypeScript — ARM — Lots of fun!</em></center> -->
-<!--<center><em>Saint Valentine's Day Sale — 40% off</em></center>
-<center><em>The perfect compiler gift to your loved ones</em></center>-->
 
 
 
