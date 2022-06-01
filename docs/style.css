@@ -287,5 +287,8 @@ figure {
 }
 figcaption {
   display: table-caption;
-  caption-side: top;
+  caption-side: bottom;
+  margin-top: 1em;
 }
+
+

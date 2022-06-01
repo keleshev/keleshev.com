@@ -260,7 +260,7 @@ So, if you buy the ebook today, I make a promise to give you a discount, once th
 
 If due to circumstances you can't afford to buy the book—write me an email at [vladimir@keleshev.com](mailto:vladimir@keleshev.com), and I'm sure we can figure something out!
 
-<center><img src=/keleshev.jpg width=200 height=200 style=float:right /></center>
+<center><img src=/keleshev.jpg width=200 height=200 style="float:right; border-radius:200px; margin-top:50px" /></center>
 
 ## About me
 

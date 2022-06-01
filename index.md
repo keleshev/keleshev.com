@@ -24,6 +24,10 @@ My book
 Blog
 ----
 
+<!--
+* 2022
+  * [Abstract Syntax Tree: an Example in C](/abstract-syntax-tree-an-example-in-c) 
+-->
 * 2021
   * [Advanced Error Handling in OCaml](/advanced-error-handling-in-ocaml)
 * 2020
@@ -70,17 +74,20 @@ In 2010 I made a series of videos about Boolean Algebra.
 * [DeMorgan’s Theorem](/boolean-algebra-demorgans-theorem)
 * [Standard Forms](/boolean-algebra-standard-sop-pos-forms)
 
+
 -->
 
-<center><img src=./keleshev.jpg width=200 height=200 style=float:right /></center>
+<img src=./keleshev.jpg width=200 height=200 style="float:right; border-radius:100px; margin-top:50px" />
+
 About me
 --------
+
 
 My name is Vladimir Keleshev.
 I am a software developer living and working just outside of Copenhagen.
 I have worked with embedded systems, safety-critical systems,
 compilers, and now with finance.
-I have just published an ebook called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
+Recently, I have published an ebook called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
 
 * Twitter: [\@keleshev](http://twitter.com/keleshev)
 * GitHub: [\@keleshev](http://github.com/keleshev)

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <meta name="dcterms.date" content="2022-04-24" />
+  <title>Abstract Syntax Tree: an Example in C</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+  <h1>Abstract Syntax Tree<br/><small><small>an Example in C</small></small></h1>
+
+<center style="margin: 25.46px;" ><em>Example with pretty-printer and code generator</em></center>
+
+<center style="margin: 25.46px;" >Vladimir Keleshev • 2022-04-24</center>
+
+<header id="title-block-header">
+</header>
+<p>In a previous blog post, we looked at a simple <a href="/one-pass-compiler-primer">one-pass compiler</a> written in C. Now, let’s take a look at how we can design an Abstract Syntax Tree and how we can work with it.</p>
+<p>An Abstract Syntax Tree (or an AST)</p>
+<figure>
+<img src="ast.svg" alt="Figure 1. Abstract Syntax Tree example" /><figcaption aria-hidden="true">Figure 1. Abstract Syntax Tree example</figcaption>
+</figure>
+<p>An Abstract Syntax Tree (or an AST)</p>
+<figure>
+<img src="ast-memory-layout.svg" alt="Figure 1. Abstract Syntax Tree example" /><figcaption aria-hidden="true">Figure 1. Abstract Syntax Tree example</figcaption>
+</figure>
+<p>An Abstract Syntax Tree (or an AST)</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> AST AST<span class="op">;</span> <span class="co">// Forward reference</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> AST <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">enum</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    AST_MAIN<span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    AST_NUMBER<span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    AST_ADD<span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    AST_MUL<span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> tag<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">union</span> <span class="op">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> AST_MAIN <span class="op">{</span> AST <span class="op">*</span>body<span class="op">;</span> <span class="op">}</span> AST_MAIN<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> AST_NUMBER <span class="op">{</span> <span class="dt">int</span> number<span class="op">;</span> <span class="op">}</span> AST_NUMBER<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> AST_ADD <span class="op">{</span> AST <span class="op">*</span>left<span class="op">;</span> AST <span class="op">*</span>right<span class="op">;</span> <span class="op">}</span> AST_ADD<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> AST_MUL <span class="op">{</span> AST <span class="op">*</span>left<span class="op">;</span> AST <span class="op">*</span>right<span class="op">;</span> <span class="op">}</span> AST_MUL<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> data<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>AST <span class="op">*</span>ast_new<span class="op">(</span>AST ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  AST <span class="op">*</span>ptr <span class="op">=</span> malloc<span class="op">(</span><span class="kw">sizeof</span><span class="op">(</span>AST<span class="op">));</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>ptr<span class="op">)</span> <span class="op">*</span>ptr <span class="op">=</span> ast<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> ptr<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>   </span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ast_free<span class="op">(</span>AST <span class="op">*</span>ptr<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  AST ast <span class="op">=</span> <span class="op">*</span>ptr<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> <span class="op">(</span>ast<span class="op">.</span>tag<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_MAIN<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_MAIN data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_MAIN<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      ast_free<span class="op">(</span>data<span class="op">.</span>body<span class="op">);</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_NUMBER<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_NUMBER data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_NUMBER<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_ADD<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_ADD data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_ADD<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      ast_free<span class="op">(</span>data<span class="op">.</span>left<span class="op">);</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      ast_free<span class="op">(</span>data<span class="op">.</span>right<span class="op">);</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_MUL<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_MUL data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_MUL<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>      ast_free<span class="op">(</span>data<span class="op">.</span>left<span class="op">);</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>      ast_free<span class="op">(</span>data<span class="op">.</span>right<span class="op">);</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> </span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  free<span class="op">(</span>ptr<span class="op">);</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>   </span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ast_print<span class="op">(</span>AST <span class="op">*</span>ptr<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  AST ast <span class="op">=</span> <span class="op">*</span>ptr<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> <span class="op">(</span>ast<span class="op">.</span>tag<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_MAIN<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_MAIN data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_MAIN<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot;main() = &quot;</span><span class="op">);</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      ast_print<span class="op">(</span>data<span class="op">.</span>body<span class="op">);</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_NUMBER<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_NUMBER data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_NUMBER<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot;%d&quot;</span><span class="op">,</span> data<span class="op">.</span>number<span class="op">);</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_ADD<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_ADD data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_ADD<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot;(&quot;</span><span class="op">);</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>      ast_print<span class="op">(</span>data<span class="op">.</span>left<span class="op">);</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot; + &quot;</span><span class="op">);</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>      ast_print<span class="op">(</span>data<span class="op">.</span>right<span class="op">);</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot;)&quot;</span><span class="op">);</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_MUL<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_MUL data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_MUL<span class="op">;</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot;(&quot;</span><span class="op">);</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      ast_print<span class="op">(</span>data<span class="op">.</span>left<span class="op">);</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot; * &quot;</span><span class="op">);</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>      ast_print<span class="op">(</span>data<span class="op">.</span>right<span class="op">);</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>      printf<span class="op">(</span><span class="st">&quot;)&quot;</span><span class="op">);</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define emitf printf</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ast_emit<span class="op">(</span>AST <span class="op">*</span>ptr<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  AST ast <span class="op">=</span> <span class="op">*</span>ptr<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> <span class="op">(</span>ast<span class="op">.</span>tag<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_MAIN<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_MAIN data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_MAIN<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;.global _main</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;_main:</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      ast_emit<span class="op">(</span>data<span class="op">.</span>body<span class="op">);</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  ret</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_NUMBER<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_NUMBER data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_NUMBER<span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  mov rax, %d</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> data<span class="op">.</span>number<span class="op">);</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_ADD<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_ADD data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_ADD<span class="op">;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      ast_emit<span class="op">(</span>data<span class="op">.</span>left<span class="op">);</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  push rax</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      ast_emit<span class="op">(</span>data<span class="op">.</span>right<span class="op">);</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  pop rbx</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  add rax, rbx</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> AST_MUL<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>      <span class="kw">struct</span> AST_MUL data <span class="op">=</span> ast<span class="op">.</span>data<span class="op">.</span>AST_MUL<span class="op">;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>      ast_emit<span class="op">(</span>data<span class="op">.</span>left<span class="op">);</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  push rax</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      ast_emit<span class="op">(</span>data<span class="op">.</span>right<span class="op">);</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  pop rbx</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>      emitf<span class="op">(</span><span class="st">&quot;  mul rbx</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// main() = 4 + 2 * 10 + 3 * (5 + 1)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  AST <span class="op">*</span>term <span class="op">=</span> AST_NEW<span class="op">(</span>AST_MAIN<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    AST_NEW<span class="op">(</span>AST_ADD<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      AST_NEW<span class="op">(</span>AST_NUMBER<span class="op">,</span> <span class="dv">4</span><span class="op">),</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      AST_NEW<span class="op">(</span>AST_ADD<span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        AST_NEW<span class="op">(</span>AST_MUL<span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>          AST_NEW<span class="op">(</span>AST_NUMBER<span class="op">,</span> <span class="dv">2</span><span class="op">),</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>          AST_NEW<span class="op">(</span>AST_NUMBER<span class="op">,</span> <span class="dv">10</span><span class="op">),</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">),</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        AST_NEW<span class="op">(</span>AST_MUL<span class="op">,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>          AST_NEW<span class="op">(</span>AST_NUMBER<span class="op">,</span> <span class="dv">3</span><span class="op">),</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>          AST_NEW<span class="op">(</span>AST_ADD<span class="op">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>            AST_NEW<span class="op">(</span>AST_NUMBER<span class="op">,</span> <span class="dv">5</span><span class="op">),</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            AST_NEW<span class="op">(</span>AST_NUMBER<span class="op">,</span> <span class="dv">1</span><span class="op">),</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>          <span class="op">),</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">),</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      <span class="op">),</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">),</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="op">);</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  printf<span class="op">(</span><span class="st">&quot;/* &quot;</span><span class="op">);</span> ast_print<span class="op">(</span>term<span class="op">);</span> printf<span class="op">(</span><span class="st">&quot; */</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  ast_emit<span class="op">(</span>term<span class="op">);</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  ast_free<span class="op">(</span>term<span class="op">);</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>   </span></code></pre></div>
+<p>In a <a href="/composable-error-handling-in-ocaml">previous blog post</a>, we discussed using an OCaml feature called <em>polymorphic variants</em> for error handling. Here, let’s discuss some more advanced forms of this error-handling approach: returning multiple errors, performing error recovery, as well as handling warnings.</p>
+<p>In many programs (for example, in a compiler or an IDE), we want to report all detected errors, instead of quitting on the first error. We also often want to collect warnings that are not critical for the execution of the program.</p>
+<p>To demonstrate the problem and the solutions, let’s use an artificial example: a type checker for a small language with types <code>t</code> and terms <code>e</code>, which is technically a subset of OCaml:</p>
+<!--
+
+t -> bool | int
+
+e -> true | false
+   | 0 | 1 | 2 | …
+   | (e : t)
+   | if e then e else e
+
+-->
+<p style="padding-left: 3.0em; text-indent: -1.25em">
+<em> t </em> → <b><code> bool </code></b>|<b><code> int</code><br/> </b>
+</p>
+<p style="padding-left: 3.0em; text-indent: -1.25em">
+<em>e </em> → <b><code> true </code></b>|<b><code> false</code><br/> </b> |<code> 0 </code>|<code> 1 </code>|<code> 2 </code>|<code> </code>…<br/> |<code> (</code><em>e</em><code> : </code><em>t</em><code>)</code><br/> |<b><code> if </code></b><em>e</em><b><code> then </code></b><em>e</em><b><code> else </code></b><em>e</em>
+</p>
+<p>It’s not a very useful language, but it is enough for us to discuss the interesting error handling cases. We will represent this language with the following OCaml types:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Type = <span class="kw">struct</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> t = Bool | Int</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Term = <span class="kw">struct</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> t =</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    | Bool <span class="kw">of</span> <span class="dt">bool</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    | Int <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    | Annotation <span class="kw">of</span> t * Type.t</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    | If <span class="kw">of</span> {</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        conditional: t; </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        consequence: t; </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        alternative: t;</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> Term</span></code></pre></div>
+<h2 id="using-exceptions">Using exceptions</h2>
+<p>As a recap, let’s first write the type checker while using exceptions for error handling. We start by defining <code>failwithf</code>, which raises an exception like <code>failwith</code>, but allows printf-like formatting:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> failwithf f = <span class="dt">Printf</span>.ksprintf <span class="dt">failwith</span> f</span></code></pre></div>
+<p>And now, the type checker itself, in the form of a function called <code>infer</code>, which infers the type or fails with an exception:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">rec</span> infer = <span class="kw">function</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  | Bool _ -&gt; Type.Bool ❶</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  | Int _ -&gt; Type.Int</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  | Annotation (term, annotated_t) -&gt; ❷</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> term_t = infer term <span class="kw">in</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">if</span> term_t &lt;&gt; annotated_t <span class="kw">then</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        failwithf <span class="st">&quot;Expected %s, but got %s&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>          (Type.to_string annotated_t) </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>          (Type.to_string term_t)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        annotated_t</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  | If {conditional; consequence; alternative} -&gt; ❸</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> conditional_t = infer conditional <span class="kw">in</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> consequence_t = infer consequence <span class="kw">in</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> alternative_t = infer alternative <span class="kw">in</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">if</span> conditional_t &lt;&gt; Type.Bool <span class="kw">then</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        failwithf <span class="st">&quot;If condition must be boolean&quot;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span> <span class="kw">if</span> consequence_t &lt;&gt; alternative_t <span class="kw">then</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        failwithf <span class="st">&quot;If branches must match: %s vs. %s&quot;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>          (Type.to_string consequence_t) </span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>          (Type.to_string alternative_t)</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>        consequence_t</span></code></pre></div>
+<p>Writing type checkers, I find it helpful to follow a convention of adding an <code>_t</code> suffix to distinguish between terms and their types, like <code>term</code> and <code>term_t</code> above. Some highlights:</p>
+<ol>
+<li style="padding-inline-start: 1ch; list-style-type: &#39;❶&#39;">
+For boolean and integer constants we can infer the type to be boolean or integer, respectively.
+</li>
+<li style="padding-inline-start: 1ch; list-style-type: &#39;❷&#39;">
+In case of a type annotation, we recursively infer the type (the process that can fail in itself) and compare it to the annotated type.
+</li>
+<li style="padding-inline-start: 1ch; list-style-type: &#39;❸&#39;">
+In case of an <code>if</code> conditional, we
+</li>
+<ul>
+<li>
+infer the type of all terms,
+</li>
+<li>
+make sure that the conditional is boolean,
+</li>
+<li>
+make sure that the two branches have the same type.
+</li>
+</ul>
+</ol>
+<h2 id="polymorphic-variants">Polymorphic variants</h2>
+<p>Now, let’s rewrite the type checker using the result type with polymorphic variants for errors (like we did in the earlier blog post):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> return x = Ok x</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> error x = Error x</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">let</span><span class="er">*)</span> = Result.bind</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">rec</span> infer = <span class="kw">function</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  | Bool _ -&gt; return Type.Bool</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  | Int _ -&gt; return Type.Int</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  | Annotation (term, annotated_t) -&gt;</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* term_t = infer term <span class="kw">in</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">if</span> term_t &lt;&gt; annotated_t <span class="kw">then</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        error (`Expected_x_got_y (annotated_t, term_t))</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        return annotated_t</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  | If {conditional; consequence; alternative} -&gt;</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* conditional_t = infer conditional <span class="kw">in</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* consequence_t = infer consequence <span class="kw">in</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* alternative_t = infer alternative <span class="kw">in</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>      <span class="kw">if</span> conditional_t &lt;&gt; Type.Bool <span class="kw">then</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>        error `If_conditional_must_be_boolean</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span> <span class="kw">if</span> consequence_t &lt;&gt; alternative_t <span class="kw">then</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        error (`If_branches_must_match (consequence_t,</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>                                        alternative_t))</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>        return consequence_t</span></code></pre></div>
+<p>It reads very similarly. We have used <code>Result.bind</code> for our <code>let*</code> bindings instead of the regular <code>let</code> bindings. We also used <code>return</code> and <code>error</code> as aliases for <code>Ok</code> and <code>Error</code> result constructors.</p>
+<p>Instead of raising an exception, the <code>infer</code> function returns a type <code>(Type.t, _) result</code> where <code>_</code> is the inferred polymorphic variant type. Still, our type checker stops at the first error. Let’s change that.</p>
+<h2 id="handling-multiple-errors">Handling multiple errors</h2>
+<p>As the first step, let’s change our <code>error</code> alias to allow for a list of errors to be returned:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> error x = Error [x]</span></code></pre></div>
+<p>This changes the return type of <code>infer</code> to <code>(Type.t, _ list) result</code>.</p>
+<p>Now, to actually return multiple errors we need to control which bindings are short-circuiting as before and which bindings can be used to detect and report errors together. For example, we can’t report that the <em>conditional must be boolean</em> before we infer the type of the conditional, but we can report errors happening in both conditional branches (the consequence and the alternative) as they can be checked separately. Fortunately, OCaml has a neat feature to help us with that.</p>
+<p>Similarly to how consequent <code>let</code> bindings are dependent on each other, <code>and</code> bindings allow to bind independent values. And OCaml allows custom <code>and*</code> bindings similarly to custom <code>let*</code> bindings.</p>
+<blockquote>
+<p>The <code>and*</code> bindings are syntactic sugar for monoidal products. For more info, see the <a href="https://ocaml.org/manual/bindingops.html">relevant section of the OCaml Manual</a>.</p>
+</blockquote>
+<p>We can specify that when two bindings are combined using <code>and*</code> the error lists are appended, using the <code>@</code> operator below:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">and</span><span class="er">*)</span> left right = <span class="kw">match</span> left, right <span class="kw">with</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  | Ok left, Ok right -&gt; Ok (left, right)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  | Error left, Error right -&gt; Error (left @ right)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  | Error e, _ | _, Error e -&gt; Error e</span></code></pre></div>
+<blockquote>
+<p>Appending lists is not efficient, so a different data structure would be a better fit here, such as a <em>catenation list</em>. But that’s a topic for a different blog post.</p>
+</blockquote>
+<p>Now, for cases where errors can be detected independently we can use the <code>and*</code> bindings. We need some care to apply them in the right places to catch as many independent errors as possible. As a result, our type checker now looks like this:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> return x = Ok x</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> error x = Error [x]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">let</span><span class="er">*)</span> = Result.bind</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">and</span><span class="er">*)</span> left right = <span class="kw">match</span> left, right <span class="kw">with</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  | Ok left, Ok right -&gt; Ok (left, right)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  | Error left, Error right -&gt; Error (left @ right)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  | Error e, _ | _, Error e -&gt; Error e</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">rec</span> infer = <span class="kw">function</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  | Bool _ -&gt; return Type.Bool</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  | Int _ -&gt; return Type.Int</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  | Annotation (term, annotated_t) -&gt;</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* term_t = infer term <span class="kw">in</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">if</span> term_t &lt;&gt; annotated_t <span class="kw">then</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        error (`Expected_x_got_y (annotated_t, term_t))</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        return annotated_t</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  | If {conditional; consequence; alternative} -&gt;</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* () =</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span>* conditional_t = infer conditional <span class="kw">in</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> conditional_t &lt;&gt; Type.Bool <span class="kw">then</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>          error `If_conditional_must_be_boolean</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>          return ()</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>      <span class="kw">and</span>* result_t =</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span>* consequence_t = infer consequence</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>        <span class="kw">and</span>* alternative_t = infer alternative <span class="kw">in</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> consequence_t &lt;&gt; alternative_t <span class="kw">then</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>          error (`If_branches_must_match (consequence_t, </span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>                                          alternative_t))</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>          return consequence_t</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>      <span class="kw">in</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>      return result_t</span></code></pre></div>
+<p>The error handling is a bit more involved than before, but it can capture many possible errors. For example, type checking the following program…</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> <span class="dv">1</span> <span class="kw">then</span> <span class="dv">2</span> <span class="kw">else</span> <span class="kw">true</span></span></code></pre></div>
+<p>…will detect both the non-boolean conditional and the branch mismatch errors:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (infer (If {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  conditional=Int <span class="dv">1</span>;</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  consequence=Int <span class="dv">2</span>;</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  alternative=Bool <span class="kw">true</span>;</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>}) = Error [</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  `If_conditional_must_be_boolean;</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  `If_branches_must_match (Type.Int, Type.Bool);</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>]);</span></code></pre></div>
+<p>While checking the following snippet…</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> (<span class="dv">1</span>: <span class="dt">bool</span>) <span class="kw">then</span> (<span class="dv">2</span>: <span class="dt">bool</span>) <span class="kw">else</span> (<span class="kw">true</span>: <span class="dt">int</span>)</span></code></pre></div>
+<p>…our type-checker will capture all three annotation errors (unlike what the OCaml compiler does, for example):</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (infer (If {               </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  conditional=Annotation (Int <span class="dv">1</span>, Type.Bool);</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  consequence=Annotation (Int <span class="dv">2</span>, Type.Bool);</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  alternative=Annotation (Bool <span class="kw">true</span>, Type.Int);</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>}) = Error [</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  `Expected_x_got_y (Type.Bool, Type.Int);</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  `Expected_x_got_y (Type.Bool, Type.Int);</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  `Expected_x_got_y (Type.Int, Type.Bool);</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>]);</span></code></pre></div>
+<blockquote>
+<p>We should include the source code locations with the errors in practice to point to the right place in the source code.</p>
+</blockquote>
+<p>Even though we find and report multiple errors, we have not considered the possibility of error recovery. For example, in case of an annotation we could detect and report a type mismatch, but then recover by assuming that the annotation is correct to continue type checking (and potentially uncover more errors). To achieve that, we need to change our approach slightly.</p>
+<h2 id="error-recovery">Error recovery</h2>
+<p>The <code>result</code> type can express either a success result on an error (or a list of errors, in our case). To express a result obtained after recovering from an error, we need to change the <code>result</code> type from a sum type (variant) to a product type (record). For a lack of a better name, let’s call such type an <code>outcome</code>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> (&#39;ok, &#39;error) outcome = {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  result: &#39;ok <span class="dt">option</span>;</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  errors: &#39;error <span class="dt">list</span>;</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Let’s reimplement <code>return</code>, <code>error</code>, <code>(let*)</code>, and <code>(and*)</code> for this type:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> return x = {result=<span class="dt">Some</span> x; errors=[]}</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> error x = {result=<span class="dt">None</span>; errors=[x]}</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">let</span><span class="er">*)</span> body callback = <span class="kw">match</span> body <span class="kw">with</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  | {result=<span class="dt">None</span>; errors} <span class="kw">as</span> e -&gt; e</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  | {result=<span class="dt">Some</span> ok; errors=previous_errors} -&gt;</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> {result; errors} = callback ok <span class="kw">in</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>      {result; errors=previous_errors @ errors}</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (<span class="kw">and</span><span class="er">*)</span> left right =</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> result = <span class="kw">match</span> left.result, right.result <span class="kw">with</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    | <span class="dt">Some</span> left, <span class="dt">Some</span> right -&gt; <span class="dt">Some</span> (left, right)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    | _ -&gt; <span class="dt">None</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  {result; errors=left.errors @ right.errors}</span></code></pre></div>
+<p>The implementation is very similar as before, including <code>(let*)</code>, which has some similarities to how <code>Result.bind</code> is implemented.</p>
+<p>With these combinators, our existing type checker works the same way without change. The only difference is in the shape of the return type. So far, this gives us nothing. That is, until we add a new combinator function:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> recoverable_error x = {result=<span class="dt">Some</span> (); errors=[x]}</span></code></pre></div>
+<p>It is a constructor that holds a non-empty result <em>and</em> an error. This allows us to capture the error and recover from it by returning a result.</p>
+<p>Now we can change how we handle annotations:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">rec</span> infer = <span class="kw">function</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  | Bool _ -&gt; return Type.Bool</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  | Int _ -&gt; return Type.Int</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  | Annotation (term, annotated_t) -&gt;</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* term_t = infer term <span class="kw">in</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span>* () =</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> term_t &lt;&gt; annotated_t <span class="kw">then</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>          recoverable_error (</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>            `Expected_x_got_y (annotated_t, term_t))</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>          return ()</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">in</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>      return annotated_t</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  | If {conditional; consequence; alternative} -&gt;</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>      …</span></code></pre></div>
+<p>Here, if the annotated and the inferred types do not match, we report a recoverable error but continue by returning the annotated type.</p>
+<p>This affects our previous example:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> (<span class="dv">1</span>: <span class="dt">bool</span>) <span class="kw">then</span> (<span class="dv">2</span>: <span class="dt">bool</span>) <span class="kw">else</span> (<span class="kw">true</span>: <span class="dt">int</span>)</span></code></pre></div>
+<p>This will capture an additional error: the fact that the two branches are of a different type.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (infer (If {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  conditional=Annotation (Int <span class="dv">1</span>, Type.Bool);</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  consequence=Annotation (Int <span class="dv">2</span>, Type.Bool);</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  alternative=Annotation (Bool <span class="kw">true</span>, Type.Int);</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>}) = {</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  result=<span class="dt">None</span>;</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  errors=[</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    `Expected_x_got_y (Type.Bool, Type.Int);</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    `Expected_x_got_y (Type.Bool, Type.Int);</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    `Expected_x_got_y (Type.Int, Type.Bool);</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    `If_branches_must_match (Type.Bool, Type.Int);</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  ];</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>});</span></code></pre></div>
+<p>So, thanks to error recovery, we can capture more errors.</p>
+<blockquote>
+<p>What we have implemented can be described as a composition of an option monad and a writer monad. Similar results can be achieved using a monad transformer library.</p>
+</blockquote>
+<h2 id="warnings">Warnings</h2>
+<p>Since OCaml is not a purely functional language, we can just print warning messages to the <code>stderr</code> channel, as they happen, without anything special. For that, we can use <code>eprintf</code> from the <code>Printf</code> module, or we can use a logging library. We can also append warnings to a mutable collection to deal with them later.</p>
+<p>To handle warnings, a logical extension of our purely-functional approach would be to add a <code>warnings</code> record field to the outcome type:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> (&#39;ok, &#39;error, &#39;warning) t = {</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  result: &#39;ok <span class="dt">option</span>;</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  errors: &#39;error <span class="dt">list</span>;</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  warnings: &#39;warning <span class="dt">list</span>;</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>And a combinator that introduces warnings:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> warn w = {result=<span class="dt">Some</span> (); errors=[]; warnings=[w]}</span></code></pre></div>
+<p>This way, we can, for example, issue a warning in case an <code>if</code> conditional is a constant:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>   <span class="kw">let</span>* () = </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>     <span class="kw">let</span>* conditional_t = infer conditional <span class="kw">in</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>       <span class="kw">if</span> conditional_t &lt;&gt; Type.Bool <span class="kw">then</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>         error `If_conditional_must_be_boolean</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>       <span class="kw">else</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>         <span class="kw">match</span> conditional <span class="kw">with</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>         | Bool value -&gt;</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>             warn (`Conditional_always value)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>         | _ -&gt;</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>             return ()</span></code></pre></div>
+<p>Now, let’s go and write some friendly programs that help presenting a comprehensive view of errors and warnings to the user, instead of bailing out at first sight of a problem. <a href="/" title="Home">☰</a></p>
+<h2 id="newsletter">Newsletter</h2>
+<blockquote>
+<p>Subscribe to receive an occasional email from me about compilers, functional programming, or my book <a href="/compiling-to-assembly-from-scratch">Compiling to Assembly from Scratch</a>.</p>
+<script async data-uid="8529ea38b4" src="https://motivated-writer-7421.ck.page/8529ea38b4/index.js"></script>
+<p>Unsibscribe at any time.</p>
+</blockquote>
+<h2 id="references">References</h2>
+<ul>
+<li>All code from this blog post in a runnable <a href="https://gist.github.com/keleshev/a153fa3ce9e3e341baa25d2b7cff6bac">gist</a></li>
+<li>The OCaml Manual on <a href="https://ocaml.org/manual/bindingops.html">binding operators</a></li>
+</ul>
+<h2 id="bibtex">BibTeX</h2>
+<p><small></p>
+<pre><code>@misc{Keleshev:2022-1,
+  title=&quot;Abstract Syntax Tree in C&quot;,
+  author=&quot;Vladimir Keleshev&quot;,
+  year=2022,
+  howpublished=
+    &quot;\url{https://keleshev.com/abstract-syntax-tree-in-c}&quot;,
+}</code></pre>
+<p></small></p>
+<!-- * * * -->
+<!--
+*Did you like this blog post? Cool! But did you know I wrote a whole book! It's called* Compiling to Assembly from Scratch. *It teaches you enough assembly programming and compiler fundamentals to implement a compiler for a small programming language. From scratch. Check it out:*
+-->
+
+
+  <hr class="fleuron" />
+</body>
+</html>

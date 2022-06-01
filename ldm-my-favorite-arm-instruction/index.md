@@ -39,7 +39,7 @@ The register set is encoded as a 16-bit mask in a 32-bit instruction.
 Here's a simplified encoding of the original example:
 
 
-![Simplified encoding of the LDM instruction](./ldm-encoding-arm.svg){ width=75% }
+![Figure 1. Simplified encoding of the LDM instruction](./ldm-encoding-arm.svg){ width=75% }
 
 
 Such instruction is a perfect fit for a [load-store architecture](https://en.wikipedia.org/wiki/Load%E2%80%93store_architecture) like ARM, where the primary workflow is:
