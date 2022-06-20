@@ -24,7 +24,7 @@ hr.fleuron:after {
 
 body {
     margin: auto;
-    padding: 0 0px;
+    padding: 0 1.25em;
     /* padding-bottom: 100px; */
     width: 700px;
     font-size: 19.0px;
@@ -284,6 +284,7 @@ figure {
   display: table;
   width: 100%;
   margin: 0;
+  padding-top: 1em;
 }
 figcaption {
   display: table-caption;

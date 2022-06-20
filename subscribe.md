@@ -23,5 +23,5 @@ I [blog](/) about *compilers* and *functional programming*, and I have recently 
 >
 > <script async data-uid="8529ea38b4" src="https://motivated-writer-7421.ck.page/8529ea38b4/index.js"></script>
 >
-> Unsibscribe at any time.
+> Unsubscribe at any time.
 >

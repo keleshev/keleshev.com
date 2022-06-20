@@ -24,10 +24,8 @@ My book
 Blog
 ----
 
-<!--
 * 2022
   * [Abstract Syntax Tree: an Example in C](/abstract-syntax-tree-an-example-in-c) 
--->
 * 2021
   * [Advanced Error Handling in OCaml](/advanced-error-handling-in-ocaml)
 * 2020
@@ -102,5 +100,5 @@ Recently, I have published an ebook called [Compiling to Assembly from Scratch](
 >
 > <script async data-uid="8529ea38b4" src="https://motivated-writer-7421.ck.page/8529ea38b4/index.js"></script>
 >
-> Unsibscribe at any time.
+> Unsubscribe at any time.
 >
