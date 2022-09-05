@@ -36,14 +36,17 @@ The source code is available on GitHub:
  * <https://github.com/keleshev/compiling-to-assembly-from-scratch>
 
 
-## Discussion forum & community
+## Discussion forum
 
-The book's discussion forum is available here:
+The book used to have a dedicated discussion forum, but it didn't see much use, so it was discontinued.
+For posterity, here's the archive:
 
  * <https://discourse.keleshev.com>
 
-To sign up use invitation code `COM2ASM` (also available in the book's *Preface*).
-Looking forward to see you join the discussion!
+I can recommend to use Reddit communities r/Compilers and r/ProgrammingLanguages to discuss the book:
+
+ * <https://www.reddit.com/r/Compilers/>
+ * <https://www.reddit.com/r/ProgrammingLanguages/>
 
 * * *
 
