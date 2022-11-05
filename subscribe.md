@@ -4,7 +4,9 @@ fancy-title: Subscribe
 ---
 
 <br/>
-<center><img src=./keleshev.jpg width=200 height=200 style=float:right /></center>
+<center>
+<img src=./keleshev.jpg width=200 height=200 style="float:right; border-radius:100px; margin-top:50px" />
+</center>
 
 My name is Vladimir Keleshev.
 I am a software developer from Copenhagen.
