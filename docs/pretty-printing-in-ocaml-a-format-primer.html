@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <meta name="dcterms.date" content="2024-05-05" />
+  <title>Pretty Printing in OCaml: A Format Primer</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+  <h1>Pretty Printing in OCaml<br/><small><small>A Format Primer</small></small></h1>
+
+
+<center style="margin: 25.46px;" >Vladimir Keleshev • 2024-05-05</center>
+
+<header id="title-block-header">
+</header>
+<p><a href="https://v2.ocaml.org/api/Format.html">Format</a> is a module in OCaml standard library. It is used for writing pretty printers for code and data structures. Projects like <a href="https://github.com/ocaml-ppx/ocamlformat">ocamlformat</a> use it to implement very advanced code formatters.</p>
+<p>Format has a very elegant and powerful core, but its interface is a bit clunky and unintuitive. In this respect, it’s a little bit like git: powerfull tool with a bit of antics, but very much worth learning.</p>
+<p>First, let’s take a step back.</p>
+<h2 id="printf"><code>printf</code></h2>
+<p>You’re probably familliar with printf-style formatting. It originated in C, but found its way into many modern languages. Here are some example programs that print a string “Hello, 42 dolfins!” using printf-style formatting.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* C */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;Hello, %d %s!&quot;</span><span class="op">,</span> <span class="dv">42</span><span class="op">,</span> <span class="st">&quot;dolfins&quot;</span><span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Python</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Hello, </span><span class="sc">%d</span><span class="st"> </span><span class="sc">%s</span><span class="st">!&quot;</span> <span class="op">%</span> (<span class="dv">42</span>, <span class="st">&quot;dolfins&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// JavaScript</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Hello, %d %s!&quot;</span><span class="op">,</span> <span class="dv">42</span><span class="op">,</span> <span class="st">&quot;dolfins&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">(* OCaml *)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>printf <span class="st">&quot;Hello, %d %s!&quot;</span> <span class="dv">42</span> <span class="st">&quot;dolfins&quot;</span></span></code></pre></div>
+<p>They consist of the <em>formatting string</em> <code>"Hello, %d %s!"</code> with two <em>format specifiers</em>, <code>%d</code> for an integer parameter, and <code>%s</code> for a string parameter. Many more are available.</p>
+<p>In OCaml, <code>printf</code> function is part of the <a href="https://v2.ocaml.org/api/Printf.html">Printf</a> module. It is made type safe by some interesting trickery that is outside of the scope of this article. In short—<em>very much out-of-character for OCaml</em>—the string is coersed to another type: a GADT type <code>Stdlib.format</code>.</p>
+<p>The Format module builds on top of that and has its own version of <code>printf</code> function (and others). On top of the many %-style specifiers of Printf (like <code>%s</code> and <code>%d</code>), it adds many more @-style specifiers used to control the alignment and indentation (like <code>@[</code>, <code>@]</code> and <code>@;</code>).</p>
+<p>It’s best not to mix the two modules. Printf is for casual printing to the console, Format—for data structures and code.</p>
+<h2 id="fprintf"><code>fprintf</code></h2>
+<p><code>fprintf</code>, which in C stands for “file print formatted”, is a more general function that takes an additional parameter. In C, it takes a file descriptor; in OCaml <code>Printf.fprintf</code> takes an output channel.</p>
+<p>However, <code>Format.fprintf</code> takes something called “pretty print formatter”, which is an abstraction. It is usually shortened to <code>ppf</code>. By selecting an implementation of it later we can print to a file or a buffer or something more exotic and custom.</p>
+<p>Let’s start our journey by making sure we imported the <code>printf</code> and <code>fprintf</code> functions from the right module:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> printf = <span class="dt">Format</span>.printf</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> fprintf = <span class="dt">Format</span>.fprintf</span></code></pre></div>
+<p>Let’s write our first formatter function. By convention they are either called <code>pp_&lt;type&gt;</code> or <code>&lt;Module&gt;.pp</code>, for example, <code>pp_json</code> or <code>JSON.pp</code>. Let’s start with something simple, a quoted string:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pp_string ppf <span class="dt">string</span> =</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  fprintf ppf <span class="st">&quot;%S&quot;</span> <span class="dt">string</span></span></code></pre></div>
+<p>The capital-S <code>%S</code> specifier produces a quoted string following the OCaml lexical conventions.</p>
+<h2 id="format.pp_print_list"><code>Format.pp_print_list</code></h2>
+<p>Next function that we will “import” from the Format module is <code>pp_print_list</code>. It takes a list of items to print, a pretty-printer for each item <code>pp_item</code>, and a separator <code>pp_sep</code>.</p>
+<p>However, <code>pp_sep</code> needs to be a full-blown pretty-printer itself, which will be slightly too verbose for our needs, so we make a quick wrapper that allows to pass just a formatting string.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pp_print_list ~sep pp_item =                                    </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Format</span>.pp_print_list </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    ~pp_sep:(<span class="kw">fun</span> ppf () -&gt; fprintf ppf sep) pp_item</span></code></pre></div>
+<blockquote>
+<p>This <code>pp_print_list</code>… I guess it stands for “pretty print print list”? Well… long story short: Format predates the module system in OCaml (or Caml Light, should I say?). Back then, when you loaded a module, you got all the functions in it, so it was a good practice to have a prefix for each function, like you do in C.</p>
+<p>Though, they did rename <code>list_length</code> to <code>List.length</code> at some point…</p>
+</blockquote>
+<h2 id="let-example">Let Example</h2>
+<p>Now, for our main example, we will be writing pretty printers for comma-separated lists with brackets for delimiters. We will use this nested list to illustrate the different approaches:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> example = [                                             </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [];                                                       </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  [<span class="st">&quot;one&quot;</span>; <span class="st">&quot;two&quot;</span>; <span class="st">&quot;three&quot;</span>];                                  </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  [                                                         </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;one&quot;</span>; <span class="st">&quot;two&quot;</span>; <span class="st">&quot;three&quot;</span>; <span class="st">&quot;four&quot;</span>; <span class="st">&quot;five&quot;</span>;                  </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;six&quot;</span>; <span class="st">&quot;seven&quot;</span>; <span class="st">&quot;eight&quot;</span>; <span class="st">&quot;nine&quot;</span>; <span class="st">&quot;ten&quot;</span>;                 </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  ];                                                        </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>]    </span></code></pre></div>
+<p>First, let’s write a naïve implementation that is not very pretty and just prints it in a single line:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pp_list pp_item ppf <span class="dt">list</span> =                            </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  fprintf ppf <span class="st">&quot;[%a]&quot;</span>                                      </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    (pp_print_list ~sep:<span class="st">&quot;, &quot;</span> pp_item) <span class="dt">list</span>  </span></code></pre></div>
+<p>We define <code>pp_list</code>—our main function. It takes a <code>pp_item</code>—a pretty printer that knows how to print nested elements: sometimes they will be strings, other times—nested lists. We define it as <code>fprintf</code> with a format <code>"[%a]"</code>. This is similar to writing <code>"[%s]"</code>, but allows to pass a pretty printer with a value to print. The value in this case is <code>list</code>, and the pretty printer—we construct it using <code>pp_print_list</code> which takes a separator and a printer for each item.</p>
+<p>In fact, <code>pp_print_list</code> does all the heavy lifting here, while we only wrapped the result in brackets and specified comma (with a generous space) as the separator.</p>
+<p>We can use <code>pp_list</code> to print the nested list <code>example</code> as follows:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>printf <span class="st">&quot;%a&quot;</span> (pp_list (pp_list pp_string)) example</span></code></pre></div>
+<p>As expected, the result is one long boring line:</p>
+<pre><code>[[], [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;], [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;, &quot;six&quot;, &quot;seven&quot;, &quot;eight&quot;, &quot;nine&quot;, &quot;ten&quot;]]</code></pre>
+<p>Let’s add some indentation.</p>
+<h2 id="break-hints">Break hints</h2>
+<p>Just like regular <code>printf</code> strings have %-specifiers (<code>%s</code>, <code>%d</code>, etc.), Format uses @-specifiers for “boxes” and “break hints”.</p>
+<p>Break hints (or line-break–hints) allow us to tell the formatter: you may or may not break the line here. They are written as <code>"@;"</code> and—importantly—take two integer parameters like this: <code>"@;&lt;1 2&gt;"</code>.</p>
+<ol type="1">
+<li><p>The first one is called “fits” and specifies how many spaces (zero or more) should be printed in case the expression fits on a single line.</p></li>
+<li><p>The second one is called “breaks” and specifies how many spaces of indentation should be used after the line break, in case the expression does not fit on a single line.</p></li>
+</ol>
+<h2 id="boxes">Boxes</h2>
+<p>Boxes is another abstraction that goes hand-in-hand with break hints.</p>
+<p>A box is “opened” with <code>"@["</code> and is “closed” with <code>"@]"</code>. Opening the box takes a parameter that specifies the type of the box: <code>"@[&lt;hv&gt;"</code>. We’ll go through the various options further down.</p>
+<p>Boxes and break hints work together as follows. When you open a box, you say that the current column (where the box is introduced) is now the baseline for all indentation inside this box. So when you later specify a break hint like <code>"@;&lt;1 2&gt;"</code> with “breaks” of two, and a break is necessary, the line will be broken and padded with spaces until it matches the column where the box is opened <em>plus</em> two spaces.</p>
+<p>Nesting boxes allows nesting indentation levels. The decision of fits-<em>vs</em>-breaks is made depending on the box type and the desired maximum <em>margin</em>.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> () = <span class="dt">Format</span>.set_margin <span class="dv">60</span></span></code></pre></div>
+<p>We set it 60 for the default pretty print formatter used by printf, but this can be set per “ppf”.</p>
+<blockquote>
+<p>The @-specifiers are hard to read at first, but eventually you get used to them just like with %-ones. We’ll highlight them in strings for readability.</p>
+</blockquote>
+<h2 id="horizontal-xor-vertical-hv-box">Horizontal xor vertical “hv” box</h2>
+<p>The first type is “hv”, written as <code>"@[&lt;hv&gt;…@]"</code>. It is usally mentioned as “horizontal/vertical” box, but I like to call it “horizontal <em>xor</em> vertical” box to highlight the exclusive nature of the choice:</p>
+<ul>
+<li>If everything in the box fits on one line, it is layed out horizontally: every break hint becomes (zero or more) spaces, as specified by the first—“fits”—parameter.</li>
+<li>If everything does not fit on a single like, the layout is vertical: every break hint becomes a line break, followed by the baseline indentation of the box <em>plus</em> the second—“breaks”—parameter of spaces.</li>
+</ul>
+<p>Let’s reimplement <code>pp_list</code> using the newfound knowledge of boxes and break hints.</p>
+<!--
+```ocaml
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<hv>[%a]@]"                              
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list   
+```
+-->
+<style>
+pre > i {
+  /* background: #EEE; */
+  /* border: 1px solid lightgrey; */
+  border-radius: 7px;
+  font-family:inherit;
+  box-shadow: 0 0 0 1pt #DDD;
+}
+</style>
+<pre><b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[%a]<i>@]</i>"❶
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>"❷ pp_item) list</pre>
+<ol>
+<li style="list-style-type: &#39;❶  &#39;">
+<p>
+We open an “hv” box before the opening bracket of the printed list, and close it after the closing bracket.
+</p>
+</li>
+<li style="list-style-type: &#39;❷  &#39;">
+<p>
+We specify the item separator as a literal comma, followed by a break hint: one space for “fits” and one for “breaks”.
+</p>
+</li>
+</ol>
+<p>Run it through our <code>example</code>, and we get the following:</p>
+<pre><code>[[],
+ [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;],
+ [&quot;one&quot;,
+  &quot;two&quot;,
+  &quot;three&quot;,
+  &quot;four&quot;,
+  &quot;five&quot;,
+  &quot;six&quot;,
+  &quot;seven&quot;,
+  &quot;eight&quot;,
+  &quot;nine&quot;,
+  &quot;ten&quot;]]</code></pre>
+<p>Not too bad! Let’s unwrap.</p>
+<p>The two shorter lists fit inside the 60 character margin, so they used comma plus one space for separators.</p>
+<p>The longer list did not fit, so it used line breaks everywhere plus one space, <em>relative to the column just before the opening bracket</em>—where we opened our box.</p>
+<p>If we want to put brackets on their own line—we add break hints:</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<hv>[@;<0 1>%a@;<0 0>]@]"                
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list  -->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list   
+</pre>
+<p>Same as before, but we put <code>@;&lt;0 1&gt;</code> just after the opening bracket and <code>@;&lt;0 0&gt;</code> just before the closing one. Now the formatter has to break them as well if the items do not fit.</p>
+<pre><code>[
+ [],
+ [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;],
+ [
+  &quot;one&quot;,
+  &quot;two&quot;,
+  &quot;three&quot;,
+  &quot;four&quot;,
+  &quot;five&quot;,
+  &quot;six&quot;,
+  &quot;seven&quot;,
+  &quot;eight&quot;,
+  &quot;nine&quot;,
+  &quot;ten&quot;
+ ]
+]</code></pre>
+<p>Both hints use zero for “fits” spaces, so no more whitespace is introduced for the compact lists. For longer list the first break “breaks” to one space to make sure the first element is indented, and the last one breaks with zero spaces to make sure that the closing bracket is put back at the column “zero” relative to the opening bracket.</p>
+<p>That was a minimal illustrative change, but one space indentation is a little bit odd. Let’s do two.</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<hv>[@;<0 2>%a@;<0 0>]@]"                
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list 
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list 
+</pre>
+<pre><code>[
+  [],
+  [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;],
+  [
+    &quot;one&quot;,
+    &quot;two&quot;,
+    &quot;three&quot;,
+    &quot;four&quot;,
+    &quot;five&quot;,
+    &quot;six&quot;,
+    &quot;seven&quot;,
+    &quot;eight&quot;,
+    &quot;nine&quot;,
+    &quot;ten&quot;
+  ]
+]</code></pre>
+<h2 id="horizontal-h-box">Horizontal “h” box</h2>
+<p>Horizontal, or an “h” box ignores the “breaks” part of the hint and lays out everything on a single line using the “fits” spaces:</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<h>[@;<0 2>%a@;<0 0>]@]"                
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list 
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;h&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list 
+</pre>
+<p>Just like our first naïve attempt did.</p>
+<pre><code>[[], [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;], [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;, &quot;six&quot;, &quot;seven&quot;, &quot;eight&quot;, &quot;nine&quot;, &quot;ten&quot;]]</code></pre>
+<h2 id="vertical-v-box">Vertical “v” box</h2>
+<p>Vertical “v” box is the opposite extreme: ignores the “fits” spaces and introduces breaks everywhere.</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<v>[@;<0 2>%a@;<0 0>]@]"                
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list 
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;v&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list 
+</pre>
+<p>Output:</p>
+<pre><code>[
+  [
+    
+  ],
+  [
+    &quot;one&quot;,
+    &quot;two&quot;,
+    &quot;three&quot;
+  ],
+  [
+    &quot;one&quot;,
+    &quot;two&quot;,
+    &quot;three&quot;,
+    &quot;four&quot;,
+    &quot;five&quot;,
+    &quot;six&quot;,
+    &quot;seven&quot;,
+    &quot;eight&quot;,
+    &quot;nine&quot;,
+    &quot;ten&quot;
+  ]
+]</code></pre>
+<p>This is often the desirable layout, except for the ugly empty list. For this case I recommend pattern-matching on the empty list and printing it literally as <code>[]</code>.</p>
+<h2 id="compacting-hov-box">Compacting “hov” box</h2>
+<p>Compacting “hov” box is a fun one. It tries to lay out as many items horisontally, but if they don’t fit it only introduces a single break and continues horizontally.</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<hov>[@;<0 1>%a@;<0 0>]@]"                
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list 
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;hov&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list 
+</pre>
+<p>The result is very compact:</p>
+<pre><code>[[], [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;],
+ [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;, &quot;six&quot;, &quot;seven&quot;,
+  &quot;eight&quot;, &quot;nine&quot;, &quot;ten&quot;]]</code></pre>
+<h2 id="compacting-b-box">Compacting “b” box</h2>
+<p>The “b” box is very similar to “hov”, except for one detail.</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<b>[@;<0 1>%a@;<0 0>]@]"                
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list 
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;b&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list 
+</pre>
+<p>It always performs a break if a break reduces indentation. The first break hint <code>@;&lt;0 1&gt;</code> and the following ones <code>@;&lt;1 1&gt;</code> have a “breaks” indent of one. The last break hint <code>@;&lt;0 0&gt;</code> has indentation of zero, which is less then one, so the line is broken up.</p>
+<pre><code>[[], [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;],
+ [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;, &quot;six&quot;, &quot;seven&quot;,
+  &quot;eight&quot;, &quot;nine&quot;, &quot;ten&quot;
+ ]
+]</code></pre>
+<p>I suppose this box is introduced exactly to support this kind of layout: closing delimiter on its own line.</p>
+<h2 id="comma-first">Comma-first</h2>
+<p>We are on a roll, let’s add another example: a comma-first layout.</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<hv>[ %a@;<1 0>]@]"                
+    (pp_print_list ~sep:"@;<0 0>, " pp_item) list 
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[ %a<i>@;&lt;1 0&gt;</i>]<i>@]</i>"                
+    (pp_print_list ~sep:"<i>@;&lt;0 0&gt;</i>, " pp_item) list 
+</pre>
+<p>We use an “hv” box, a break hint before the comma, and a break hint before the closing bracket. As before, pattern-match on empty list to customize it.</p>
+<pre><code>[ [  ]
+, [ &quot;one&quot;, &quot;two&quot;, &quot;three&quot; ]
+, [ &quot;one&quot;
+  , &quot;two&quot;
+  , &quot;three&quot;
+  , &quot;four&quot;
+  , &quot;five&quot;
+  , &quot;six&quot;
+  , &quot;seven&quot;
+  , &quot;eight&quot;
+  , &quot;nine&quot;
+  , &quot;ten&quot;
+  ]
+]</code></pre>
+<h2 id="optional-trailing-comma">Optional trailing comma</h2>
+<p>So far we have only wrangled with whitespace: spaces and newlines. What if we want to introduce print characters when the layout fits or breaks? A common requirement is to add a trailing comma in multi-line list definitions.</p>
+<p>We can acheive it as follows:</p>
+<!--
+let pp_list pp_item ppf list =                            
+  fprintf ppf "@[<hv>[@;<0 2>%a%t]@]"                     
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list          
+    (Format.pp_print_custom_break                         
+       ~fits:("", 0, "") ~breaks:(",", 0, ""))   
+-->
+<pre>
+<b>let</b> pp_list pp_item ppf list =                            
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 2&gt;</i>%a%t]<i>@]</i>"                     
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list          
+    (Format.pp_print_custom_break                         
+       ~fits:("", 0, "") ~breaks:(",", 0, ""))   
+</pre>
+<p>This example uses <code>pp_print_custom_break</code> and is a little bit more involved, so I refer you to the <a href="https://ocaml.org/manual/5.1/api/Format.html#VALpp_print_custom_break">official documentation</a> for this one.</p>
+<pre><code>[
+  [],
+  [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;],
+  [
+    &quot;one&quot;,
+    &quot;two&quot;,
+    &quot;three&quot;,
+    &quot;four&quot;,
+    &quot;five&quot;,
+    &quot;six&quot;,
+    &quot;seven&quot;,
+    &quot;eight&quot;,
+    &quot;nine&quot;,
+    &quot;ten&quot;,
+  ],
+]</code></pre>
+<p>Note the additional comma after <code>"ten"</code> and the last nested list.</p>
+<h2 id="tips-and-tricks">Tips and tricks</h2>
+<ul>
+<li>You can pass box and break hint parameters dynamically by using %-specifiers. For example: <code>"@[&lt;%s&gt;"</code> or <code>"@;&lt;%d %d&gt;"</code>.</li>
+<li>Negative parameters sometimes work, but are usually a hack: <code>"@;&lt;0 -2&gt;"</code>.</li>
+<li><code>"@["</code> defaults to an <code>"@[&lt;hv&gt;"</code> box, but I prefer the full version for clarity.</li>
+<li>Boxes take a second parameter “indent”, e.g. <code>"@[&lt;hv 2&gt;"</code>. It’s like adding 2 to each nested hints’ “breaks” parameter. I avoid this because it often leads to using negative break hints.</li>
+<li><code>"@,"</code> is a shortcut for <code>"@;&lt;0 0&gt;"</code>; <code>"@ "</code>—for <code>"@;&lt;1 0&gt;"</code>. This is too much to remember, for me.</li>
+<li>More of this in the <a href="https://ocaml.org/manual/5.1/api/Format.html">docs</a>.</li>
+</ul>
+<h2>
+Btw, check out my book:
+</h2>
+<div style="text-align: center; line-height: 0px">
+<p><a href="/compiling-to-assembly-from-scratch"
+style="border-bottom: none; font-size: 0"> <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+src="/compiling-to-assembly-from-scratch.jpg"
+style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+width=200 height=300 /> </a></p>
+</div>
+<h2 id="bonus-json-pretty-printer">Bonus: JSON pretty-printer</h2>
+<p>As a treat, here’s a complete and correct JSON pretty-printer.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> JSON = <span class="kw">struct</span>                                      </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">(* Invariants: utf8 strings, unique keys *)</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> t =                                                </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    | Null                                                </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    | Boolean <span class="kw">of</span> <span class="dt">bool</span>                                     </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    | Number <span class="kw">of</span> <span class="dt">float</span>                                     </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    | <span class="dt">String</span> <span class="kw">of</span> <span class="dt">string</span>                                    </span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    | <span class="dt">Array</span> <span class="kw">of</span> t <span class="dt">list</span>                                     </span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    | Object <span class="kw">of</span> (<span class="dt">string</span> * t) <span class="dt">list</span>                         </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>                                                          </span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">(** Good-looking, round-trippable floats *)</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> number_to_string n =                                </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> s = sprintf <span class="st">&quot;%.15g&quot;</span> n <span class="kw">in</span>                          </span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> Float.of_string s = n <span class="kw">then</span>                         </span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>      s                                                   </span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span>                                                  </span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>      sprintf <span class="st">&quot;%.17g&quot;</span> n   </span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>                                                          </span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pp_string_body ppf =                                </span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">String</span>.iter (<span class="kw">function</span>                                 </span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;&quot;&#39;</span>    -&gt; fprintf ppf {|\<span class="st">&quot;|} (* {|&quot;</span>|} <span class="er">*)</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\\&#39;</span>   -&gt; fprintf ppf {|\\|}                      </span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\b&#39;</span>   -&gt; fprintf ppf {|\b|}                      </span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\x0C&#39;</span> -&gt; fprintf ppf {|\f|}                      </span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\n&#39;</span>   -&gt; fprintf ppf {|\n|}                      </span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\r&#39;</span>   -&gt; fprintf ppf {|\r|}                      </span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\t&#39;</span>   -&gt; fprintf ppf {|\t|}                      </span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>      | <span class="ch">&#39;\x00&#39;</span>..<span class="ch">&#39;\x1F&#39;</span> <span class="kw">as</span> non_print_char -&gt;               </span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>          fprintf ppf {|\u%.<span class="dv">4</span>X|} (<span class="dt">Char</span>.code non_print_char)</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>      | <span class="dt">char</span>   -&gt; fprintf ppf {|%c|} <span class="dt">char</span>                 </span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>    )                                                     </span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>                                                          </span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> box pp ppf value = fprintf ppf <span class="st">&quot;@[&lt;hv&gt;%a@]&quot;</span> pp value</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>                                                          </span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> <span class="kw">rec</span> pp ppf = <span class="kw">function</span>                               </span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>    | Null      -&gt; fprintf ppf <span class="st">&quot;null&quot;</span>                     </span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>    | Boolean b -&gt; fprintf ppf <span class="st">&quot;%b&quot;</span> b                     </span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>    | Number n  -&gt; fprintf ppf <span class="st">&quot;%s&quot;</span> (number_to_string n)  </span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>    | <span class="dt">String</span> s  -&gt; fprintf ppf {|<span class="st">&quot;%a&quot;</span>|} pp_string_body s  </span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>    | <span class="dt">Array</span> a   -&gt; fprintf ppf                            </span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;[@;&lt;0 2&gt;%a@;&lt;0 0&gt;]&quot;</span>                               </span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a>       (pp_print_list ~sep:<span class="st">&quot;,@;&lt;1 2&gt;&quot;</span> (box pp)) a         </span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>    | Object o  -&gt; fprintf ppf                            </span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;{@;&lt;0 2&gt;%a@;&lt;0 0&gt;}&quot;</span>                               </span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a>       (pp_print_list ~sep:<span class="st">&quot;,@;&lt;1 2&gt;&quot;</span> (box pp_pair)) o    </span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>                                                          </span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a>  <span class="kw">and</span> pp_pair ppf (field, value) =                        </span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a>    fprintf ppf {|<span class="st">&quot;%a&quot;</span>: %a|} pp_string_body field pp value</span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> to_string = sprintf <span class="st">&quot;%a&quot;</span> (box pp)                   </span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
+<h2 id="source-code"><a href="https://gist.github.com/keleshev/4322a18daa818a818f0ab49dfe3ed394">Source code</a></h2>
+<!--[☰](/ "Home") -->
+<h2 id="bibtex">BibTeX</h2>
+<p><small></p>
+<pre><code>@misc{Keleshev:2024-1,
+  title=&quot;Pretty-printing in OCaml: A Format Primer&quot;,
+  author=&quot;Vladimir Keleshev&quot;,
+  year=2024,
+  howpublished=
+    &quot;\url{https://keleshev.com/pretty-printing-in-ocaml-a-format-primer}&quot;,
+}</code></pre>
+<p></small></p>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

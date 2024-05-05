@@ -24,8 +24,18 @@ My book
 Blog
 ----
 
+* 2024
+<!--
+  * Trickery that makes printf in OCaml work
+  * Let's use JavaScript pp to compile something to it
+  * Advanced Pretty Printing in OCaml: JavaScript Example
+  * Tagless Final Primer: JSON Example
+  * Composable Pretty Printing in OCaml: JSON Example
+  * JSON ADT design example?
+-->
+  * [Pretty Printing in OCaml: A Format Primer](/pretty-printing-in-ocaml-a-format-primer)
 * 2022
-  * [Abstract Syntax Tree: an Example in C](/abstract-syntax-tree-an-example-in-c) 
+  * [Abstract Syntax Tree: An Example in C](/abstract-syntax-tree-an-example-in-c) 
 * 2021
   * [Advanced Error Handling in OCaml](/advanced-error-handling-in-ocaml)
 * 2020
@@ -40,7 +50,7 @@ Blog
 * 2018
   * [Point-free Pattern Matching](/point-free-pattern-matching)
   * [Interpretations of Fold](/interpretations-of-fold)
-  * [Cortege: a Row-polymorphic Tuple](cortege-a-row-polymorphic-tuple)
+  * [Cortege: A Row-polymorphic Tuple](cortege-a-row-polymorphic-tuple)
   * [Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml)
   * [Composable Error Handling in OCaml](/composable-error-handling-in-ocaml)
 * 2016
