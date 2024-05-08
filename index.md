@@ -60,9 +60,6 @@ Blog
 * 2014
   * [WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction)
   * [Dissecting a Code Golf Challenge](/dissecting-a-code-golf-challenge)
-* 2010
-  * [YAML: Quick Introduction](/yaml-quick-introduction)
-
 
 <!--
 
