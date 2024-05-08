@@ -10,7 +10,7 @@ It is used for writing pretty printers for code and data structures.
 Projects like [ocamlformat](https://github.com/ocaml-ppx/ocamlformat) use it to implement very advanced code formatters.
 
 Format has a very elegant and powerful core, but its interface is a bit clunky and unintuitive.
-In this respect, it's a little bit like git: powerfull tool with a bit of antics, but very much worth learning. 
+In this respect, it's a little bit like git: powerfull tool with a bit of antics, but very much worth learning.
 
 First, let's take a step back.
 
@@ -43,7 +43,7 @@ printf "Hello, %d %s!" 42 "dolfins"
 They consist of the *formatting string* `"Hello, %d %s!"` with two *format specifiers*, `%d` for an integer parameter, and `%s` for a string parameter.
 Many more are available.
 
-In OCaml, `printf` function is part of the 
+In OCaml, `printf` function is part of the
 [Printf](https://v2.ocaml.org/api/Printf.html)
 module.
 It is made type safe by some interesting trickery that is outside of the scope of this article.
@@ -53,7 +53,7 @@ The Format module builds on top of that and has its own version of `printf` func
 On top of the many %-style specifiers of Printf (like `%s` and `%d`), it adds many more @-style specifiers used to control the alignment and indentation (like `@[`, `@]` and `@;`).
 
 It's best not to mix the two modules.
-Printf is for casual printing to the console, Format—for data structures and code. 
+Printf is for casual printing to the console, Format—for data structures and code.
 
 ## `fprintf`
 
@@ -90,8 +90,8 @@ It takes a list of items to print, a pretty-printer for each item `pp_item`, and
 However, `pp_sep` needs to be a full-blown pretty-printer itself, which will be slightly too verbose for our needs, so we make a quick wrapper that allows to pass just a formatting string.
 
 ```ocaml
-let pp_print_list ~sep pp_item =                                    
-  Format.pp_print_list 
+let pp_print_list ~sep pp_item =
+  Format.pp_print_list
     ~pp_sep:(fun ppf () -> fprintf ppf sep) pp_item
 ```
 
@@ -108,22 +108,22 @@ Now, for our main example, we will be writing pretty printers for comma-separate
 We will use this nested list to illustrate the different approaches:
 
 ```ocaml
-let example = [                                             
-  [];                                                       
-  ["one"; "two"; "three"];                                  
-  [                                                         
-    "one"; "two"; "three"; "four"; "five";                  
-    "six"; "seven"; "eight"; "nine"; "ten";                 
-  ];                                                        
-]    
+let example = [
+  [];
+  ["one"; "two"; "three"];
+  [
+    "one"; "two"; "three"; "four"; "five";
+    "six"; "seven"; "eight"; "nine"; "ten";
+  ];
+]
 ```
 
 First, let's write a naïve implementation that is not very pretty and just prints it in a single line:
 
 ```ocaml
-let pp_list pp_item ppf list =                            
-  fprintf ppf "[%a]"                                      
-    (pp_print_list ~sep:", " pp_item) list  
+let pp_list pp_item ppf list =
+  fprintf ppf "[%a]"
+    (pp_print_list ~sep:", " pp_item) list
 ```
 
 We define `pp_list`—our main function.
@@ -195,9 +195,9 @@ Let's reimplement `pp_list` using the newfound knowledge of boxes and break hint
 
 <!--
 ```ocaml
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<hv>[%a]@]"                              
-    (pp_print_list ~sep:",@;<1 1>" pp_item) list   
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<hv>[%a]@]"
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list
 ```
 -->
 
@@ -211,7 +211,7 @@ pre > i {
 }
 </style>
 
-<pre><b>let</b> pp_list pp_item ppf list =                            
+<pre><b>let</b> pp_list pp_item ppf list =
   fprintf ppf "<i>@[&lt;hv&gt;</i>[%a]<i>@]</i>"❶
     (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>"❷ pp_item) list</pre>
 
@@ -250,14 +250,14 @@ The longer list did not fit, so it used line breaks everywhere plus one space, *
 If we want to put brackets on their own line—we add break hints:
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<hv>[@;<0 1>%a@;<0 0>]@]"                
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<hv>[@;<0 1>%a@;<0 0>]@]"
     (pp_print_list ~sep:",@;<1 1>" pp_item) list  -->
 
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list   
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list
 </pre>
 
 Same as before, but we put `@;<0 1>` just after the opening bracket and `@;<0 0>` just before the closing one.
@@ -289,14 +289,14 @@ That was a minimal illustrative change, but one space indentation is a little bi
 Let's do two.
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<hv>[@;<0 2>%a@;<0 0>]@]"                
-    (pp_print_list ~sep:",@;<1 2>" pp_item) list 
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<hv>[@;<0 2>%a@;<0 0>]@]"
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list 
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list
 </pre>
 
 ```
@@ -323,14 +323,14 @@ let pp_list pp_item ppf list =
 Horizontal, or an "h" box ignores the "breaks" part of the hint and lays out everything on a single line using the "fits" spaces:
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<h>[@;<0 2>%a@;<0 0>]@]"                
-    (pp_print_list ~sep:",@;<1 2>" pp_item) list 
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<h>[@;<0 2>%a@;<0 0>]@]"
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;h&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list 
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;h&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list
 </pre>
 
 Just like our first naïve attempt did.
@@ -344,14 +344,14 @@ Just like our first naïve attempt did.
 Vertical "v" box is the opposite extreme: ignores the "fits" spaces and introduces breaks everywhere.
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<v>[@;<0 2>%a@;<0 0>]@]"                
-    (pp_print_list ~sep:",@;<1 2>" pp_item) list 
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<v>[@;<0 2>%a@;<0 0>]@]"
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;v&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list 
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;v&gt;</i>[<i>@;&lt;0 2&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list
 </pre>
 
 Output:
@@ -359,7 +359,7 @@ Output:
 ```
 [
   [
-    
+
   ],
   [
     "one",
@@ -390,14 +390,14 @@ Compacting "hov" box is a fun one.
 It tries to lay out as many items horisontally, but if they don't fit it only introduces a single break and continues horizontally.
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<hov>[@;<0 1>%a@;<0 0>]@]"                
-    (pp_print_list ~sep:",@;<1 1>" pp_item) list 
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<hov>[@;<0 1>%a@;<0 0>]@]"
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;hov&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list 
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;hov&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list
 </pre>
 
 The result is very compact:
@@ -413,14 +413,14 @@ The result is very compact:
 The "b" box is very similar to "hov", except for one detail.
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<b>[@;<0 1>%a@;<0 0>]@]"                
-    (pp_print_list ~sep:",@;<1 1>" pp_item) list 
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<b>[@;<0 1>%a@;<0 0>]@]"
+    (pp_print_list ~sep:",@;<1 1>" pp_item) list
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;b&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list 
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;b&gt;</i>[<i>@;&lt;0 1&gt;</i>%a<i>@;&lt;0 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>" pp_item) list
 </pre>
 
 It always performs a break if a break reduces indentation.
@@ -443,14 +443,14 @@ I suppose this box is introduced exactly to support this kind of layout: closing
 We are on a roll, let's add another example: a comma-first layout.
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<hv>[ %a@;<1 0>]@]"                
-    (pp_print_list ~sep:"@;<0 0>, " pp_item) list 
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<hv>[ %a@;<1 0>]@]"
+    (pp_print_list ~sep:"@;<0 0>, " pp_item) list
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;hv&gt;</i>[ %a<i>@;&lt;1 0&gt;</i>]<i>@]</i>"                
-    (pp_print_list ~sep:"<i>@;&lt;0 0&gt;</i>, " pp_item) list 
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[ %a<i>@;&lt;1 0&gt;</i>]<i>@]</i>"
+    (pp_print_list ~sep:"<i>@;&lt;0 0&gt;</i>, " pp_item) list
 </pre>
 
 We use an "hv" box, a break hint before the comma, and a break hint before the closing bracket.
@@ -482,18 +482,18 @@ A common requirement is to add a trailing comma in multi-line list definitions.
 We can acheive it as follows:
 
 <!--
-let pp_list pp_item ppf list =                            
-  fprintf ppf "@[<hv>[@;<0 2>%a%t]@]"                     
-    (pp_print_list ~sep:",@;<1 2>" pp_item) list          
-    (Format.pp_print_custom_break                         
-       ~fits:("", 0, "") ~breaks:(",", 0, ""))   
+let pp_list pp_item ppf list =
+  fprintf ppf "@[<hv>[@;<0 2>%a%t]@]"
+    (pp_print_list ~sep:",@;<1 2>" pp_item) list
+    (Format.pp_print_custom_break
+       ~fits:("", 0, "") ~breaks:(",", 0, ""))
 -->
 <pre>
-<b>let</b> pp_list pp_item ppf list =                            
-  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 2&gt;</i>%a%t]<i>@]</i>"                     
-    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list          
-    (Format.pp_print_custom_break                         
-       ~fits:("", 0, "") ~breaks:(",", 0, ""))   
+<b>let</b> pp_list pp_item ppf list =
+  fprintf ppf "<i>@[&lt;hv&gt;</i>[<i>@;&lt;0 2&gt;</i>%a%t]<i>@]</i>"
+    (pp_print_list ~sep:",<i>@;&lt;1 2&gt;</i>" pp_item) list
+    (Format.pp_print_custom_break
+       ~fits:("", 0, "") ~breaks:(",", 0, ""))
 </pre>
 
 This example uses `pp_print_custom_break` and is a little bit more involved, so I refer you to the
@@ -525,7 +525,7 @@ Note the additional comma after `"ten"` and the last nested list.
 
 * You can pass box and break hint parameters dynamically by using %-specifiers.
   For example: `"@[<%s>"` or `"@;<%d %d>"`.
-* Negative parameters sometimes work, but are usually a hack: `"@;<0 -2>"`. 
+* Negative parameters sometimes work, but are usually a hack: `"@;<0 -2>"`.
 * `"@["` defaults to an `"@[<hv>"` box, but I prefer the full version for clarity.
 * Boxes take a second parameter "indent", e.g. `"@[<hv 2>"`.
   It's like adding 2 to each nested hints' "breaks" parameter.
@@ -550,56 +550,56 @@ width=200 height=300 />
 As a treat, here's a complete and correct JSON pretty-printer.
 
 ```ocaml
-module JSON = struct                                      
+module JSON = struct
   (* Invariants: utf8 strings, unique keys *)
-  type t =                                                
-    | Null                                                
-    | Boolean of bool                                     
-    | Number of float                                     
-    | String of string                                    
-    | Array of t list                                     
-    | Object of (string * t) list                         
-                                                          
+  type t =
+    | Null
+    | Boolean of bool
+    | Number of float
+    | String of string
+    | Array of t list
+    | Object of (string * t) list
+
   (** Good-looking, round-trippable floats *)
-  let number_to_string n =                                
-    let s = sprintf "%.15g" n in                          
-    if Float.of_string s = n then                         
-      s                                                   
-    else                                                  
-      sprintf "%.17g" n   
-                                                          
-  let pp_string_body ppf =                                
-    String.iter (function                                 
+  let number_to_string n =
+    let s = sprintf "%.15g" n in
+    if Float.of_string s = n then
+      s
+    else
+      sprintf "%.17g" n
+
+  let pp_string_body ppf =
+    String.iter (function
       | '"'    -> fprintf ppf {|\"|} (* {|"|} *)
-      | '\\'   -> fprintf ppf {|\\|}                      
-      | '\b'   -> fprintf ppf {|\b|}                      
-      | '\x0C' -> fprintf ppf {|\f|}                      
-      | '\n'   -> fprintf ppf {|\n|}                      
-      | '\r'   -> fprintf ppf {|\r|}                      
-      | '\t'   -> fprintf ppf {|\t|}                      
-      | '\x00'..'\x1F' as non_print_char ->               
+      | '\\'   -> fprintf ppf {|\\|}
+      | '\b'   -> fprintf ppf {|\b|}
+      | '\x0C' -> fprintf ppf {|\f|}
+      | '\n'   -> fprintf ppf {|\n|}
+      | '\r'   -> fprintf ppf {|\r|}
+      | '\t'   -> fprintf ppf {|\t|}
+      | '\x00'..'\x1F' as non_print_char ->
           fprintf ppf {|\u%.4X|} (Char.code non_print_char)
-      | char   -> fprintf ppf {|%c|} char                 
-    )                                                     
-                                                          
+      | char   -> fprintf ppf {|%c|} char
+    )
+
   let box pp ppf value = fprintf ppf "@[<hv>%a@]" pp value
-                                                          
-  let rec pp ppf = function                               
-    | Null      -> fprintf ppf "null"                     
-    | Boolean b -> fprintf ppf "%b" b                     
-    | Number n  -> fprintf ppf "%s" (number_to_string n)  
-    | String s  -> fprintf ppf {|"%a"|} pp_string_body s  
-    | Array a   -> fprintf ppf                            
-       "[@;<0 2>%a@;<0 0>]"                               
-       (pp_print_list ~sep:",@;<1 2>" (box pp)) a         
-    | Object o  -> fprintf ppf                            
-       "{@;<0 2>%a@;<0 0>}"                               
-       (pp_print_list ~sep:",@;<1 2>" (box pp_pair)) o    
-                                                          
-  and pp_pair ppf (field, value) =                        
+
+  let rec pp ppf = function
+    | Null      -> fprintf ppf "null"
+    | Boolean b -> fprintf ppf "%b" b
+    | Number n  -> fprintf ppf "%s" (number_to_string n)
+    | String s  -> fprintf ppf {|"%a"|} pp_string_body s
+    | Array a   -> fprintf ppf
+       "[@;<0 2>%a@;<0 0>]"
+       (pp_print_list ~sep:",@;<1 2>" (box pp)) a
+    | Object o  -> fprintf ppf
+       "{@;<0 2>%a@;<0 0>}"
+       (pp_print_list ~sep:",@;<1 2>" (box pp_pair)) o
+
+  and pp_pair ppf (field, value) =
     fprintf ppf {|"%a": %a|} pp_string_body field pp value
 
-  let to_string = sprintf "%a" (box pp)                   
+  let to_string = sprintf "%a" (box pp)
 end
 ```
 
@@ -611,7 +611,7 @@ end
 ## BibTeX
 
 <small>
-```       
+```
 @misc{Keleshev:2024-1,
   title="Pretty Printing in OCaml: A Format Primer",
   author="Vladimir Keleshev",
