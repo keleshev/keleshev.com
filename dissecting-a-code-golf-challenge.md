@@ -1,13 +1,14 @@
-Dissecting a code golf challenge
-================================
-
-<center>2014-03-23</center>
+---
+title: "Dissecting a Code Golf Challenge"
+fancy-title: "Dissecting a Code Golf Challenge"
+date: 2014-03-23
+---
 
 You probably know, *code golf* is a "sport" of writing
 a program which solves a task with as little number
 of characters of source code as possible.
 
-At the last [Python meetup](http://pycon.dk) Brian Lauridsen
+At the local Python meetup, Brian Lauridsen
 presented a code golf challenge. The challenge is called
 *grid computing* and was available at
 [codegolf.com](http://codegolf.com), which at the moment
@@ -39,7 +40,7 @@ of the challenge:
 The challenge is very tempting by its simplicity. However,
 according to codegolf.com, the best solution in Python
 was written in only 73 characters. At the meetup we
-got it down to 78 characters, but not less. So next weekend
+got it down to 78 characters, but not less. So the weekend
 after the meetup I immersed into this challenge to
 get it down to 73. And here are the results.
 
@@ -50,7 +51,7 @@ Solving the puzzle
 
 Let's see what a *naïve* solution can look like in Python:
 
-```python3
+```python
 import sys
 
 # Parse matrix.
@@ -87,7 +88,7 @@ call it instead of `.read().splitlines()`.  However,
 you might know that file-like objects support the iterator
 protocol, so you can iterate over them directly:
 
-```python3
+```python
 for line in sys.stdin:
     ...
 ```
@@ -99,7 +100,7 @@ will split over any whitespace, so no need to call
 Next, using list-comprehensions instead of for loops
 tightens up the code considerably:
 
-```python3
+```python
 import sys
 
 matrix = [[int(digits) for digits in line.split()]
@@ -128,7 +129,7 @@ However, there is some duplication between `row_sums`
 and `column_sums`. We could pull out summation,
 and apply it in the last step instead:
 
-```python3
+```python
 import sys
 
 matrix = [map(int, line.split())
@@ -158,7 +159,7 @@ But you might know this "party trick", that `zip(*matrix)`
 transposes a matrix. If you didn't know about this,
 stop and think about it for a minute.
 
-```python3
+```python
 import sys
 
 matrix = [map(int, line.split())
@@ -172,7 +173,7 @@ print(max(map(sum, matrix + zip(*matrix))))
 Now let's go all-dirty on this and remove all unnecessary
 whitespace, and make every variable a single letter.
 
-```python3
+```python
 import sys
 m=[map(int,l.split())for l in sys.stdin]
 print(max(map(sum,m+zip(*m))))
@@ -195,7 +196,7 @@ character instead of 5.
 On the other hand, Python 2 allows to drop parenthesis
 of `print` call, so we save another character:
 
-```python2
+```python
 m=[map(int,raw_input().split())for _ in range(10)]
 print max(map(sum,m+zip(*m)))
 ```
@@ -212,7 +213,7 @@ would be to iterate over a collection of length 10.
 We can get this collection by multiplying a list with
 a single item by 10:
 
-```python2
+```python
 m=[map(int,raw_input().split())for _ in[0]*10]
 print max(map(sum,m+zip(*m)))
 ```
@@ -252,17 +253,17 @@ it leaks variable bindings from comprehensions
 (as well as `except` clauses). This was fixed in Python 3.
 Here's some code to illustrate the issue:
 
-```python3
+<pre>
 $ python3
->>> [x for x in range(10)]
+>>> [x <b>for</b> x in range(10)]
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 >>> x
 <em>Traceback (most recent call last):
-  File "&lt;stdin&gt;"</em><em>, line 1, in <module>
+  File "&lt;stdin&gt;"</em><em>, line 1, in &lt;module&gt;
 NameError: name 'x' is not defined</em>
-```
+</pre>
 
-```python2
+```python
 $ python2
 >>> [x for x in range(10)]
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -270,16 +271,16 @@ $ python2
 9
 ```
 
-You see, `x` -- "leaked" from inside the list comprehension
+You see, `x`—"leaked" from inside the list comprehension
 and was available in the outer scope with its last assigned value.
 
 How can we use this?! Well, right now we are not using
 the list comprehension variable at all. But instead we
 could put it to some use... We are calling `map` twice.
 It would be so handy if we could put it into a variable,
-without paying the cost of an explicit assignment...
+without paying the cost of an explicit assignment…
 
-```python2
+```python
 m=[_(int,raw_input().split())for _ in[map]*10]
 print max(_(sum,m+zip(*m)))
 ```
@@ -300,7 +301,7 @@ as a prompt before it reads a line from standard input.
 Let's see if we gain anything by assigning `raw_input` to
 the undescore (`_`), instead of `map`, and then...
 
-```python2
+```python
 m=[map(int,_().split())for _ in[raw_input]*10]
 _(max(map(sum,m+zip(*m))))
 ```
@@ -312,10 +313,18 @@ last character and reached the world record for this
 challenge.
 
 I bet you have learned something new about Python today.
-[&#9632;](/ "Home")
+[☰](/ "Home")
 
-<center markdown="1">
-*Comment this on [Reddit](http://www.reddit.com/r/programming/comments/217v8s)*
-<br/>
-*Follow me on [Twitter](http://twitter.com/keleshev)*
-</center>
+## Cite as…
+
+<small>
+```
+@misc{Keleshev:2014-1,
+  title="Dissecting a Code Golf Challenge",
+  author="Vladimir Keleshev",
+  year=2014,
+  howpublished=
+    "\url{https://keleshev.com/dissecting-a-code-golf-challenge}",
+}
+```
+</small>

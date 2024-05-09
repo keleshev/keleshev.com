@@ -24,7 +24,7 @@ hr.fleuron:after {
 
 body {
     margin: auto;
-    padding: 0 1.25em;
+    /*padding: 0 1.25em;*/
     /* padding-bottom: 100px; */
     width: 700px;
     font-size: 19.0px;
@@ -212,9 +212,7 @@ margin-right: 10px !important;
 }
 
 #home {
-    //text-align: center;
-    line-height: 1.0;
-    //-webkit-animation: rotateWord 360s linear infinite 0s;
+    line-height: 42px;
 }
 
 
@@ -231,10 +229,11 @@ margin-right: 10px !important;
 }
 
 #home-menu {
-    line-height: 1.0;
+    line-height: 42px;
     font-size: 48px; 72px;
     border: 0;
-position:absolute; line-height: inherit; }
+position:absolute; }
+
 #home-menu a {
     border: 0;
 }

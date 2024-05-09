@@ -1,36 +1,91 @@
-<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Dissecting a code golf challenge</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="icon" sizes="109x109" href="/favicon.gif" />
-    </head>
-    <body>
-        <center><span id='home'><a title='Home' href='/'>&#9632;</a></span></center>
-        <h1>Dissecting a code golf challenge</h1>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=748;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
 
-<p><center>2014-03-23</center></p>
+  <meta name="dcterms.date" content="2014-03-23" />
+  <title>Dissecting a Code Golf Challenge</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
-<p>You probably know, <em>code golf</em> is a &#8220;sport&#8221; of writing
-a program which solves a task with as little number
-of characters of source code as possible.</p>
 
-<p>At the last <a href="http://pycon.dk">Python meetup</a> Brian Lauridsen
-presented a code golf challenge. The challenge is called
-<em>grid computing</em> and was available at
-<a href="http://codegolf.com">codegolf.com</a>, which at the moment
-of writing is down. Here is the approximate description
-of the challenge:</p>
+  <h1>Dissecting a Code Golf Challenge</h1>
 
+
+<center style="margin: 25.46px;" >Vladimir Keleshev • 2014-03-23</center>
+
+<header id="title-block-header">
+</header>
+<p>You probably know, <em>code golf</em> is a “sport” of writing a program which solves a task with as little number of characters of source code as possible.</p>
+<p>At the local Python meetup, Brian Lauridsen presented a code golf challenge. The challenge is called <em>grid computing</em> and was available at <a href="http://codegolf.com">codegolf.com</a>, which at the moment of writing is down. Here is the approximate description of the challenge:</p>
 <blockquote>
-  <p>Write a program that expects a 10-by-10 matrix from
-  standard input. The program should compute sum of each
-  row and each column and print the highest of these
-  numbers to standard output.</p>
-  
-  <p>An example input:</p>
-
+<p>Write a program that expects a 10-by-10 matrix from standard input. The program should compute sum of each row and each column and print the highest of these numbers to standard output.</p>
+<p>An example input:</p>
 <pre><code>01 34 46 31 55 21 16 88 87 87
 32 40 82 40 43 96 08 82 41 86
 30 16 24 18 04 54 65 96 38 48
@@ -40,284 +95,157 @@ of the challenge:</p>
 64 61 14 55 33 39 40 18 57 59
 49 34 50 81 85 12 22 54 80 76
 18 45 50 26 81 95 25 14 46 75
-22 52 37 50 37 40 16 71 52 17
-</code></pre>
-  
-  <p>Expected output:</p>
-
-<pre><code>615
-</code></pre>
+22 52 37 50 37 40 16 71 52 17</code></pre>
+<p>Expected output:</p>
+<pre><code>615</code></pre>
 </blockquote>
-
-<p>The challenge is very tempting by its simplicity. However,
-according to codegolf.com, the best solution in Python
-was written in only 73 characters. At the meetup we
-got it down to 78 characters, but not less. So next weekend
-after the meetup I immersed into this challenge to
-get it down to 73. And here are the results.</p>
-
+<p>The challenge is very tempting by its simplicity. However, according to codegolf.com, the best solution in Python was written in only 73 characters. At the meetup we got it down to 78 characters, but not less. So the weekend after the meetup I immersed into this challenge to get it down to 73. And here are the results.</p>
 <blockquote>
-  <p><strong>Spoiler alert:</strong> this page contains the 73 character solution.</p>
+<p><strong>Spoiler alert:</strong> this page contains the 73 character solution.</p>
 </blockquote>
-
-<h2>Solving the puzzle</h2>
-
-<p>Let&#8217;s see what a <em>naïve</em> solution can look like in Python:</p>
-
-<pre><b>import </b>sys
-
-<em># Parse matrix.
-</em>matrix = []
-<b>for </b>line <b>in </b>sys.stdin.read().splitlines():
-    row = []
-    <b>for </b>digits <b>in </b>line.split(' '):
-        number = int(digits)
-        row.append(number)
-    matrix.append(row)
-
-<em># Row sums.
-</em>all_sums = []
-<b>for </b>row <b>in </b>matrix:
-    all_sums.append(sum(row))
-
-<em># Column sums.
-</em><b>for </b>i <b>in </b>range(10):
-    column = []
-    <b>for </b>row <b>in </b>matrix:
-        column.append(row[i])
-    all_sums.append(sum(column))
-
-print(max(all_sums))
-</pre>
-
+<h2 id="solving-the-puzzle">Solving the puzzle</h2>
+<p>Let’s see what a <em>naïve</em> solution can look like in Python:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse matrix.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>matrix <span class="op">=</span> []</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> line <span class="kw">in</span> sys.stdin.read().splitlines():</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    row <span class="op">=</span> []</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> digits <span class="kw">in</span> line.split(<span class="st">&#39; &#39;</span>):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        number <span class="op">=</span> <span class="bu">int</span>(digits)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        row.append(number)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    matrix.append(row)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Row sums.</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>all_sums <span class="op">=</span> []</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> row <span class="kw">in</span> matrix:</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    all_sums.append(<span class="bu">sum</span>(row))</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Column sums.</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    column <span class="op">=</span> []</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row <span class="kw">in</span> matrix:</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        column.append(row[i])</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    all_sums.append(<span class="bu">sum</span>(column))</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">max</span>(all_sums))</span></code></pre></div>
 <p><em>Total: 446 characters.</em></p>
-
-<p>I hope you are displeased by this code as much as I am.
-Let&#8217;s gradually improve it.</p>
-
-<p>File-like objects have a <code>.readlines()</code> method, so we could
-call it instead of <code>.read().splitlines()</code>.  However,
-you might know that file-like objects support the iterator
-protocol, so you can iterate over them directly:</p>
-
-<pre><b>for </b>line <b>in </b>sys.stdin:
-    ...
-</pre>
-
-<p>Also you might know that calling <code>.split()</code> on a string
-will split over any whitespace, so no need to call
-<code>.split(' ')</code>.</p>
-
-<p>Next, using list-comprehensions instead of for loops
-tightens up the code considerably:</p>
-
-<pre><b>import </b>sys
-
-matrix = [[int(digits) <b>for </b>digits <b>in </b>line.split()]
-          <b>for </b>line <b>in </b>sys.stdin]
-
-row_sums = [sum(row) <b>for </b>row <b>in </b>matrix]
-
-column_sums = [sum([row[i] <b>for </b>row <b>in </b>matrix])
-               <b>for </b>i <b>in </b>range(10)]
-
-print(max(row_sums + column_sums))
-</pre>
-
+<p>I hope you are displeased by this code as much as I am. Let’s gradually improve it.</p>
+<p>File-like objects have a <code>.readlines()</code> method, so we could call it instead of <code>.read().splitlines()</code>. However, you might know that file-like objects support the iterator protocol, so you can iterate over them directly:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> line <span class="kw">in</span> sys.stdin:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>Also you might know that calling <code>.split()</code> on a string will split over any whitespace, so no need to call <code>.split(' ')</code>.</p>
+<p>Next, using list-comprehensions instead of for loops tightens up the code considerably:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>matrix <span class="op">=</span> [[<span class="bu">int</span>(digits) <span class="cf">for</span> digits <span class="kw">in</span> line.split()]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> line <span class="kw">in</span> sys.stdin]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>row_sums <span class="op">=</span> [<span class="bu">sum</span>(row) <span class="cf">for</span> row <span class="kw">in</span> matrix]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>column_sums <span class="op">=</span> [<span class="bu">sum</span>([row[i] <span class="cf">for</span> row <span class="kw">in</span> matrix])</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>               <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)]</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">max</span>(row_sums <span class="op">+</span> column_sums))</span></code></pre></div>
 <p><em>Total: 256 characters.</em></p>
-
-<p>Some people will already claim that this is <em>too</em> tight
-and unreadable, but I think it is still sensible.</p>
-
-<p>Next, using <code>map</code> instead of list comprehensions will
-save us some characters. We can use:</p>
-
+<p>Some people will already claim that this is <em>too</em> tight and unreadable, but I think it is still sensible.</p>
+<p>Next, using <code>map</code> instead of list comprehensions will save us some characters. We can use:</p>
 <ul>
 <li><code>map(int, line.split())</code> to parse each line,</li>
 <li><code>map(sum, matrix)</code> for <code>row_sums</code>.</li>
 </ul>
-
-<p>However, there is some duplication between <code>row_sums</code>
-and <code>column_sums</code>. We could pull out summation,
-and apply it in the last step instead:</p>
-
-<pre><b>import </b>sys
-
-matrix = [map(int, line.split())
-          <b>for </b>line <b>in </b>sys.stdin]
-
-rows = [row <b>for </b>row <b>in </b>matrix]
-
-columns = [[row[i] <b>for </b>row <b>in </b>matrix]
-           <b>for </b>i <b>in </b>range(10)]
-
-print(max(map(sum, rows + columns)))
-</pre>
-
+<p>However, there is some duplication between <code>row_sums</code> and <code>column_sums</code>. We could pull out summation, and apply it in the last step instead:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>matrix <span class="op">=</span> [<span class="bu">map</span>(<span class="bu">int</span>, line.split())</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> line <span class="kw">in</span> sys.stdin]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> [row <span class="cf">for</span> row <span class="kw">in</span> matrix]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>columns <span class="op">=</span> [[row[i] <span class="cf">for</span> row <span class="kw">in</span> matrix]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>           <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)]</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">max</span>(<span class="bu">map</span>(<span class="bu">sum</span>, rows <span class="op">+</span> columns)))</span></code></pre></div>
 <p><em>Total: 197 characters.</em></p>
-
-<h2>Party trick</h2>
-
-<p>Now, the above code is silly, because <code>rows</code> is the same as <code>matrix</code>,
-and <code>columns</code> is the same matrix, but transposed. We could
-use a library like <code>numpy</code> to transpose a matrix, but using
-libraries is against the rules of code golf.
-Otherwise you could just
-write libraries that solve a challenge in one function call.</p>
-
-<p>But you might know this &#8220;party trick<span><span style="position: absolute">,</span>&rdquo;</span> that <code>zip(*matrix)</code>
-transposes a matrix. If you didn&#8217;t know about this,
-stop and think about it for a minute.</p>
-
-<pre><b>import </b>sys
-
-matrix = [map(int, line.split())
-          <b>for </b>line <b>in </b>sys.stdin]
-
-print(max(map(sum, matrix + zip(*matrix))))
-</pre>
-
+<h2 id="party-trick">Party trick</h2>
+<p>Now, the above code is silly, because <code>rows</code> is the same as <code>matrix</code>, and <code>columns</code> is the same matrix, but transposed. We could use a library like <code>numpy</code> to transpose a matrix, but using libraries is against the rules of code golf. Otherwise you could just write libraries that solve a challenge in one function call.</p>
+<p>But you might know this “party trick”, that <code>zip(*matrix)</code> transposes a matrix. If you didn’t know about this, stop and think about it for a minute.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>matrix <span class="op">=</span> [<span class="bu">map</span>(<span class="bu">int</span>, line.split())</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> line <span class="kw">in</span> sys.stdin]</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">max</span>(<span class="bu">map</span>(<span class="bu">sum</span>, matrix <span class="op">+</span> <span class="bu">zip</span>(<span class="op">*</span>matrix))))</span></code></pre></div>
 <p><em>Total: 113 characters.</em></p>
-
-<p>Now let&#8217;s go all-dirty on this and remove all unnecessary
-whitespace, and make every variable a single letter.</p>
-
-<pre><b>import </b>sys
-m=[map(int,l.split())<b>for </b>l <b>in </b>sys.stdin]
-print(max(map(sum,m+zip(*m))))
-</pre>
-
+<p>Now let’s go all-dirty on this and remove all unnecessary whitespace, and make every variable a single letter.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>m<span class="op">=</span>[<span class="bu">map</span>(<span class="bu">int</span>,l.split())<span class="cf">for</span> l <span class="kw">in</span> sys.stdin]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">max</span>(<span class="bu">map</span>(<span class="bu">sum</span>,m<span class="op">+</span><span class="bu">zip</span>(<span class="op">*</span>m))))</span></code></pre></div>
 <p><em>Total: 83 characters.</em></p>
-
 <p><em>Now</em>, we are much closer to our goal of <em>73</em> characters.</p>
-
-<h2>Knowing your pythons</h2>
-
-<p>One way to save 5 characters would be to use a built-in
-function called <code>input</code>, which reads a single line from
-standard input. However, this is when we realize that
-the codegolf.com checks the solutions using Python 2.5.
-That forces us to use <code>raw_input</code> instead, saving a single
-character instead of 5.</p>
-
-<p>On the other hand, Python 2 allows to drop parenthesis
-of <code>print</code> call, so we save another character:</p>
-
-<pre>m=[map(int,raw_input().split())<b>for </b>_ <b>in </b>range(10)]
-<b>print </b>max(map(sum,m+zip(*m)))
-</pre>
-
+<h2 id="knowing-your-pythons">Knowing your pythons</h2>
+<p>One way to save 5 characters would be to use a built-in function called <code>input</code>, which reads a single line from standard input. However, this is when we realize that the codegolf.com checks the solutions using Python 2.5. That forces us to use <code>raw_input</code> instead, saving a single character instead of 5.</p>
+<p>On the other hand, Python 2 allows to drop parenthesis of <code>print</code> call, so we save another character:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>m<span class="op">=</span>[<span class="bu">map</span>(<span class="bu">int</span>,<span class="bu">raw_input</span>().split())<span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span> <span class="bu">max</span>(<span class="bu">map</span>(<span class="bu">sum</span>,m<span class="op">+</span><span class="bu">zip</span>(<span class="op">*</span>m)))</span></code></pre></div>
 <p><em>Total: 81 characters.</em></p>
-
-<h2>Obscured iteration</h2>
-
-<p>Using <code>raw_input</code> forced us
-to use <code>range(10)</code> instead of iterating over lines.
-How can we mitigate this?! Another way to iterate 10 times
-would be to iterate over a collection of length 10.
-We can get this collection by multiplying a list with
-a single item by 10:</p>
-
-<pre>m=[map(int,raw_input().split())<b>for </b>_ <b>in</b>[0]*10]
-<b>print </b>max(map(sum,m+zip(*m)))
-</pre>
-
+<h2 id="obscured-iteration">Obscured iteration</h2>
+<p>Using <code>raw_input</code> forced us to use <code>range(10)</code> instead of iterating over lines. How can we mitigate this?! Another way to iterate 10 times would be to iterate over a collection of length 10. We can get this collection by multiplying a list with a single item by 10:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>m<span class="op">=</span>[<span class="bu">map</span>(<span class="bu">int</span>,<span class="bu">raw_input</span>().split())<span class="cf">for</span> _ <span class="kw">in</span>[<span class="dv">0</span>]<span class="op">*</span><span class="dv">10</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span> <span class="bu">max</span>(<span class="bu">map</span>(<span class="bu">sum</span>,m<span class="op">+</span><span class="bu">zip</span>(<span class="op">*</span>m)))</span></code></pre></div>
 <p><em>Total: 77 characters.</em></p>
-
-<h2>Hexdump</h2>
-
-<p>However, we still haven&#8217;t used one important code golf trick.
-If you do a <code>hexdump</code> of our program, you can see that
-we have a trailing newline, which is usually added by the
-editor. You might also discover that your editor is
-using <code>\r\n</code> instead of <code>\n</code>.</p>
-
-<pre><code>$ hexdump -c grid_challenge.py | cut -c '9-'
+<h2 id="hexdump">Hexdump</h2>
+<p>However, we still haven’t used one important code golf trick. If you do a <code>hexdump</code> of our program, you can see that we have a trailing newline, which is usually added by the editor. You might also discover that your editor is using <code>\r\n</code> instead of <code>\n</code>.</p>
+<pre><code>$ hexdump -c grid_challenge.py | cut -c &#39;9-&#39;
 m  =  [  m  a  p  (  i  n  t  ,  r  a  w  _  i
 n  p  u  t  (  )  .  s  p  l  i  t  (  )  )  f
 o  r     _     i  n  [  0  ]  *  1  0  ] \n  p
 r  i  n  t     m  a  x  (  m  a  p  (  s  u m
-,  m  +  z  i  p  (  *  m  )  )  ) \n
-</code></pre>
-
-<p>Yep, we have a trailing <code>\n</code>. Let&#8217;s write a script that
-removes it from our programs, and now we are down to&#8230;</p>
-
+,  m  +  z  i  p  (  *  m  )  )  ) \n</code></pre>
+<p>Yep, we have a trailing <code>\n</code>. Let’s write a script that removes it from our programs, and now we are down to…</p>
 <p><em>Total: 76 characters.</em></p>
-
-<h2>Leaked variable</h2>
-
-<p>And here the <em>really</em> hard part starts. I have spent many
-hours trying to reduce this number. And it got really
-nasty.</p>
-
-<p>One little known misfeature of Python 2 is that
-it leaks variable bindings from comprehensions
-(as well as <code>except</code> clauses). This was fixed in Python 3.
-Here&#8217;s some code to illustrate the issue:</p>
-
-<pre>$ python3
->>> [x <b>for </b>x <b>in </b>range(10)]
+<h2 id="leaked-variable">Leaked variable</h2>
+<p>And here the <em>really</em> hard part starts. I have spent many hours trying to reduce this number. And it got really nasty.</p>
+<p>One little known misfeature of Python 2 is that it leaks variable bindings from comprehensions (as well as <code>except</code> clauses). This was fixed in Python 3. Here’s some code to illustrate the issue:</p>
+<pre>
+$ python3
+>>> [x <b>for</b> x in range(10)]
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 >>> x
 <em>Traceback (most recent call last):
-  File <em>"&lt;stdin&gt;"</em></em><em>, line 1, <b>in </b><module>
-NameError: name 'x' <b>is </b><b>not </b>defined</em>
+  File "&lt;stdin&gt;"</em><em>, line 1, in &lt;module&gt;
+NameError: name 'x' is not defined</em>
 </pre>
-
-<pre>$ python2
->>> [x <b>for </b>x <b>in </b>range(10)]
-[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
->>> x
-9
-</pre>
-
-<p>You see, <code>x</code> &#8211; &#8220;leaked&#8221; from inside the list comprehension
-and was available in the outer scope with its last assigned value.</p>
-
-<p>How can we use this?! Well, right now we are not using
-the list comprehension variable at all. But instead we
-could put it to some use&#8230; We are calling <code>map</code> twice.
-It would be so handy if we could put it into a variable,
-without paying the cost of an explicit assignment&#8230;</p>
-
-<pre>m=[_(int,raw_input().split())<b>for </b>_ <b>in</b>[map]*10]
-<b>print </b>max(_(sum,m+zip(*m)))
-</pre>
-
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>$ python2</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> [x <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)]</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>[<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>, <span class="dv">8</span>, <span class="dv">9</span>]</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> x</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="dv">9</span></span></code></pre></div>
+<p>You see, <code>x</code>—“leaked” from inside the list comprehension and was available in the outer scope with its last assigned value.</p>
+<p>How can we use this?! Well, right now we are not using the list comprehension variable at all. But instead we could put it to some use… We are calling <code>map</code> twice. It would be so handy if we could put it into a variable, without paying the cost of an explicit assignment…</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>m<span class="op">=</span>[_(<span class="bu">int</span>,<span class="bu">raw_input</span>().split())<span class="cf">for</span> _ <span class="kw">in</span>[<span class="bu">map</span>]<span class="op">*</span><span class="dv">10</span>]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span> <span class="bu">max</span>(_(<span class="bu">sum</span>,m<span class="op">+</span><span class="bu">zip</span>(<span class="op">*</span>m)))</span></code></pre></div>
 <p><em>Total: 74 characters.</em></p>
-
-<p>Here we created a list of 10 <code>map</code> functions, which allowed
-us to assign <code>map</code> to the undescore (<code>_</code>) variable and save 3 characters in total.
-But we are still behind the
-world&#8217;s best 73 character solution.</p>
-
-<h2>The last drop</h2>
-
-<p>One less obscure feature of <code>raw_input</code> is that it takes
-an optional argument called <code>prompt</code>, which gets printed
-as a prompt before it reads a line from standard input.
-Let&#8217;s see if we gain anything by assigning <code>raw_input</code> to
-the undescore (<code>_</code>), instead of <code>map</code>, and then&#8230;</p>
-
-<pre>m=[map(int,_().split())<b>for </b>_ <b>in</b>[raw_input]*10]
-_(max(map(sum,m+zip(*m))))
-</pre>
-
+<p>Here we created a list of 10 <code>map</code> functions, which allowed us to assign <code>map</code> to the undescore (<code>_</code>) variable and save 3 characters in total. But we are still behind the world’s best 73 character solution.</p>
+<h2 id="the-last-drop">The last drop</h2>
+<p>One less obscure feature of <code>raw_input</code> is that it takes an optional argument called <code>prompt</code>, which gets printed as a prompt before it reads a line from standard input. Let’s see if we gain anything by assigning <code>raw_input</code> to the undescore (<code>_</code>), instead of <code>map</code>, and then…</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>m<span class="op">=</span>[<span class="bu">map</span>(<span class="bu">int</span>,_().split())<span class="cf">for</span> _ <span class="kw">in</span>[<span class="bu">raw_input</span>]<span class="op">*</span><span class="dv">10</span>]</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>_(<span class="bu">max</span>(<span class="bu">map</span>(<span class="bu">sum</span>,m<span class="op">+</span><span class="bu">zip</span>(<span class="op">*</span>m))))</span></code></pre></div>
 <p><em>Total: 73 characters.</em></p>
+<p>Yes! By using <code>raw_input</code> instead of <code>print</code> we saved the last character and reached the world record for this challenge.</p>
+<p>I bet you have learned something new about Python today. <a href="/" title="Home">☰</a></p>
+<h2 id="cite-as">Cite as…</h2>
+<p><small></p>
+<pre><code>@misc{Keleshev:2014-1,
+  title=&quot;Dissecting a Code Golf Challenge&quot;,
+  author=&quot;Vladimir Keleshev&quot;,
+  year=2014,
+  howpublished=
+    &quot;\url{https://keleshev.com/dissecting-a-code-golf-challenge}&quot;,
+}</code></pre>
+<p></small></p>
 
-<p>Yes! By using <code>raw_input</code> instead of <code>print</code> we saved the
-last character and reached the world record for this
-challenge.</p>
 
-<p>I bet you have learned something new about Python today.
-<a href="/" title="Home">&#9632;</a></p>
-
-<p><center markdown="1">
-<em>Comment this on <a href="http://www.reddit.com/r/programming/comments/217v8s">Reddit</a></em>
-<br/>
-<em>Follow me on <a href="http://twitter.com/keleshev">Twitter</a></em>
-</center></p>
-
-    </body>
+  <hr class="fleuron" />
+</body>
 </html>
