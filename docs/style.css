@@ -292,3 +292,25 @@ figcaption {
 }
 
 
+.circled-numbers ol {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.circled-numbers ol li {
+  position: relative;
+  padding-left: 2em;
+}
+
+.circled-numbers ol li:nth-child(1)::before { content: '❶'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(2)::before { content: '❷'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(3)::before { content: '❸'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(4)::before { content: '❹'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(5)::before { content: '❺'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(6)::before { content: '❻'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(7)::before { content: '❼'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(8)::before { content: '❽'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(9)::before { content: '❾'; position: absolute; left: 0.75em; font-family: monospace; }
+.circled-numbers ol li:nth-child(10)::before { content: '❿'; position: absolute; left: 0.75em; font-family: monospace; }
+
+

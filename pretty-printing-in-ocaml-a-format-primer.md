@@ -5,14 +5,14 @@ date: 2024-05-05
 #cta: {book: false}
 ---
 
-[Format](https://v2.ocaml.org/api/Format.html) is a module in OCaml standard library.
-It is used for writing pretty printers for code and data structures.
+[Format](https://v2.ocaml.org/api/Format.html) is a module in OCaml standard library
+that is used for writing pretty printers for code and data structures.
 Projects like [ocamlformat](https://github.com/ocaml-ppx/ocamlformat) use it to implement very advanced code formatters.
 
 Format has a very elegant and powerful core, but its interface is a bit clunky and unintuitive.
 In this respect, it's a little bit like git: powerfull tool with a bit of antics, but very much worth learning.
 
-First, let's take a step back.
+But first, let's take a step back.
 
 ## `printf`
 
@@ -46,11 +46,11 @@ Many more are available.
 In OCaml, `printf` function is part of the
 [Printf](https://v2.ocaml.org/api/Printf.html)
 module.
-It is made type safe by some interesting trickery that is outside of the scope of this article.
+It is made type safe by some interesting trickery which is outside of the scope for this article.
 In short—*very much out-of-character for OCaml*—the string is coersed to another type: a GADT type `Stdlib.format`.
 
-The Format module builds on top of that and has its own version of `printf` function (and others).
-On top of the many %-style specifiers of Printf (like `%s` and `%d`), it adds many more @-style specifiers used to control the alignment and indentation (like `@[`, `@]` and `@;`).
+The Format module builds on top of that functionality and has its own version of `printf` function (and others).
+Similar to the many %-style specifiers of Printf (like `%s` and `%d`), it adds many more @-style specifiers used to control the alignment and indentation (like `@[`, `@]` and `@;`).
 
 It's best not to mix the two modules.
 Printf is for casual printing to the console, Format—for data structures and code.
@@ -58,11 +58,11 @@ Printf is for casual printing to the console, Format—for data structures and c
 ## `fprintf`
 
 `fprintf`, which in C stands for "file print formatted", is a more general function that takes an additional parameter.
-In C, it takes a file descriptor; in OCaml `Printf.fprintf` takes an output channel.
+In C it takes a file descriptor; in OCaml `Printf.fprintf` takes an output channel.
 
-However, `Format.fprintf` takes something called "pretty print formatter", which is an abstraction.
+In contrast, `Format.fprintf` takes something called "pretty print formatter", which is an abstraction.
 It is usually shortened to `ppf`.
-By selecting an implementation of it later we can print to a file or a buffer or something more exotic and custom.
+By selecting its implementation later, we can print to a file or a buffer or something more exotic and custom.
 
 Let's start our journey by making sure we imported the `printf` and `fprintf` functions from the right module:
 
@@ -87,7 +87,7 @@ The capital-S `%S` specifier produces a quoted string following the OCaml lexica
 Next function that we will "import" from the Format module is `pp_print_list`.
 It takes a list of items to print, a pretty-printer for each item `pp_item`, and a separator `pp_sep`.
 
-However, `pp_sep` needs to be a full-blown pretty-printer itself, which will be slightly too verbose for our needs, so we make a quick wrapper that allows to pass just a formatting string.
+However, `pp_sep` needs to be a full-blown pretty-printer itself, which will be slightly too verbose for our needs, so we make a quick wrapper that allows to pass just the formatting string:
 
 ```ocaml
 let pp_print_list ~sep pp_item =
@@ -95,16 +95,18 @@ let pp_print_list ~sep pp_item =
     ~pp_sep:(fun ppf () -> fprintf ppf sep) pp_item
 ```
 
+* * *
+
 > This `pp_print_list`… I guess it stands for "pretty print print list"?
 > Well… long story short: Format predates the module system in OCaml (or Caml Light, should I say?).
-> Back then, when you loaded a module, you got all the functions in it, so it was a good practice to have a prefix for each function, like you do in C.
+> Back then when you loaded a module, you got all the functions in it, so it was a good practice to have a prefix for each function, like you do in C.
 >
 > Though, they did rename `list_length` to `List.length` at some point…
 
 
 ## Let Example
 
-Now, for our main example, we will be writing pretty printers for comma-separated lists with brackets for delimiters.
+Now for our main example, we will be writing pretty printers for comma-separated lists with brackets for delimiters.
 We will use this nested list to illustrate the different approaches:
 
 ```ocaml
@@ -118,7 +120,7 @@ let example = [
 ]
 ```
 
-First, let's write a naïve implementation that is not very pretty and just prints it in a single line:
+First, let's write a naïve implementation that is not very pretty and just prints the nested list in a single line:
 
 ```ocaml
 let pp_list pp_item ppf list =
@@ -127,8 +129,8 @@ let pp_list pp_item ppf list =
 ```
 
 We define `pp_list`—our main function.
-It takes a `pp_item`—a pretty printer that knows how to print nested elements: sometimes they will be strings, other times—nested lists.
-We define it as `fprintf` with a format `"[%a]"`.
+It takes a `pp_item`, a pretty printer that knows how to print nested elements: sometimes they will be strings, other times—nested lists.
+We define it using `fprintf` with a format `"[%a]"`.
 This is similar to writing `"[%s]"`, but allows to pass a pretty printer with a value to print.
 The value in this case is `list`, and the pretty printer—we construct it using `pp_print_list` which takes a separator and a printer for each item.
 
@@ -155,16 +157,16 @@ Just like regular `printf` strings have %-specifiers (`%s`, `%d`, etc.), Format 
 Break hints (or line-break–hints) allow us to tell the formatter: you may or may not break the line here.
 They are written as `"@;"` and—importantly—take two integer parameters like this: `"@;<1 2>"`.
 
-1. The first one is called "fits" and specifies how many spaces (zero or more) should be printed in case the expression fits on a single line.
+1. The first one is called "fits"—it specifies how many spaces (zero or more) should be printed if the expression fits on a single line.
 
-2. The second one is called "breaks" and specifies how many spaces of indentation should be used after the line break, in case the expression does not fit on a single line.
+2. The second one is called "breaks"—it specifies how many spaces of indentation should be used after the line break if the expression does not fit on a single line.
 
 ## Boxes
 
 Boxes is another abstraction that goes hand-in-hand with break hints.
 
 A box is "opened" with `"@["` and is "closed" with `"@]"`.
-Opening the box takes a parameter that specifies the type of the box: `"@[<hv>"`.
+Opening a box takes a parameter that specifies the type of the box: `"@[<hv>"`.
 We'll go through the various options further down.
 
 Boxes and break hints work together as follows.
@@ -178,7 +180,7 @@ The decision of fits-*vs*-breaks is made depending on the box type and the desir
 let () = Format.set_margin 60
 ```
 
-We set it 60 for the default pretty print formatter used by printf, but this can be set per "ppf".
+We set it 60 for the default `stdout` pretty print formatter used by printf, but this can be set per "ppf".
 
 > The @-specifiers are hard to read at first, but eventually you get used to them just like with %-ones.
 > We'll highlight them in strings for readability.
@@ -186,12 +188,12 @@ We set it 60 for the default pretty print formatter used by printf, but this can
 ## Horizontal xor vertical "hv" box
 
 The first type is "hv", written as `"@[<hv>…@]"`.
-It is usally mentioned as "horizontal/vertical" box, but I like to call it "horizontal *xor* vertical" box to highlight the exclusive nature of the choice:
+It is usually mentioned as "horizontal/vertical" box, but I like to call it "horizontal *xor* vertical" box to highlight the exclusive nature of the choice:
 
 * If everything in the box fits on one line, it is layed out horizontally: every break hint becomes (zero or more) spaces, as specified by the first—"fits"—parameter.
 * If everything does not fit on a single like, the layout is vertical: every break hint becomes a line break, followed by the baseline indentation of the box *plus* the second—"breaks"—parameter of spaces.
 
-Let's reimplement `pp_list` using the newfound knowledge of boxes and break hints.
+Let's reimplement `pp_list` using the newfound knowledge of boxes and break hints:
 
 <!--
 ```ocaml
@@ -213,16 +215,14 @@ pre > i {
 
 <pre><b>let</b> pp_list pp_item ppf list =
   fprintf ppf "<i>@[&lt;hv&gt;</i>[%a]<i>@]</i>"❶
-    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>"❷ pp_item) list</pre>
+    (pp_print_list ~sep:",<i>@;&lt;1 1&gt;</i>"❷ pp_item) list
+</pre>
 
-<ol>
-  <li style="list-style-type: '❶  '">
-    <p>We open an "hv" box before the opening bracket of the printed list, and close it after the closing bracket.</p>
-  </li>
-  <li style="list-style-type: '❷  '">
-    <p>We specify the item separator as a literal comma, followed by a break hint: one space for "fits" and one for "breaks".</p>
-  </li>
-</ol>
+<div class="circled-numbers">
+1. We open an "hv" box before the opening bracket of the printed list, and close it after the closing bracket.
+
+2. We specify the item separator as a literal comma, followed by a break hint: one space for "fits" and one for "breaks".
+</div>
 
 Run it through our `example`, and we get the following:
 
@@ -243,11 +243,11 @@ Run it through our `example`, and we get the following:
 
 Not too bad! Let's unwrap.
 
-The two shorter lists fit inside the 60 character margin, so they used comma plus one space for separators.
+The two shorter lists fit inside the 60 character margin, so they use comma plus one space for separators.
 
 The longer list did not fit, so it used line breaks everywhere plus one space, *relative to the column just before the opening bracket*—where we opened our box.
 
-If we want to put brackets on their own line—we add break hints:
+If we want to put brackets on their own line, we add break hints:
 
 <!--
 let pp_list pp_item ppf list =
@@ -320,7 +320,7 @@ let pp_list pp_item ppf list =
 
 ## Horizontal "h" box
 
-Horizontal, or an "h" box ignores the "breaks" part of the hint and lays out everything on a single line using the "fits" spaces:
+Horizontal, or an "h" box ignores the "breaks" part of hints and lays out everything on a single line using the "fits" spaces:
 
 <!--
 let pp_list pp_item ppf list =
@@ -382,7 +382,7 @@ Output:
 ```
 
 This is often the desirable layout, except for the ugly empty list.
-For this case I recommend pattern-matching on the empty list and printing it literally as `[]`.
+For this case, I recommend pattern-matching on the empty list and printing it literally as `[]`.
 
 ## Compacting "hov" box
 
@@ -410,7 +410,7 @@ The result is very compact:
 
 ## Compacting "b" box
 
-The "b" box is very similar to "hov", except for one detail.
+The "b" box is very similar to "hov", except for one detail…
 
 <!--
 let pp_list pp_item ppf list =
@@ -435,7 +435,7 @@ The last break hint `@;<0 0>` has indentation of zero, which is less then one, s
 ]
 ```
 
-I suppose this box is introduced exactly to support this kind of layout: closing delimiter on its own line.
+I suppose that the "b" box is introduced specifically to support this kind of layout: closing delimiter on its own line.
 
 
 ## Comma-first
@@ -519,7 +519,7 @@ for this one.
 ]
 ```
 
-Note the additional comma after `"ten"` and the last nested list.
+Note the additional comma after `"ten"` and after the last nested list.
 
 ## Tips and tricks
 
@@ -528,13 +528,15 @@ Note the additional comma after `"ten"` and the last nested list.
 * Negative parameters sometimes work, but are usually a hack: `"@;<0 -2>"`.
 * `"@["` defaults to an `"@[<hv>"` box, but I prefer the full version for clarity.
 * Boxes take a second parameter "indent", e.g. `"@[<hv 2>"`.
-  It's like adding 2 to each nested hints' "breaks" parameter.
+  It's like adding two to each nested hint's "breaks" parameter.
   I avoid this because it often leads to using negative break hints.
 * `"@,"` is a shortcut for `"@;<0 0>"`; `"@ "`—for `"@;<1 0>"`.
-  This is too much to remember, for me.
-* More of this in the [docs](https://ocaml.org/manual/5.1/api/Format.html).
+  This is too much for me to remember.
+* Learn more in the official [docs](https://ocaml.org/manual/5.1/api/Format.html).
 
-<h2>Btw, check out my book:</h2>
+
+
+<center><h2>Oh, btw, check out my book</h2></center>
 <div style="text-align: center; line-height: 0px">
 <a href="/compiling-to-assembly-from-scratch"
 style="border-bottom: none; font-size: 0">
