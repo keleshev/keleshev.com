@@ -436,7 +436,7 @@ Now, let's go and write some friendly programs that help presenting a comprehens
 * All code from this blog post in a runnable [gist](https://gist.github.com/keleshev/a153fa3ce9e3e341baa25d2b7cff6bac)
 * The OCaml Manual on [binding operators](https://ocaml.org/manual/bindingops.html)
 
-## BibTeX
+## Citation
 
 <small>
 ```

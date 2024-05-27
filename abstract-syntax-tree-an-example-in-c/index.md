@@ -1,6 +1,6 @@
 ---
-title: "Abstract Syntax Tree: an Example in C"
-fancy-title: "Abstract Syntax Tree<br/><small><small>an Example in C</small></small>"
+title: "Abstract Syntax Tree: An Example in C"
+fancy-title: "Abstract Syntax Tree<br/><small><small>An Example in C</small></small>"
 subtitle: With pretty-printing and code generation
 date: 2022-06-20
 cta: {}
@@ -390,7 +390,7 @@ let rec emit = function
 
 ## [Source code](https://gist.github.com/keleshev/6efbf2fc521b2f0797decb19c6932ecc)
 
-## BibTeX
+## Citation
 
 <small>
 ```

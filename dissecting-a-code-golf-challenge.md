@@ -315,7 +315,7 @@ challenge.
 I bet you have learned something new about Python today.
 [☰](/ "Home")
 
-## Cite as…
+## Citation
 
 <small>
 ```

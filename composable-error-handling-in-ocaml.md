@@ -517,7 +517,7 @@ Big thanks to [Oskar Wickström](https://twitter.com/owickstrom)
 for giving feedback on a draft of this post.
 [☰](/ "Home")
 
-## BibTeX
+## Citation
 
 <small>
 ```       

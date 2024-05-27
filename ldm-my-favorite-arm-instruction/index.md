@@ -126,7 +126,7 @@ With 32 registers it is no longer possible to encode a bitmask of all registers 
 So, instead, ARM64 has LDP and STP: load pair and store pair, which are the spiritual successors of LDM and STM.
 [☰](/ "Home")
 
-## BibTeX
+## Citation
 
 <small> 
 ```       

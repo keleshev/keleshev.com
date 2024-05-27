@@ -532,7 +532,8 @@ Note the additional comma after `"ten"` and after the last nested list.
   I avoid this because it often leads to using negative break hints.
 * `"@,"` is a shortcut for `"@;<0 0>"`; `"@ "`—for `"@;<1 0>"`.
   This is too much for me to remember.
-* Learn more in the official [docs](https://ocaml.org/manual/5.1/api/Format.html).
+
+Learn more in the official [Format documentation](https://ocaml.org/manual/5.1/api/Format.html).
 
 
 
@@ -610,7 +611,7 @@ end
 
 <!--[☰](/ "Home") -->
 
-## BibTeX
+## Citation
 
 <small>
 ```

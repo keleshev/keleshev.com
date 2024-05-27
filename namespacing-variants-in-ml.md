@@ -172,7 +172,7 @@ I'm more inclined than not
 to group them in a namespace module.
 [☰](/ "Home")
 
-## BibTeX
+## Citation
 
 <small>
 ```       

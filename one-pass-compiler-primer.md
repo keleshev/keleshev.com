@@ -240,7 +240,7 @@ This blog post was inspired by a [question on Quora](https://www.quora.com/What-
 The complete code, including lexer, parser, and a makefile is available on GitHub [as a gist](https://gist.github.com/keleshev/cdd6d3d46437284b2a0c2fc42cf90e0f).
 [☰](/ "Home")
 
-## BibTeX
+## Citation
 
 <small>
 ```       
