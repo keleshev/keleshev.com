@@ -286,7 +286,7 @@ To achieve that, we need to change our approach slightly.
 
 ## Error recovery
 
-The `result` type can express either a success result on an error (or a list of errors, in our case).
+The `result` type can express either a success result or an error (or a list of errors, in our case).
 To express a result obtained after recovering from an error, we need to change the `result` type from a sum type (variant) to a product type (record).
 For a lack of a better name, let's call such type an `outcome`:
 
