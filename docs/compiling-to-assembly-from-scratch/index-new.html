@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>
+Compiling to Assembly<br/><small><small>from Scratch </small></small>
+</h1>
+<div style="
+    position: absolute;
+    width: 100%;
+    height: 400px; /* Adjust height as needed */
+    background-image: url(&#39;./bg.png&#39;);
+    background-repeat: repeat;
+    background-size: cover;
+    background-position: center;
+    /* 700px is body width, 750px min viewport, -25px left margin */
+    margin-left: min(-25px, calc((100% - 700px) / 2 * -1));
+">
+
+</div>
+<div style=" height: 400px;">
+
+</div>
+<p>
+</p>
+<div style="margin: 0px 0;">
+<a class="big-round-btn" href="#" style="width:230px; margin-left:75px">
+<center>
+<table>
+<tr>
+<td>
+</td>
+<td rowspan="2">
+<center>
+   <b>$49</b>
+</center>
+</td>
+</tr>
+<tr>
+<td>
+<center>
+Buy hardcover<br/> <small> at <em><b>lulu.com</b></em> </small>
+</center>
+</td>
+</tr>
+</table>
+</center>
+</a> <a href="#Contents" class="big-round-btn-inverted" style="width:230px; margin-left:74px;">
+<center>
+<table>
+<tr>
+<td>
+<center>
+Read online for <b>free<b>
+</center>
+</td>
+</tr>
+<tr>
+</tr>
+</table>
+</center>
+</a>
+</div>
+<!--<p>&nbsp;</p>-->
+<p><big><em>Have you been trying to learn how <strong>compilers</strong> and <strong>programming languages</strong> work?</em></big></p>
+<!--table style="width: 100%">
+  <tr>
+    <td style="width:50%">
+      <center>
+        <a class="big-round-btn" href="#" style="width:66%">
+          <table>
+            <tr>
+              <td>
+              </td>
+              <td rowspan="2"><center> &nbsp;&nbsp; <b>$49</b> </center></td>
+            </tr>
+            <tr>
+              <td>
+                <center>
+                  Buy hardcover<br/>
+                  <small> at <em><b>lulu.com</b></em> </small>
+                </center>
+              </td>
+            </tr>
+          </table>
+        <a>
+      </center>
+    </td>
+    <td style="width:50%">
+      <center>
+        <a href="#Contents" class="big-round-btn-inverted" style="width:66%">
+          <table>
+            <tr>
+              <td><center>Read online for <b>free<b></center></td>
+            </tr>
+            <tr>
+            </tr>
+          </table>
+        </a>
+      </center>
+    </td>
+  </tr>
+</table-->
+<p>Then come along! Let’s make a compiler that goes all the way from <em>source</em> to <em>assembly</em> from scratch—no shortcuts!</p>
+<p>This book will teach you enough compiler theory and assembly programming to get going. It uses a subset of <strong>TypeScript</strong> that reads like pseudocode and targets <strong>ARM</strong> 32-bit instruction set.</p>
+<p><span id="Contents"></span></p>
+<h2>
+Contents
+</h2>
+<ol type="1">
+<li><a href="./">Introduction</a></li>
+<li><a href="./">TypeScript Basics</a></li>
+</ol>
+<p><em>Part I: Baseline Compiler</em></p>
+<ol start="3" type="1">
+<li><a href="./">High-level Compiler Overview</a></li>
+<li><a href="./">Abstract Syntax Tree</a></li>
+<li><a href="./">Introduction to Parser Combinators</a></li>
+<li><a href="./">First Pass: The Parser</a></li>
+<li><a href="./">Introduction to ARM Assembly Programming</a></li>
+<li><a href="./">Second Pass: Code Generation</a></li>
+</ol>
+<p><em>Part II: Compiler Extensions</em></p>
+<ol start="9" type="1">
+<li><a href="./">Introduction to Part II</a></li>
+<li><a href="./">Primitive Scalar Data Types</a></li>
+<li><a href="./">Arrays and Heap Allocation</a></li>
+<li><a href="./">Visitor Pattern</a></li>
+<li><a href="./">Static Type Checking and Inference</a></li>
+<li><a href="./">Dynamic Typing</a></li>
+<li><a href="./">Garbage Collection</a></li>
+</ol>
+<p><em>Appendices</em></p>
+<ol type="A">
+<li>
+<a href="./">Running ARM Programs</a>
+</li>
+<li>
+<a href="./">GAS v. ARMASM Syntax</a>
+</li>
+</ol>
+<center>
+<img src=/keleshev.jpg width=200 height=200 style="float:right; border-radius:200px; margin-top:50px" />
+</center>
+<h2 id="about-me">About me</h2>
+<p>My name is Vladimir Keleshev, I have worked with compilers both commercially and in open-source. My fondness of ARM assembly stems from my previous work in embedded systems. Currently, I work in finance with domain-specific languages.</p>
+<h2 id="questions-feedback">Questions? Feedback?</h2>
+<p>Email me at <a href="mailto:vladimir@keleshev.com">vladimir@keleshev.com</a>, DM me at <a href="https://twitter.com/keleshev"><span class="citation" data-cites="keleshev">@keleshev</span></a>, or open an issue or a pull request on <a href="https://github.com/keleshev/keleshev.com/tree/main/compiling-to-assembly-from-scratch">GitHub</a>.</p>
+<p><br /></p>
+<!--
+> <h2 class=h2-card >Be the first to know when the book is finalized!</h2>
+
+> <center>Reading a draft is not your style? I get it. Subscribe to be notified when the book is finalized (and related news about the book and compilers).</center>
+>
+>
+> <center><a href=https://sellfy.com/p/bkz0pv/ id=bkz0pv class=sellfy-buy-button data-text=Pre-order></a></center>
+>
+> <script async data-uid="f6381e8cdd" src="https://motivated-writer-7421.ck.page/f6381e8cdd/index.js"></script>
+>
+> <center><small>You can unsubscribe at any time</small></center>
+
+-->
+<!--script async data-uid="129429cd71" src="https://motivated-writer-7421.ck.page/129429cd71/index.js"></script-->
+<footer style="height:122px; overflow: hidden; position:relative;">
+<center style="pposition:absolute; overflow:visible;">
+<img style="object-fit:cover;" src=./spike.png width=256 height=260 />
+</center>
+</footer>
+<!--
+<footer style="height:122px; overflow:hidden; position:relative;">
+<div style="position:absolute; bottom:-138px; left:50%; transform:translateX(-50%); width:256px; height:260px;">
+<img src="./spike.png" alt="Footer Image" style="width:100%; height:100%; object-fit:cover;"/>
+</div>
+</footer>
+-->
+<!--
+<footer style="height:260px; overflow:hidden; position:relative;">
+<div style="position:absolute; top:-138px; left:50%; transform:translateX(-50%); width:256px; height:260px;">
+<img src="./spike.png" alt="Footer Image" style="width:100%; height:100%; object-fit:cover;"/>
+</div>
+</footer>
+-->
+
+
+</body>
+</html>
