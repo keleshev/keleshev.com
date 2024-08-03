@@ -160,13 +160,11 @@ my previous work in embedded systems.
 Currently, I work in finance
 with domain-specific languages.
 
-## Questions? Feedback?
+## Questions? Comments? Feedback?
 
-Email me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com),
-DM me at
-<a href="https://twitter.com/keleshev">@keleshev</a>,
-or open an issue or a pull request on 
-[GitHub](https://github.com/keleshev/keleshev.com/tree/main/compiling-to-assembly-from-scratch).
+ * Email me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com),
+ * DM me at <a href="https://twitter.com/keleshev">@keleshev</a>, or
+ * Open an issue or a pull request on [GitHub](https://github.com/keleshev/keleshev.com/tree/main/compiling-to-assembly-from-scratch).
 
 <br />
 
