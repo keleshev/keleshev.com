@@ -13,7 +13,7 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-fr
     position: absolute;
     width: 100%;
     height: 400px; /* Adjust height as needed */
-    background-image: url('./bg.png');
+    background-image: url('./compiling-to-assembly-from-scratch-photo.jpg');
     background-repeat: repeat;
     background-size: cover;
     background-position: center;
