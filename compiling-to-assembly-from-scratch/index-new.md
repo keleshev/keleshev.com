@@ -12,7 +12,7 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-fr
 <div style="
     position: absolute;
     width: 100%;
-    height: 400px; /* Adjust height as needed */
+    height: 500px; /* Adjust height as needed */
     background-image: url('./compiling-to-assembly-from-scratch-photo.jpg');
     background-repeat: repeat;
     background-size: cover;
@@ -20,7 +20,7 @@ twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-fr
     /* 700px is body width, 750px min viewport, -25px left margin */
     margin-left: min(-25px, calc((100% - 700px) / 2 * -1));
 "> </div>
-<div style=" height: 400px;"> </div>
+<div style=" height: 500px;"> </div>
 
 
 <p></p>
