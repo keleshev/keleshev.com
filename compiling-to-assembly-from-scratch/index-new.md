@@ -160,11 +160,27 @@ my previous work in embedded systems.
 Currently, I work in finance
 with domain-specific languages.
 
+## Citation
+
+<small>
+```
+@book{Keleshev:2024,
+  author="Vladimir Keleshev",
+  title="Compiling to Assembly from Scratch",
+  publisher="keleshev.com",
+  year=2024,
+  isbn="978-87-980078-0-7",
+  note="Originally published in 2020 as ebook",
+}
+```
+</small>
+
 ## Questions? Comments? Feedback?
 
  * Email me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com),
  * DM me at <a href="https://twitter.com/keleshev">@keleshev</a>, or
  * Open an issue or a pull request on [GitHub](https://github.com/keleshev/keleshev.com/tree/main/compiling-to-assembly-from-scratch).
+
 
 <br />
 
