@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>10. Primitive Scalar Data Types • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 10</small></small><br/>Primitive Scalar Data Types<br/><br/></h1>
+<p> </p>
+<p>When we say <em>scalar data types</em> we mean data types that fit into a single machine word, which is not a pointer but carries a value in itself. We already have one scalar data type for integer numbers.</p>
+<p>Let’s introduce a boolean data type. First, we need an AST node for it:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="bu">Boolean</span> <span class="kw">implements</span> AST {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">value</span><span class="op">:</span> boolean) {}</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emit</span>(<span class="dt">env</span><span class="op">:</span> Environment) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">this</span><span class="op">.</span><span class="at">value</span>) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">emit</span>(<span class="vs">`  mov r0, #1`</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">emit</span>(<span class="vs">`  mov r0, #0`</span>)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equals</span>(<span class="dt">other</span><span class="op">:</span> AST)<span class="op">:</span> boolean {…}</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We emit it the same way as integers 1 and 0 (for <code class="sourceCode javascript"><span class="kw">true</span></code> and <code class="sourceCode javascript"><span class="kw">false</span></code>).</p>
+<p>In the parser, we introduce new tokens for <code class="sourceCode javascript"><span class="kw">true</span></code> and <code class="sourceCode javascript"><span class="kw">false</span></code>, and compose them to create a <code class="sourceCode javascript">boolean</code> parser:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> TRUE <span class="op">=</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">token</span>(<span class="ss">/true</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> <span class="kw">new</span> <span class="bu">Boolean</span>(<span class="kw">true</span>))<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> FALSE <span class="op">=</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">token</span>(<span class="ss">/false</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> <span class="kw">new</span> <span class="bu">Boolean</span>(<span class="kw">false</span>))<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> boolean<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span> TRUE<span class="op">.</span><span class="fu">or</span>(FALSE)</span></code></pre></div>
+<p>We can extend the <code>atom</code> rule of the expression grammar by adding a <code>boolean</code> alternative. A good idea at this point is to introduce an additional <code>scalar</code> rule:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>scalar <span class="op">&lt;-</span> boolean <span class="op">/</span> ID <span class="op">/</span> NUMBER</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>atom <span class="op">&lt;-</span> call <span class="op">/</span> scalar <span class="op">/</span> LEFT_PAREN expression RIGHT_PAREN</span></code></pre></div>
+<p>Then, after implementing this grammar as a parser we get booleans in our extended baseline language:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span>(<span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span>(<span class="op">!</span><span class="kw">false</span>)<span class="op">;</span></span></code></pre></div>
+<p>However, they behave exactly like integers <code>1</code> and <code>0</code>, so <code class="sourceCode javascript"><span class="fu">assert</span>(<span class="kw">true</span> <span class="op">==</span> <span class="dv">1</span>)</code> will succeed. Under static typing, this comparison would be rejected by the compiler. Under dynamic typing, this would evaluate to <code class="sourceCode javascript"><span class="kw">false</span></code> at run-time.</p>
+<hr />
+<p>Similarly, we can add other scalars, such as <code class="sourceCode javascript"><span class="kw">undefined</span></code>, <code class="sourceCode javascript"><span class="kw">null</span></code> (that compile to 0, like <code class="sourceCode javascript"><span class="kw">false</span></code>), or a character type, which could compile to the integer value of its ASCII code (though, JavaScript and TypeScript treat characters as strings).</p>
+<table>
+<caption>Summary of AST constructor signatures with examples</caption>
+<colgroup>
+<col style="width: 77%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>AST Constructor Signature</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><p><code class="sourceCode javascript"><span class="bu">Boolean</span>(value<span class="op">:</span> boolean)</code></p>
+<p><code>Undefined()</code></p>
+<p><code>Null()</code></p></td>
+<td><p><code class="sourceCode javascript"><span class="kw">true</span></code></p>
+<p><code class="sourceCode javascript"><span class="kw">undefined</span></code></p>
+<p><code class="sourceCode javascript"><span class="kw">null</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<center><p><a href="./11-arrays-and-heap-allocation#fold">Next: Chapter 11. Arrays and Heap Allocation</a></p></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

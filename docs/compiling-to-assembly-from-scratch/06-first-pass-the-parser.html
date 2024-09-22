@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>6. First Pass: The Parser • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 6</small></small><br/>First Pass: The Parser<br/><br/></h1>
+<p> </p>
+<p>Now that we’ve got enough parsing machinery working, we can implement the parser that produces an AST from source for our compiler.</p>
+<h2 id="whitespace-and-comments">Whitespace and comments</h2>
+<p>First, let’s define parsers for whitespace and comments, which we collectively refer to as <em>ignored</em>. (When a parser is split into a lexer and a parser, parsing whitespace and comments is usually done at the lexer-level.)</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> whitespace <span class="op">=</span> <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[ \n\r\t]+</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> comments <span class="op">=</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[/][/]</span><span class="ss">.</span><span class="sc">*</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">or</span>(<span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[/][*]</span><span class="ss">.</span><span class="sc">*[*][/]</span><span class="ss">/sy</span>))<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> ignored <span class="op">=</span> <span class="fu">zeroOrMore</span>(whitespace<span class="op">.</span><span class="fu">or</span>(comments))<span class="op">;</span></span></code></pre></div>
+<p>We allow both single-line (<code class="sourceCode javascript"><span class="co">// …</span></code>) and multi-line (<code class="sourceCode javascript"><span class="co">/* … */</span></code>) comments. In JavaScript regular expressions, the dot matches any character, <em>except</em> newline. To implement multi-line comments, we need to match newline as well. It is possible to alter the meaning of the dot regular expression to match any character <em>including</em> newline by passing the “dot-all” flag “<code>s</code>” alongside the “sticky” flag “<code>y</code>”:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ss">/</span><span class="sc">[/][*]</span><span class="ss">.</span><span class="sc">*[*][/]</span><span class="ss">/sy</span></span></code></pre></div>
+<p>We use character classes with a single character like <code>[*]</code> as a readable way to escape characters that have special meaning in regular expressions. Otherwise, they quickly start looking like a broken saw:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ss">/</span><span class="sc">\/\*</span><span class="ss">.</span><span class="sc">*\*\/</span><span class="ss">/sy</span></span></code></pre></div>
+<h2 id="tokens">Tokens</h2>
+<p>Even though our parser is scanerless (or token-less), it is still useful to distinguish tokens as our syntactic building blocks. The idea is to build token-like parsers from simple character parsers, and only then build full parser on top of token-like parsers.</p>
+<p>As customary, we will use the naming convention for tokens (in grammar rules and parsers): they will be upper-case.</p>
+<p>Tokens provide us a higher-level view of our source than single characters. They allow us to not deal with minute details like whitespace and comments. And this is precisely how we’ll use them here. We’ll define a <code>token</code> parser combinator (or, more precisely, constructor) that allows us to ignore whitespace and comments around our lexemes (or tokens).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> token <span class="op">=</span> (pattern) <span class="kw">=&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(pattern)<span class="op">.</span><span class="fu">bind</span>((value) <span class="kw">=&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ignored<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(value)))<span class="op">;</span></span></code></pre></div>
+<p>It takes a regular expression pattern and returns a parser that is a sequence of that pattern and an <code>ignored</code> rule that we defined previously to handle whitespace and comments. It produces the string value matched by the pattern but ignores the value of the <code>ignored</code> rule. We “pad” with <code>ignored</code> only on the right-hand-side, not around the pattern. The latter would be redundant in all but the first token, which we can handle specially. This is a common way to handle whitespace and comments in scanerless parsers.</p>
+<p>We’ll start with defining tokens for keywords in our language, like <code class="sourceCode javascript"><span class="kw">function</span></code>, <code class="sourceCode javascript"><span class="cf">if</span></code>, <code class="sourceCode javascript"><span class="cf">else</span></code>, <code class="sourceCode javascript"><span class="cf">return</span></code>, <code class="sourceCode javascript"><span class="kw">var</span></code>, and <code class="sourceCode javascript"><span class="cf">while</span></code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> FUNCTION <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/function</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> IF <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/if</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> ELSE <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/else</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> RETURN <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/return</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> VAR <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/var</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> WHILE <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/while</span><span class="sc">\b</span><span class="ss">/y</span>)<span class="op">;</span></span></code></pre></div>
+<p>We’ve used a word-break escape sequence <code>\b</code> to make sure we don’t recognize <code>functional</code> as a keyword <code class="sourceCode javascript"><span class="kw">function</span></code> followed by identifier <code>al</code>.</p>
+<p>Then, tokens for punctuation: commas, parenthesis, etc.:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> COMMA <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[,]</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> SEMICOLON <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/;/y</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> LEFT_PAREN <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[(]</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> RIGHT_PAREN <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[)]</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> LEFT_BRACE <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[{]</span><span class="ss">/y</span>)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> RIGHT_BRACE <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[}]</span><span class="ss">/y</span>)<span class="op">;</span></span></code></pre></div>
+<p>Our baseline compiler will handle only decimal integer numbers <em>(base 10)</em>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> NUMBER <span class="op">=</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((digits) <span class="kw">=&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="bu">Number</span>(<span class="pp">parseInt</span>(digits<span class="op">,</span> <span class="dv">10</span>)))<span class="op">;</span></span></code></pre></div>
+<p>We map the <code>[0-9]+</code> token to convert digits to a JavaScript number using <code>parseInt</code> JavaScript built-in function that takes a string and a base number (10 for decimal). Then we construct a <code>Number</code> AST node from it.</p>
+<p>Identifiers start with a letter or an underscore and are followed by a number of letters, digits, and underscores. In other words, they can’t start with a digit.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> ID <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[a-zA-Z_][a-zA-Z0-9_]*</span><span class="ss">/y</span>)<span class="op">;</span></span></code></pre></div>
+<p>In some cases, it will be useful for us to parse identifiers just for their string value, but sometimes it is more convenient to produce the AST node. That’s why we create an alias <code>id</code>, which is the same as <code>ID</code>, but instead of producing a string, it produces an AST node <code>Id</code>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> id <span class="op">=</span> ID<span class="op">.</span><span class="fu">map</span>((x) <span class="kw">=&gt;</span> <span class="kw">new</span> <span class="fu">Id</span>(x))<span class="op">;</span></span></code></pre></div>
+<p>Now, the operator tokens:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> NOT <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/!/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Not)<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> EQUAL <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/==/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Equal)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> NOT_EQUAL <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/!=/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> NotEqual)<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> PLUS <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[+]</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Add)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> MINUS <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[-]</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Subtract)<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> STAR <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[*]</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Multiply)<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> SLASH <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/</span><span class="sc">[/]</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Divide)<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> ASSIGN <span class="op">=</span> <span class="fu">token</span>(<span class="ss">/=/y</span>)<span class="op">.</span><span class="fu">map</span>((_) <span class="kw">=&gt;</span> Assign)<span class="op">;</span></span></code></pre></div>
+<p>We cannot construct a full AST node out of a single operator, but it will be handy to return the class of the AST node.</p>
+<h2 id="grammar">Grammar</h2>
+<p>The grammar for our baseline compiler is split into two parts: <em>expressions</em> and <em>statements</em>. JavaScript (and TypeScript) is pretty relaxed about distinguishing the two. In general, expressions are constructs that produce a value like <code>1 + 2</code>, and statements are something that has an effect but does not produce a value, like a <code>while</code> loop.</p>
+<h2 id="expression-parser">Expression parser</h2>
+<p>We will start by constructing a parser for a single expression. Here is the grammar for an expression in the baseline language.</p>
+<pre><code>args &lt;- (expression (COMMA expression)*)?
+call &lt;- ID LEFT_PAREN args RIGHT_PAREN
+atom &lt;- call / ID / NUMBER
+      / LEFT_PAREN expression RIGHT_PAREN
+unary &lt;- NOT? atom
+product &lt;- unary ((STAR / SLASH) unary)*
+sum &lt;- product ((PLUS / MINUS) product)*
+comparison &lt;- sum ((EQUAL / NOT_EQUAL) sum)*
+expression &lt;- comparison</code></pre>
+<p>It consists of infix operations such as <code>==</code>, <code>!=</code>, <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, unary negation <code>!x</code>, identifiers, integer numbers, and function calls.</p>
+<p>The expression rule is split into several layers in order to handle operator precedence. The <code>expression</code> itself is just an alias to <code>comparison</code>. The <code>comparison</code> rule represents the operators with the lowest precedence: <code>==</code> and <code>!=</code>. The <code>comparison</code> itself is built out of <code>sum</code> in which operators have higher precedence: <code>+</code> and <code>-</code>. The <code>sum</code>, in turn, is built out of <code>product</code> rules with the highest precedence among infix operators: <code>*</code> and <code>/</code>. Those are built from <code>unary</code>, which represents unary operators, of which we have only negation: <code>!</code>. Negation has the highest precedence among all our operators. It is built upon a rule called <code>atom</code>. The <code>atom</code> rule represents the rules that are “atomic”, or require no precedence because of the way they are structured. For example, <code>ID</code> and <code>NUMBER</code> are single lexemes, so precedence doesn’t apply, while <code>call</code> and parenthesized expressions have explicit delimiters, so precedence doesn’t apply either. The <code>args</code> rule is extracted to simplify the <code>call</code> rule.</p>
+<p>This process of constructing parsers with increasing precedence is sometimes compared to adding beads to a rope.</p>
+<p>You can probably notice that the lowest-level rules, such as <code>atom</code> and <code>call</code> (via <code>args</code>) refer back to <code>expression</code>. This means that our grammar is <em>recursive</em>. This creates a slight problem for constructing a parser for this grammar. While JavaScript allows for recursive functions, it does not allow for recursive values. Other languages allow for so-called <code>let-rec</code> bindings, but not JavaScript. The way we handle this is by initially defining <code>expression</code> as an <code>error</code> parser:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> expression<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  Parser<span class="op">.</span><span class="fu">error</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Expression parser used before definition&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Now we are free to use it when constructing our parser. However, we must remember to change this parser in-place once we define <code>comparison</code> and before we use it:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>expression<span class="op">.</span><span class="at">parse</span> <span class="op">=</span> comparison<span class="op">.</span><span class="at">parse</span><span class="op">;</span></span></code></pre></div>
+<h2 id="call-parser">Call parser</h2>
+<p>We need to implement <code>call</code> by first implementing <code>args</code>.</p>
+<pre><code>args &lt;- (expression (COMMA expression)*)?
+call &lt;- ID LEFT_PAREN args RIGHT_PAREN</code></pre>
+<p>Mechanically converting the <code>args</code> to a parser gives us:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// args &lt;- (expression (COMMA expression)*)?</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> args <span class="op">=</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">maybe</span>(</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    expression<span class="op">.</span><span class="fu">and</span>(<span class="fu">zeroOrMore</span>(COMMA<span class="op">.</span><span class="fu">and</span>(expression))))</span></code></pre></div>
+<p>Like in the case of the <code>Call</code> AST node, we called it <code>args</code> instead of <code>arguments</code>, because <code>arguments</code> is a special JavaScript object, and we don’t want to clash with it.</p>
+<p>We want this parser to return something useful, like an array of AST nodes. The <code>maybe</code> combinator returns <code>null</code> if it doesn’t match, but we want an empty array, so let’s replace it with <code>.or(constant([]))</code>. We need to bind the first expression, then the rest of the expressions, and then concatenate them. By doing that we end up with the following:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// args &lt;- (expression (COMMA expression)*)?</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> args<span class="op">:</span> Parser<span class="op">&lt;</span><span class="bu">Array</span><span class="op">&lt;</span>AST<span class="op">&gt;&gt;</span> <span class="op">=</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  expression<span class="op">.</span><span class="fu">bind</span>((arg) <span class="kw">=&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">zeroOrMore</span>(COMMA<span class="op">.</span><span class="fu">and</span>(expression))<span class="op">.</span><span class="fu">bind</span>((args) <span class="kw">=&gt;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">constant</span>([arg<span class="op">,</span> <span class="op">...</span>args])))<span class="op">.</span><span class="fu">or</span>(<span class="fu">constant</span>([]))</span></code></pre></div>
+<p>The expression <code>zeroOrMore(COMMA.and(expression))</code> conveniently ignores the commas and produces an array of AST nodes.</p>
+<p>Now, implementing <code>call</code> mechanically from grammar gives us:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// call &lt;- ID LEFT_PAREN args RIGHT_PAREN</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> call <span class="op">=</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  ID<span class="op">.</span><span class="fu">and</span>(LEFT_PAREN<span class="op">.</span><span class="fu">and</span>(args<span class="op">.</span><span class="fu">and</span>(RIGHT_PAREN)))</span></code></pre></div>
+<p>We bind <code>ID</code> (that represents the name of the callee) and <code>args</code> to construct a <code>Call</code> node:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// call &lt;- ID LEFT_PAREN args RIGHT_PAREN</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> call<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  ID<span class="op">.</span><span class="fu">bind</span>((callee) <span class="kw">=&gt;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    LEFT_PAREN<span class="op">.</span><span class="fu">and</span>(args<span class="op">.</span><span class="fu">bind</span>((args) <span class="kw">=&gt;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>      RIGHT_PAREN<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">Call</span>(callee<span class="op">,</span> args))))))<span class="op">;</span></span></code></pre></div>
+<h2 id="atom">Atom</h2>
+<p>The next parser is <code>atom</code>. To ensure that it produces an AST, we need to use <code>id</code> rule instead of <code>ID</code>. We also bind the <code>expression</code> to extract its value.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// atom &lt;- call / ID / NUMBER</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">//       / LEFT_PAREN expression RIGHT_PAREN</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> atom<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  call<span class="op">.</span><span class="fu">or</span>(id)<span class="op">.</span><span class="fu">or</span>(NUMBER)<span class="op">.</span><span class="fu">or</span>(</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    LEFT_PAREN<span class="op">.</span><span class="fu">and</span>(expression)<span class="op">.</span><span class="fu">bind</span>((e) <span class="kw">=&gt;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>      RIGHT_PAREN<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(e))))<span class="op">;</span></span></code></pre></div>
+<p>The order of the choices is important. If the rule started as <code>ID / call</code> instead, <code>call</code> would never match, since <code>call</code> itself begins with an <code>ID</code>.</p>
+<h2 id="unary-operators">Unary operators</h2>
+<p>For unary parser, we bind both <code>NOT?</code> and <code>atom</code>. If <code>NOT</code> operator is present we construct the <code>Not</code> AST node, otherwise, we produce the underlying node.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// unary &lt;- NOT? atom</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> unary<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">maybe</span>(NOT)<span class="op">.</span><span class="fu">bind</span>((not) <span class="kw">=&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    atom<span class="op">.</span><span class="fu">map</span>((term) <span class="kw">=&gt;</span> not <span class="op">?</span> <span class="kw">new</span> <span class="fu">Not</span>(term) <span class="op">:</span> term))<span class="op">;</span></span></code></pre></div>
+<p>We have bound the value of the <code>atom</code> to a name <code>term</code>, which we will use as a catch-all phrase when binding expressions or statements.</p>
+<h2 id="infix-operators">Infix operators</h2>
+<!-- TODO "precedence language confusing: lower is higher, higher is lower? -->
+<p>Infix operators are all constructed similarly, with lower precedence rules building upon higher precedence rules.</p>
+<pre><code>product &lt;- unary ((STAR / SLASH) unary)*
+sum &lt;- product ((PLUS / MINUS) product)*
+comparison &lt;- sum ((EQUAL / NOT_EQUAL) sum)*</code></pre>
+<p>You can probably remember that we made sure that operator rule parsers produce the class of the corresponding AST node. For example, the <code>EQUAL</code> token produces the <code>Equal</code> class. We will use that property.</p>
+<p>We’ll start with the <code>product</code> parser. Naive mechanical translation gives us:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// product &lt;- unary ((STAR / SLASH) unary)*</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> product <span class="op">=</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  unary<span class="op">.</span><span class="fu">and</span>(<span class="fu">zeroOrMore</span>(STAR<span class="op">.</span><span class="fu">or</span>(SLASH)<span class="op">.</span><span class="fu">and</span>(unary)))<span class="op">;</span></span></code></pre></div>
+<p>Binding the first <code>unary</code> is easy. However, constructing a nested AST from all of this is not.</p>
+<p>We can map <code>(STAR / SLASH) unary</code> to an intermediate data structure <code>{operator, term}</code>, which is a pair constructed from <code>STAR / SLASH</code> and <code>unary</code> values. This way, we get an array of operator-term pairs. We bind the <code>unary</code> and call its value <code>first</code>.</p>
+<p>For example, if we were parsing a string <code>"x * y / z"</code>, then <code>first</code> would be <code>new Id("x")</code>, while <code>operatorTerms</code> would be an array like this:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>[</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  {<span class="dt">operator</span><span class="op">:</span> Multiply<span class="op">,</span> <span class="dt">term</span><span class="op">:</span> <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;y&quot;</span>)}<span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  {<span class="dt">operator</span><span class="op">:</span> Divide<span class="op">,</span>   <span class="dt">term</span><span class="op">:</span> <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;z&quot;</span>)}<span class="op">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<p>How do we reduce those into an AST node like the following?</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">new</span> <span class="fu">Divide</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">Multiply</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;x&quot;</span>)<span class="op">,</span> <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;y&quot;</span>))<span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;z&quot;</span>))</span></code></pre></div>
+<p>Turns out that <code>array.reduce</code> is precisely the method that can accomplish this! Here’s the resulting code:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// product &lt;- unary ((STAR / SLASH) unary)*</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> product <span class="op">=</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  unary<span class="op">.</span><span class="fu">bind</span>((first) <span class="kw">=&gt;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">zeroOrMore</span>(STAR<span class="op">.</span><span class="fu">or</span>(SLASH)<span class="op">.</span><span class="fu">bind</span>((operator) <span class="kw">=&gt;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>      unary<span class="op">.</span><span class="fu">bind</span>((term) <span class="kw">=&gt;</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>({operator<span class="op">,</span> term}))))<span class="op">.</span><span class="fu">map</span>((operatorTerms) <span class="kw">=&gt;</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>          operatorTerms<span class="op">.</span><span class="fu">reduce</span>((left<span class="op">,</span> {operator<span class="op">,</span> term}) <span class="kw">=&gt;</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="fu">operator</span>(left<span class="op">,</span> term)<span class="op">,</span> first)))<span class="op">;</span></span></code></pre></div>
+<p>Quite a mouthful! Fortunately, this is the most complicated rule that we will encounter. Even better, we can extract this repeating pattern into another parser combinator and use it again. We’ll call that combinator <code>infix</code>:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> infix <span class="op">=</span> (operatorParser<span class="op">,</span> termParser) <span class="kw">=&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  termParser<span class="op">.</span><span class="fu">bind</span>((term) <span class="kw">=&gt;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">zeroOrMore</span>(operatorParser<span class="op">.</span><span class="fu">bind</span>((operator) <span class="kw">=&gt;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>      termParser<span class="op">.</span><span class="fu">bind</span>((term) <span class="kw">=&gt;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>({operator<span class="op">,</span> term}))))<span class="op">.</span><span class="fu">map</span>((operatorTerms) <span class="kw">=&gt;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>          operatorTerms<span class="op">.</span><span class="fu">reduce</span>((left<span class="op">,</span> {operator<span class="op">,</span> term}) <span class="kw">=&gt;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="fu">operator</span>(left<span class="op">,</span> term)<span class="op">,</span> term)))<span class="op">;</span></span></code></pre></div>
+<p>We changed our <code>product</code> rule into a function that takes two parameters: <code>operatorParser</code> and <code>termParser</code>. We replaced <code>unary</code> with <code>termParser</code> and <code>STAR.or(SLASH)</code> with <code>operatorParser</code>. And now we’ve got a reusable combinator, which we can use not only for <code>product</code> but also for <code>sum</code> and <code>comparison</code>.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">// product &lt;- unary ((STAR / SLASH) unary)*</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> product <span class="op">=</span> <span class="fu">infix</span>(STAR<span class="op">.</span><span class="fu">or</span>(SLASH)<span class="op">,</span> unary)<span class="op">;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co">// sum &lt;- product ((PLUS / MINUS) product)*</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> sum <span class="op">=</span> <span class="fu">infix</span>(PLUS<span class="op">.</span><span class="fu">or</span>(MINUS)<span class="op">,</span> product)<span class="op">;</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co">// comparison &lt;- sum ((EQUAL / NOT_EQUAL) sum)*</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> comparison <span class="op">=</span> <span class="fu">infix</span>(EQUAL<span class="op">.</span><span class="fu">or</span>(NOT_EQUAL)<span class="op">,</span> sum)<span class="op">;</span></span></code></pre></div>
+<h2 id="associativity">Associativity</h2>
+<p>When we parse <code>"x * y / z"</code> we want it to be interpreted as <code>"(x * y) / z"</code> and produce the corresponding AST:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">new</span> <span class="fu">Divide</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">Multiply</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;x&quot;</span>)<span class="op">,</span> <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;y&quot;</span>))<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;z&quot;</span>))</span></code></pre></div>
+<p>Thus, we say that these operators are left-associative. At the moment we don’t have any right-associative operators, but if we did, we would use the same grammar rules, but we would have to use <code>array.reduceBack</code> instead of <code>array.reduce</code> to construct the AST, with some adjustments.</p>
+<h2 id="closing-the-loop-expression">Closing the loop: expression</h2>
+<p>Now that we have defined <code>comparison</code>, we can finally define <code>expression</code> which had only a dummy implementation so far. We do that by overwriting the <code>parse</code> method of <code>expression</code>:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">// expression &lt;- comparison</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>expression<span class="op">.</span><span class="at">parse</span> <span class="op">=</span> comparison<span class="op">.</span><span class="at">parse</span><span class="op">;</span></span></code></pre></div>
+<h2 id="statement">Statement</h2>
+<p>Next up is parsing statements. Here’s the grammar:</p>
+<pre><code>returnStatement &lt;- RETURN expression SEMICOLON
+
+expressionStatement &lt;- expression SEMICOLON
+
+ifStatement &lt;-
+  IF LEFT_PAREN expression RIGHT_PAREN
+    statement
+  ELSE
+    statement
+
+whileStatement &lt;-
+  WHILE LEFT_PAREN expression RIGHT_PAREN statement
+
+varStatement &lt;- VAR ID ASSIGN expression SEMICOLON
+
+assignmentStatement &lt;- ID ASSIGN EXPRESSION SEMICOLON
+
+blockStatement &lt;- LEFT_BRACE statement* RIGHT_BRACE
+
+parameters &lt;- (ID (COMMA ID)*)?
+
+functionStatement &lt;-
+  FUNCTION ID LEFT_PAREN parameters RIGHT_PAREN
+  blockStatement
+
+statement &lt;- returnStatement
+           / ifStatement
+           / whileStatement
+           / varStatement
+           / assignmentStatemnt
+           / blockStatement
+           / functionStatement
+           / expressionStatement</code></pre>
+<p>The high-level structure is very similar, as in the case of expressions. It consists of several rules, with <code>statement</code> defined recursively. Again, we start with a dummy implementation:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> statement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  Parser<span class="op">.</span><span class="fu">error</span>(</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Statement parser used before definition&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>First statement kind is <code>returnStatment</code> that produces the <code>Return</code> AST node:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// returnStatement &lt;- RETURN expression SEMICOLON</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> returnStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  RETURN<span class="op">.</span><span class="fu">and</span>(expression)<span class="op">.</span><span class="fu">bind</span>((term) <span class="kw">=&gt;</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    SEMICOLON<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">Return</span>(term))))<span class="op">;</span></span></code></pre></div>
+<p>The <code>expressionStatement</code> is an <code>expression</code> delimited with a semicolon:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">// expressionStatement &lt;- expression SEMICOLON</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> expressionStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  expression<span class="op">.</span><span class="fu">bind</span>((term) <span class="kw">=&gt;</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    SEMICOLON<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(term)))<span class="op">;</span></span></code></pre></div>
+<p>The <code>ifStatement</code> produces the <code>If</code> node:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ifStatement &lt;-</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co">//   IF LEFT_PAREN expression RIGHT_PAREN</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="co">//     statement</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   ELSE</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="co">//     statement</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> ifStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  IF<span class="op">.</span><span class="fu">and</span>(LEFT_PAREN)<span class="op">.</span><span class="fu">and</span>(expression)<span class="op">.</span><span class="fu">bind</span>(</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    (conditional) <span class="kw">=&gt;</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>      RIGHT_PAREN<span class="op">.</span><span class="fu">and</span>(statement)<span class="op">.</span><span class="fu">bind</span>((consequence) <span class="kw">=&gt;</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>        ELSE<span class="op">.</span><span class="fu">and</span>(statement)<span class="op">.</span><span class="fu">bind</span>((alternative) <span class="kw">=&gt;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>          <span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">If</span>(conditional<span class="op">,</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>                          consequence<span class="op">,</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>                          alternative)))))<span class="op">;</span></span></code></pre></div>
+<p>The <code>whileStatment</code> is syntactically similar to the <code>ifStatement</code>:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">// whileStatement &lt;-</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co">//   WHILE LEFT_PAREN expression RIGHT_PAREN statement</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> whileStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  WHILE<span class="op">.</span><span class="fu">and</span>(LEFT_PAREN)<span class="op">.</span><span class="fu">and</span>(expression)<span class="op">.</span><span class="fu">bind</span>(</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    (conditional) <span class="kw">=&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>      RIGHT_PAREN<span class="op">.</span><span class="fu">and</span>(statement)<span class="op">.</span><span class="fu">bind</span>((body) <span class="kw">=&gt;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">While</span>(conditional<span class="op">,</span> body))))<span class="op">;</span></span></code></pre></div>
+<p>The <code>varStatment</code> and the <code>assigmentStatement</code> are similar as well:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// varStatement &lt;-</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co">//   VAR ID ASSIGN expression SEMICOLON</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> varStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  VAR<span class="op">.</span><span class="fu">and</span>(ID)<span class="op">.</span><span class="fu">bind</span>((name) <span class="kw">=&gt;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    ASSIGN<span class="op">.</span><span class="fu">and</span>(expression)<span class="op">.</span><span class="fu">bind</span>((value) <span class="kw">=&gt;</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      SEMICOLON<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">Var</span>(name<span class="op">,</span> value)))))<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">// assignmentStatement &lt;- ID ASSIGN EXPRESSION SEMICOLON</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> assignmentStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  ID<span class="op">.</span><span class="fu">bind</span>((name) <span class="kw">=&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    ASSIGN<span class="op">.</span><span class="fu">and</span>(expression)<span class="op">.</span><span class="fu">bind</span>((value) <span class="kw">=&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>      SEMICOLON<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">Assign</span>(name<span class="op">,</span> value)))))<span class="op">;</span></span></code></pre></div>
+<p>Technically speaking, in JavaScript, the assignment is an expression, but for simplicity, we defined it as a statement. That’s also how it is used most of the time.</p>
+<p>The block statement is a list of statements delimited with braces. It produces a <code>Block</code> node:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">// blockStatement &lt;- LEFT_BRACE statement* RIGHT_BRACE</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> blockStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  LEFT_BRACE<span class="op">.</span><span class="fu">and</span>(<span class="fu">zeroOrMore</span>(statement))<span class="op">.</span><span class="fu">bind</span>(</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    (statements) <span class="kw">=&gt;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>      RIGHT_BRACE<span class="op">.</span><span class="fu">and</span>(<span class="fu">constant</span>(<span class="kw">new</span> <span class="fu">Block</span>(statements))))<span class="op">;</span></span></code></pre></div>
+<p>Function parameters rule is very similar to the <code>args</code> rule that we defined previously (in terms of parser structure), but the parser produces an <code>Array&lt;string&gt;</code> instead of <code>Array&lt;AST&gt;</code>:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co">// parameters &lt;- (ID (COMMA ID)*)?</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> parameters<span class="op">:</span> Parser<span class="op">&lt;</span><span class="bu">Array</span><span class="op">&lt;</span>string<span class="op">&gt;&gt;</span> <span class="op">=</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  ID<span class="op">.</span><span class="fu">bind</span>((param) <span class="kw">=&gt;</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">zeroOrMore</span>(COMMA<span class="op">.</span><span class="fu">and</span>(ID))<span class="op">.</span><span class="fu">bind</span>((params) <span class="kw">=&gt;</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">constant</span>([param<span class="op">,</span> <span class="op">...</span>params])))<span class="op">.</span><span class="fu">or</span>(<span class="fu">constant</span>([]))</span></code></pre></div>
+<p>The function definition (which we also refer to as a statement) builds upon <code>parameters</code> and <code>blockStatement</code> to produce a <code>Function</code> node:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">// functionStatement &lt;-</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="co">//   FUNCTION ID LEFT_PAREN parameters RIGHT_PAREN</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co">//   blockStatement</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> functionStatement<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  FUNCTION<span class="op">.</span><span class="fu">and</span>(ID)<span class="op">.</span><span class="fu">bind</span>((name) <span class="kw">=&gt;</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    LEFT_PAREN<span class="op">.</span><span class="fu">and</span>(parameters)<span class="op">.</span><span class="fu">bind</span>((parameters) <span class="kw">=&gt;</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>      RIGHT_PAREN<span class="op">.</span><span class="fu">and</span>(blockStatement)<span class="op">.</span><span class="fu">bind</span>((block) <span class="kw">=&gt;</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>(</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>          <span class="kw">new</span> <span class="bu">Function</span>(name<span class="op">,</span> parameters<span class="op">,</span> block)))))<span class="op">;</span></span></code></pre></div>
+<p>We define <code>statement</code> as one of the above statements, and we tie the recursive knot by modifying the original <code>statement.parser</code>.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">// statement &lt;- returnStatement</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="co">//            / ifStatement</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="co">//            / whileStatement</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="co">//            / varStatement</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co">//            / assignmentStatement</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="co">//            / blockStatement</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="co">//            / functionStatement</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="co">//            / expressionStatement</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> statementParser<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  returnStatement</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(functionStatement)</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(ifStatement)</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(whileStatement)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(varStatement)</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(assignmentStatement)</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(blockStatement)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">or</span>(expressionStatement)<span class="op">;</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>statement<span class="op">.</span><span class="at">parse</span> <span class="op">=</span> statementParser<span class="op">.</span><span class="at">parse</span><span class="op">;</span></span></code></pre></div>
+<p>And since our language should accept more than one statement, we need one final touch to complete our parser:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> parser<span class="op">:</span> Parser<span class="op">&lt;</span>AST<span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  ignored<span class="op">.</span><span class="fu">and</span>(<span class="fu">zeroOrMore</span>(statement))<span class="op">.</span><span class="fu">map</span>((statements) <span class="kw">=&gt;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="fu">Block</span>(statements))<span class="op">;</span></span></code></pre></div>
+<p>It starts with allowing the “ignored” whitespace and comments (which need to be explicitly ignored before the first logical token) and follows by zero or more statements that we convert to a <code>Block</code> node.</p>
+<h2 id="testing">Testing</h2>
+<p>It is essential to test the parser at each step of the way. The examples from the chapter <em>Abstract Syntax Tree</em> provide a good source of unit tests. And here’s an example of a possible integration test:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> source <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="vs">  function factorial(n) {</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="vs">    var result = 1;</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    while (n != 1) {</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="vs">      result = result * n;</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="vs">      n = n - 1;</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="vs">    return result;</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="vs">  }</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> expected <span class="op">=</span> <span class="kw">new</span> <span class="fu">Block</span>([</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="bu">Function</span>(<span class="st">&quot;factorial&quot;</span><span class="op">,</span> [<span class="st">&quot;n&quot;</span>]<span class="op">,</span> <span class="kw">new</span> <span class="fu">Block</span>([</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="fu">Var</span>(<span class="st">&quot;result&quot;</span><span class="op">,</span> <span class="kw">new</span> <span class="bu">Number</span>(<span class="dv">1</span>))<span class="op">,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="fu">While</span>(<span class="kw">new</span> <span class="fu">NotEqual</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;n&quot;</span>)<span class="op">,</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>                           <span class="kw">new</span> <span class="bu">Number</span>(<span class="dv">1</span>))<span class="op">,</span> <span class="kw">new</span> <span class="fu">Block</span>([</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">new</span> <span class="fu">Assign</span>(<span class="st">&quot;result&quot;</span><span class="op">,</span> <span class="kw">new</span> <span class="fu">Multiply</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;result&quot;</span>)<span class="op">,</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>                                        <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;n&quot;</span>)))<span class="op">,</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">new</span> <span class="fu">Assign</span>(<span class="st">&quot;n&quot;</span><span class="op">,</span> <span class="kw">new</span> <span class="fu">Subtract</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;n&quot;</span>)<span class="op">,</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>                                   <span class="kw">new</span> <span class="bu">Number</span>(<span class="dv">1</span>)))<span class="op">,</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    ]))<span class="op">,</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="fu">Return</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;result&quot;</span>))<span class="op">,</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  ]))<span class="op">,</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>])<span class="op">;</span></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result <span class="op">=</span> parser<span class="op">.</span><span class="fu">parseStringToCompletion</span>(source)<span class="op">;</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(result<span class="op">.</span><span class="fu">equals</span>(expected))<span class="op">;</span></span></code></pre></div>
+<hr />
+<center>
+<p>
+The parser is now complete, and so is the first pass of our compiler.
+<p>
+</center>
+<!--\begin{center}The parser is now complete, and so is the first pass of our compiler. \end{center}-->
+<!--\newpage
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}-->
+<center><a href="./07-arm-assembly-programming#fold">Next: Chapter 7. ARM Assembly Programming</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

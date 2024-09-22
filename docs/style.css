@@ -63,10 +63,15 @@ code span.dt {
 
 pre {
     border-left: 2.5px solid black;
+    padding-left: 1.20em;
+
     margin-left: 0;
     /*font-family: 'Fira Code';*/
-    font-family: monospace;
+    font-family: Courier, monospace;
     line-height: 150%;
+}
+code {
+    font-family: Courier, monospace;
 }
 blockquote {
     border: 2.5px solid black;
@@ -74,10 +79,6 @@ blockquote {
     margin-right: 0;
     padding-left: 1.5em;
     padding-right: 1.5em;
-}
-pre {
-    padding-left: 1.20em;
-    //padding-left: 0.0em;
 }
 
 pre em {
@@ -349,6 +350,32 @@ figcaption {
   display: table-caption;
   caption-side: bottom;
   margin-top: 1em;
+}
+
+
+/* Display tables similar to LaTeX output */
+table {
+  border-collapse: collapse;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  margin-left: auto;
+  margin-right: auto;
+}
+thead {
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+}
+thead th {
+  font-weight: normal;
+}
+table pre {
+  /* Undo left border for code blocks inside tables */
+  border-left: none;
+  padding-left: 0;
+}
+
+pre {
+  text-align: left !important;
 }
 
 

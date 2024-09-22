@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>12. Visitor Pattern • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 12</small></small><br/>Visitor Pattern<br/><br/></h1>
+<p> </p>
+<p>We are about to add more passes to our compiler: type checking, and code generation for dynamic typing. What we could do is extend the AST interface with new methods, one for each pass. It can look something like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AST {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emit</span>(<span class="dt">env</span><span class="op">:</span> Environment)<span class="op">:</span> <span class="kw">void</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emitDynamic</span>(<span class="dt">env</span><span class="op">:</span> Environment)<span class="op">:</span> <span class="kw">void</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">typeCheck</span>(<span class="dt">env</span><span class="op">:</span> TypeEnvironment)<span class="op">:</span> Type<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equal</span>(<span class="dt">other</span><span class="op">:</span> AST)<span class="op">:</span> boolean<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>And this is perfectly fine. However, this way, code for each pass is intertwined with code for every other pass. In other words, code is grouped by an AST node and not by a pass.</p>
+<p>Using the <em>visitor pattern</em> we can group the code for each pass together under a separate class. The visitor pattern allows us to decouple our passes from AST by using indirection. Instead of having a method <em>per pass, per AST node</em> we add a single method <em>per AST node</em> called <code>visit</code> that delegates the action to a class that implements the <em>visitor interface</em>. The <em>visitor interface</em> has one method per AST node: <code>visitAssert</code>, <code>visitLength</code>, <code>visitNumber</code>, etc.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AST {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  visit<span class="op">&lt;</span>T<span class="op">&gt;</span>(<span class="dt">v</span><span class="op">:</span> Visitor<span class="op">&lt;</span>T<span class="op">&gt;</span>)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equal</span>(<span class="dt">other</span><span class="op">:</span> AST)<span class="op">:</span> boolean<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Visitor<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitAssert</span>(<span class="dt">node</span><span class="op">:</span> Assert)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitLength</span>(<span class="dt">node</span><span class="op">:</span> Length)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitNumber</span>(<span class="dt">node</span><span class="op">:</span> <span class="bu">Number</span>)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitBoolean</span>(<span class="dt">node</span><span class="op">:</span> <span class="bu">Boolean</span>)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitNot</span>(<span class="dt">node</span><span class="op">:</span> Not)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitEqual</span>(<span class="dt">node</span><span class="op">:</span> Equal)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Each AST node implements the new <code>AST</code> interface by calling the corresponding visitor method. For example, <code>Assert</code> calls <code>visitAssert</code>, <code>Length</code> calls <code>visitLength</code>, etc.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Assert <span class="kw">implements</span> AST {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">condition</span><span class="op">:</span> AST) {}</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  visit<span class="op">&lt;</span>T<span class="op">&gt;</span>(<span class="dt">v</span><span class="op">:</span> Visitor<span class="op">&lt;</span>T<span class="op">&gt;</span>) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> v<span class="op">.</span><span class="fu">visitAssert</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equals</span>(<span class="dt">other</span><span class="op">:</span> AST)<span class="op">:</span> boolean {…}</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Length <span class="kw">implements</span> AST {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">array</span><span class="op">:</span> AST) {}</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  visit<span class="op">&lt;</span>T<span class="op">&gt;</span>(<span class="dt">v</span><span class="op">:</span> Visitor<span class="op">&lt;</span>T<span class="op">&gt;</span>) {</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> v<span class="op">.</span><span class="fu">visitLength</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equals</span>(<span class="dt">other</span><span class="op">:</span> AST)<span class="op">:</span> boolean {…}</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The visitor interface <code>Visitor&lt;T&gt;</code> is generic. That means it can be used to implement passes that return different things. For example, <code>Visitor&lt;AST&gt;</code> produces an <code>AST</code> node, <code>Visitor&lt;void&gt;</code> can emit code as a side-effect.</p>
+<p>Let’s convert our existing code generation pass into a visitor. Since our existing <code>emit</code> method returned <code class="sourceCode javascript"><span class="kw">void</span></code>, our new visitor will implement <code>Visitor&lt;void&gt;</code>. Instead of having a separate <code>Environment</code> class, we make the visitor constructor take all the environment parameters. In a way, the visitor becomes the environment.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CodeGenerator <span class="kw">implements</span> Visitor<span class="op">&lt;</span><span class="kw">void</span><span class="op">&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">locals</span><span class="op">:</span> <span class="bu">Map</span><span class="op">&lt;</span>string<span class="op">,</span> number<span class="op">&gt;,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>              <span class="kw">public</span> <span class="dt">nextLocalOffset</span><span class="op">:</span> number) {}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitAssert</span>(<span class="dt">node</span><span class="op">:</span> Assert) {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">condition</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  cmp r0, #1`</span>)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  moveq r0, #&#39;.&#39;`</span>)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  movne r0, #&#39;F&#39;`</span>)<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  bl putchar`</span>)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitLength</span>(<span class="dt">node</span><span class="op">:</span> Length) {</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">array</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  ldr r0, [r0, #0]`</span>)<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We copy the body of each method, like <code>Assert.emit</code> and <code>Length.emit</code> into the visitor methods, like <code>visitAssert</code> and <code>visitLength</code>.</p>
+<p>In <code>emit</code> methods we used to call <code>emit</code> recursively for inner nodes, like this:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emit</span>(env<span class="op">:</span> Environment)<span class="op">:</span> <span class="kw">void</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">array</span><span class="op">.</span><span class="fu">emit</span>(env)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  ldr r0, [r0, #0]`</span>)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>Now, instead, we call the <code>visit</code> method on them.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitLength</span>(node<span class="op">:</span> Length) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">array</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(<span class="vs">`  ldr r0, [r0, #0]`</span>)<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>Previously <code class="sourceCode javascript"><span class="kw">this</span></code> referred to the AST node, but now the node is passed as the parameter called <code>node</code>. Now, <code class="sourceCode javascript"><span class="kw">this</span></code> refers to the visitor itself, which we pass instead of the <code>env</code> parameter.</p>
+<p>In rare places where we created a new environment, we create a new visitor instead with the updated environment. Here’s an example from <code>visitFunction</code>.</p>
+<p>Before:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> env <span class="op">=</span> <span class="kw">new</span> <span class="fu">Environment</span>(locals<span class="op">,</span> <span class="op">-</span><span class="dv">20</span>)<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="fu">emit</span>(env)<span class="op">;</span></span></code></pre></div>
+<p>After:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> visitor <span class="op">=</span> <span class="kw">new</span> <span class="fu">CodeGenerator</span>(locals<span class="op">,</span> <span class="op">-</span><span class="dv">20</span>)<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="fu">visit</span>(visitor)<span class="op">;</span></span></code></pre></div>
+<p>As you can see, converting from an AST-based pass to a visitor-based pass is a purely mechanical transformation. New passes that we will introduce will also be based on the visitor pattern.</p>
+<!--- print layout
+
+> **Note:**
+>
+> If you are using a functional programming language you might notice that the visitor pattern corresponds to pattern matching.
+
+-->
+<center><a href="./13-static-type-checking-and-inference#fold">Next: Chapter 13. Static Type Checking and Inference</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

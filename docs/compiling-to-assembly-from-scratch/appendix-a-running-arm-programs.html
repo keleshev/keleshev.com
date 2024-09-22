@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>Appendix A: Running ARM Programs • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Appendix A</small></small><br/>Running ARM Programs<br/><br/></h1>
+<!-- Changes chapter labels from "Chapter" to "Appendix" -->
+<h2 id="bit-linux-on-arm-e.g.-raspberry-pi">32-bit Linux on ARM (e.g. Raspberry Pi)</h2>
+<p>If you’re a lucky owner of an ARM board like Raspberry Pi, you don’t need any special steps. You can use the built-in <code>gcc</code> toolchain and run the produced executables natively, as discussed in the book. Just make sure to run a 32-bit operating system.</p>
+<p>For example, assuming you have an assembly listing <code>hello.s</code> from <em>Part I</em>, you can assemble it like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> gcc hello.s <span class="at">-o</span> hello</span></code></pre></div>
+<p>And then, you can run the produced executable natively:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> assembly!</span></code></pre></div>
+<p>Even though modern Raspberry Pi boards have a 64-bit–capable processor, they can perfectly well run 32-bit operating systems.</p>
+<p>If you want to run a 64-bit OS on Raspberry Pi, you can still execute 32-bit code. In that case the instructions that follow apply.</p>
+<h2 id="bit-linux-on-arm">64-bit Linux on ARM</h2>
+<p>The following instructions are relevant in case you’re running 64-bit Linux on an ARM device, for example:</p>
+<ul>
+<li>a newer Raspberry Pi,</li>
+<li>an ARM laptop, such as Pinebook Pro,</li>
+<li>an ARM development board,</li>
+<li>an ARM server or compute instance.</li>
+</ul>
+<p>The good news is that most 64-bit ARM processors are backwards-compatible and can run 32-bit ARM executables natively.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>There are cases when chip manufactures disable 32-bit support to save costs. Most notably, this is the case for Apple Silicon.</p>
+</blockquote>
+<p>Note, in the case of 64-bit Linux on ARM, the built-in <code>gcc</code> toolchain supports only the 64-bit version of ARM assembly, which is different from the 32-bit assembly used in this book. That means you need to install a version of the <code>gcc</code> toolchain that targets 32-bit ARM. Assuming a Debian-based Linux distro with <code>apt-get</code> package manager, you can install it as follows:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo apt-get install gcc-arm-linux-gnueabihf</span></code></pre></div>
+<p>Now, whenever the book uses <code>gcc</code>, you need to use <code>arm-linux-gnueabihf-gcc -static</code> instead. For example, assuming you have an assembly listing <code>hello.s</code> from <em>Part I</em>, you can assemble it like this:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> arm-linux-gnueabihf-gcc <span class="at">-static</span> hello.s <span class="at">-o</span> hello</span></code></pre></div>
+<p>But then, you can run the produced executable natively:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> assembly!</span></code></pre></div>
+<h2 id="linux-on-x86-64-using-qemu">Linux on x86-64 using QEMU</h2>
+<p>This guide assumes that you don’t have access to an ARM Linux machine like a Raspberry Pi or a Pinebook Pro, but only to a good old x86-64 computer based on an AMD or Intel processor.</p>
+<blockquote>
+<p>The following has been tested on Ubuntu 20.04 LTS, but it should work the same on all Debian-based Linux distros. For other distros, you might need to use a different package manager. The package names could be slightly different, as well.</p>
+</blockquote>
+<p>On an x86-64 Linux machine, the default <code>gcc</code> toolchain expects x86-64 assembly, which is quite different from the 32-bit assembly described in this book. That means you need to install a version of the <code>gcc</code> toolchain that targets 32-bit ARM. Assuming a Debian-based Linux distro with <code>apt-get</code> package manager, you can install it as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo apt-get install gcc-arm-linux-gnueabihf</span></code></pre></div>
+<p>Now, whenever the book uses <code>gcc</code>, you need to use <code>arm-linux-gnueabihf-gcc -static</code> instead. For example, assuming you have an assembly listing <code>hello.s</code> from <em>Part I</em>, you can assemble it like this:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> arm-linux-gnueabihf-gcc <span class="at">-static</span> hello.s <span class="at">-o</span> hello</span></code></pre></div>
+<p>However, you can’t just run this executable because it is made for an ARM processor:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">-bash:</span> ./hello: cannot execute binary file: Exec form…</span></code></pre></div>
+<p>To run it, we need to install QEMU—a piece of software that allows emulating different processors, including ARM. There are several ways to use it. The <code>qemu-user</code> package enables emulation for individual executables, instead of emulating the whole operating system.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo apt-get install qemu-user</span></code></pre></div>
+<p>Now, the next step is no mistake:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> assembly!</span></code></pre></div>
+<p>What just happened? How are we running an ARM binary on x86-64? It turns out <code>qemu-user</code> has a smart mechanism: when installed, it configures itself to handle ARM binary files (which is not unlike how we can run shell scripts as if they were binaries). However, on some Linux configurations, this won’t work, and you need to be a little bit more explicit about invoking QEMU:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> qemu-arm ./hello</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> assembly!</span></code></pre></div>
+<p>Note that even though the package name is <code>qemu-user</code>, the executable name that we’re interested in is <code>qemu-arm</code>, since ARM is one of several possible target of QEMU.</p>
+<h2 id="windows-on-x86-64-using-wsl-and-qemu">Windows on x86-64 using WSL and QEMU</h2>
+<p>Follow the steps to enable Windows Subsystem for Linux (WSL). Ubuntu 20.04 LTS has been tested for this purpose.</p>
+<p><em><a href="https://ubuntu.com/wsl" class="uri">https://ubuntu.com/wsl</a></em></p>
+<p>Now, open a WSL terminal and follow the steps described in the previous section, <em>Linux on x86-64 using QEMU</em>.</p>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

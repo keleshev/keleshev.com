@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>1. Introduction • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 1</small></small><br/>Introduction<br/><br/></h1>
+<!-- TODO: move this, this is common to all pages -->
+<p> </p>
+<p style="text-align: right">It is not the gods who make our pots<br/><em>Ancient proverb</em><p>
+<p>Welcome to the wonderful journey of writing your own compiler!</p>
+<p>Picking up this book, you are probably already quite convinced that you want to understand how compilers work, and maybe even want to write one. Nevertheless, here’s a list of some of the reasons to do it:</p>
+<ul>
+<li>Writing a compiler is the ultimate step in understanding how computers work and how they execute our programs.</li>
+<li>By writing a small compiler, you can see that they are programs, just like others, and they are not magic made by gods.</li>
+<li>By understanding assembly and how compilers translate your programs to it, you can better grasp the performance of the programs you write.</li>
+<li>It will allow you to see the trade-offs of different language features more clearly, so you are better informed when to use them and how to use them effectively.</li>
+<li>Learning about parsing will help you deal with unstructured data, like scraping, or dealing with a data format for which you don’t have a library.</li>
+<li>It will also prepare you for making your own domain-specific languages, when necessary, for the tasks at hand.</li>
+<li>It may be a first step into the field of compiler engineering, a lucrative and exciting job.</li>
+<li>And finally, it will allow you to experience the fun and excitement of creating and experimenting with a language of your own making!</li>
+</ul>
+<p>The topic of compiler construction is the single most researched topic in computer science. Nothing else comes close. So there’s a massive amount of useful techniques and algorithms in compiler literature. And it turns out, a lot of it is very applicable to our day-to-day programming. There’s also a school of thought that, in the end, maybe all programs are compilers. Maybe we are not writing web apps, for example, but compilers from DOM nodes to JSON and from JSON to SQL, who knows!</p>
+<!--, it's just that whatever we are working on today is not as well researched, at the moment.-->
+<h2 id="structure-of-the-book">Structure of the book</h2>
+<p>The book describes the design and implementation of a compiler written in TypeScript, which compiles a small language to 32-bit ARM assembly.</p>
+<p>The book consists of two parts.</p>
+<p><em>Part I</em> describes the design and development of a minimal <em>baseline compiler</em> in great detail. We call it a <em>baseline compiler</em> because it lays the foundation for developing more advanced features introduced in <em>Part II</em>. The <em>implementation language</em> of the compiler is TypeScript. But the compiler’s <em>source</em> or <em>input</em> language is a <em>subset</em> (or a simplified version) of TypeScript. This subset consists of things common to any practical programming language, not specific to TypeScript: arithmetic and comparison operators, integer numbers, functions, conditional statements and loops, local variables, and assignments. We call this language the <em>baseline language</em>. It can express simple programs and functions, like this one, for example:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">factorial</span>(n) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> result <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (n <span class="op">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> result <span class="op">*</span> n<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> n <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><em>Part II</em> builds upon the <em>baseline compiler</em> and describes various <em>compiler extensions</em> in lesser detail. Those extensions are often mutually exclusive (like static typing and dynamic typing), but they all use the baseline compiler as the foundation.</p>
+<p><em>Appendix A</em> describes how to run the ARM assembly code the compiler produces. You can skip this if you’re developing your compiler on a computer which is based on an ARM processor with a 32-bit operating system like Raspberry Pi OS (formerly Raspbian). However, if you are running an x86-64 system like those from Intel and AMD, you need to see <em>Appendix A</em>.</p>
+<p><em>Appendix B</em> describes the differences between the two mainstream ARM assembly syntaxes: the GNU assembler (GAS) syntax, and the legacy ARMASM syntax.</p>
+<h2 id="why-arm">Why ARM?</h2>
+<p>In many ways, the ARM instruction set is what makes this book possible.</p>
+<p>Compared to Intel x86-64, the ARM instruction set is a work of art.</p>
+<p>Intel x86-64 is the result of evolution from an 8-bit processor, to a 16-bit one, then to a 32-bit one, and finally to a 64-bit one. At each step of the evolution, it accumulated complexity and cruft. At each step, it tried to satisfy conflicting requirements.</p>
+<ul>
+<li>Intel x86-64 is based on <em>Complex Instruction Set Architecture</em> (CISC), which was initially optimized for writing assembly by hand.</li>
+<li>ARM, on the other hand, is based on <em>Reduced Instruction Set Architecture</em> (RISC), which is optimized for writing compilers.</li>
+</ul>
+<p><em>Guess which one is an easier target for a compiler?</em></p>
+<p>If this book targeted x86-64 instead of ARM, it would have been two times as long and—more likely—never written. Also, with <em>hundreds</em> of <em>billions</em> devices shipped, we better get used to the fact that ARM is the dominant instruction set architecture today.</p>
+<p>In other words, ARM is a good start. After learning it, you will be better equipped for moving to x86-64 or the newer ARM64.</p>
+<h2 id="why-typescript">Why TypeScript?</h2>
+<p>This book describes the design and development of a compiler written in TypeScript, which compiles a small language that also uses TypeScript syntax.</p>
+<p>The compiler doesn’t have to be written in TypeScript. It could be written in any language, but I had to pick. I have used a straightforward subset of TypeScript for the examples, to make it readable for anyone who knows one or more mainstream languages.</p>
+<p>The next chapter, <em>TypeScript Basics</em>, gives you a quick overview of the language.</p>
+<h2 id="how-to-read-this-book">How to read this book</h2>
+<p><em>Part I</em> is structured linearly, with each chapter building upon the previous one. However, don’t feel guilty skipping chapters if you are already familiar with a topic.</p>
+<p>If you plan to follow along and implement the compiler described in this book (or a similar one), I recommend first to read <em>Part I</em> without writing any code. Then you can go back to the beginning and start implementing the compiler while skimming <em>Part I</em> again.</p>
+<p>The book uses the <em>parser combinators</em> approach to create the parser; however, if you know a different technique, feel free to use it instead.</p>
+<p>The book is also sprinkled with the tree types of notes.</p>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>These are general notes.</p>
+</blockquote>
+<hr />
+<blockquote>
+<p><strong>Explore</strong></p>
+<p>The <strong>Explore</strong> notes contain suggestions and ways to try out things on your own. You might find them useful for practicing and building your confidence, or you might find it more fitting to have a minimal working compiler first, and only then optionally come back to these.</p>
+</blockquote>
+<hr />
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>These contain some pedantic notes which are beside the point, but the book would be incomplete without them.</p>
+</blockquote>
+<p>We will also use <em>code folding</em> in the code snippets. We will use ellipsis (<code>…</code>) to denote that some code in a snippet was omitted, usually because it was already shown before.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">factorial</span>(n) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> result <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (n <span class="op">!=</span> <span class="dv">1</span>) {…}  <span class="co">// Here</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><em>Part II</em> is structured in mostly independent sections. Feel free to reach just for the parts you are interested in. No need to read both about <em>static typing</em> and <em>dynamic typing</em> if you want to focus only on one of these topics.</p>
+<center><a href="./02-typescript-basics#fold">Next: Chapter 2. TypeScript Basics</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

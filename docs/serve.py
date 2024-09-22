@@ -13,6 +13,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     """
 
     def translate_path(self, path):
+        #path, _, _ = path.partition("#");
         #if '.' not in path and path != '/':
         if os.path.isfile('.' + path + '.html'):
             path += '.html'

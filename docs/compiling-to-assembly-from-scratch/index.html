@@ -17,51 +17,6 @@
     div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
-    pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-    pre > code.sourceCode > span:empty { height: 1.2em; }
-    .sourceCode { overflow: visible; }
-    code.sourceCode > span { color: inherit; text-decoration: inherit; }
-    div.sourceCode { margin: 1em 0; }
-    pre.sourceCode { margin: 0; }
-    @media screen {
-    div.sourceCode { overflow: auto; }
-    }
-    @media print {
-    pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-    }
-    pre.numberSource code
-      { counter-reset: source-line 0; }
-    pre.numberSource code > span
-      { position: relative; left: -4em; counter-increment: source-line; }
-    pre.numberSource code > span > a:first-child::before
-      { content: counter(source-line);
-        position: relative; left: -1em; text-align: right; vertical-align: baseline;
-        border: none; display: inline-block;
-        -webkit-touch-callout: none; -webkit-user-select: none;
-        -khtml-user-select: none; -moz-user-select: none;
-        -ms-user-select: none; user-select: none;
-        padding: 0 4px; width: 4em;
-      }
-    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-    div.sourceCode
-      {   }
-    @media screen {
-    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-    }
-    code span.al { font-weight: bold; } /* Alert */
-    code span.an { font-style: italic; } /* Annotation */
-    code span.cf { font-weight: bold; } /* ControlFlow */
-    code span.co { font-style: italic; } /* Comment */
-    code span.cv { font-style: italic; } /* CommentVar */
-    code span.do { font-style: italic; } /* Documentation */
-    code span.dt { text-decoration: underline; } /* DataType */
-    code span.er { font-weight: bold; } /* Error */
-    code span.in { font-style: italic; } /* Information */
-    code span.kw { font-weight: bold; } /* Keyword */
-    code span.pp { font-weight: bold; } /* Preprocessor */
-    code span.wa { font-style: italic; } /* Warning */
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="/style.css" />
@@ -81,171 +36,170 @@
 <h1>
 Compiling to Assembly<br/><small><small>from Scratch </small></small>
 </h1>
-<center>
-<img id=cover style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 />
-</center>
-<center>
-<p>
-<a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b></a>
-</p>
-</center>
-<!--<center><em>TypeScript — ARM — Lots of fun!</em></center> -->
-<p><big><em>So, you’ve been trying to learn how compilers and programming languages work?</em> </big></p>
-<p>Perhaps, you’ve learned about compiling to JavaScript, or about building an interpreter? Or, maybe, about compiling to bytecode? All good steps.</p>
-<p><em>But there’s a tension building up.</em></p>
-<p>Because it feels a bit like cheating. Because you know that somewhere, somehow, the code you write is translated to assembly instructions. To the machine language. That’s where the rubber hits the road. That’s where it gets hot. And, oh-so-many resources are hesitant to cover this part. But not this book.</p>
-<p>This ebook will show you in detail how you can build a compiler from scratch that goes all the way from <em>source</em> to <em>assembly</em>.</p>
-<p>The example code is written in a subset of <strong>TypeScript</strong> that reads like pseudocode. The book describes the design and implementation of a compiler that emits 32-bit <strong>ARM</strong> assembly instructions. All you need to know is how to program, the book will teach you enough compiler theory and assembly programming to get going.</p>
-<script src=https://transactions.sendowl.com/assets/sendowl.js></script>
-<blockquote>
-<h2 class="h2-card">
-Buy now and get the following:
-</h2>
-<div style="float:right; margin-right:20px">
-<center>
-<!--a class=btn-dis><b>$45</b></a-->
-<br/> <img style="box-shadow: 0px 0px 46px -23px;" src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /><!--p><a class=btn-dis> Buy •  <b>$45</b> </a></p-->
-<p>
-<a class=btn href=https://transactions.sendowl.com/packages/793969/FCCFED46/purchase rel=nofollow> Buy ebook • <b>$45</b></a> <br/> <small><small><em>Excl. <span>EU VAT</span></em></small></small>
-</p>
-</center>
-</p>
-</div>
-<p><br/></p>
-<ul>
-<li><p>Complete book</p></li>
-<li><p>All future revisions</p></li>
-<li><p>Formats: PDF, EPUB, MOBI</p></li>
-<li><p>DRM-free</p></li>
-<li><p>Source code <em>(link in the book)</em></p></li>
-</ul>
-<p><br/> <br/> <br/> <br/> <br/></p>
-</blockquote>
-<h2 id="why-arm">Why ARM?</h2>
-<p>In many ways, the ARM instruction set is what makes this book possible.</p>
-<p>Compared to Intel x86-64, the ARM instruction set is a work of art.</p>
-<p>Intel x86-64 is the result of evolution from an 8-bit processor, to a 16-bit one, then to a 32-bit one, and finally to a 64-bit one. At each step of the evolution, it accumulated complexity and cruft. At each step, it tried to satisfy conflicting requirements.</p>
-<ul>
-<li>Intel x86-64 is based on <em>Complex Instruction Set Architecture</em> (CISC), which was initially optimized for writing assembly by hand.</li>
-<li>ARM, on the other hand, is based on <em>Reduced Instruction Set Architecture</em> (RISC), which is optimized for writing compilers.</li>
-</ul>
-<p><em>Guess which one is an easier target for a compiler?</em></p>
-<p>If this book targeted Intel x86-64 instead of ARM, it would have been two times as long and — more likely — never written. Also, with 160 <em>billion</em> devices shipped, we better get used to the fact that ARM is the dominant instruction set architecture today.</p>
-<p>In other words… ARM is a good start. After learning it, you will be better equipped for moving to x86-64 or the new ARM64.</p>
-<p><em>Will you be able to run the code your compiler produces?</em></p>
-<p>I bet you will! The Appendix contains numerous ways to execute ARM code, starting from Raspberry Pi, cloud VM, to emulating ARM on Linux and Windows.</p>
-<h2 id="why-typescript">Why TypeScript?</h2>
-<p>First of all, you will be able to follow this book in any reasonable programming language. For me, it was tough to pick one for this job, and I’m pleased I’ve chosen TypeScript.</p>
-<p>TypeScript is probably nobody’s favorite, but it’s a good compromise:</p>
-<ul>
-<li>Are you coming from a dynamic language like JavaScript, Python, or Ruby? Then if you close your eyes at the type annotations, TypeScript is just modern-day JavaScript.</li>
-<li>If you’re coming from Java or C#, then you will feel right at home, since TypeScript is brought to you by the same people who brought you C# <em>(and Turbo Pascal!)</em>.</li>
-</ul>
-<p>Don’t worry if you’ve never seen TypeScript code before. If you can read the following, you will most likely be able to pick it up, as the book goes <em>(real code from the book here!)</em>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Label {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> counter <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">value</span><span class="op">:</span> number<span class="op">;</span> <span class="co">// Type annotation</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>() {</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> Label<span class="op">.</span><span class="at">counter</span><span class="op">++;</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">toString</span>() {</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;.L&#39;</span> <span class="op">+</span> <span class="kw">this</span><span class="op">.</span><span class="at">value</span><span class="op">;</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>I avoided using any TypeScript- or JavaScript-specific language features in the code.</p>
-<p>If you’re into statically-typed functional programming languages (Haskell, OCaml, or Reason ML), you will find that the class structure I used has a nice translation to an algebraic data type. It is, in fact, how I wrote it first.</p>
-<style>
-  #home { float: left; }
-  pre {
-    border-left: 0;
-    font-size: 16px;
-    line-height: 1.5em;
-  }
+<div style="
+    position: absolute;
+    width: 100%;
+    height: 500px; /* Adjust height as needed */
+    background-image: url(&#39;./compiling-to-assembly-from-scratch-photo.jpg&#39;);
+    background-repeat: repeat;
+    background-size: cover;
+    background-position: center;
+    /* 700px is body width, 750px min viewport, -25px left margin */
+    margin-left: min(-25px, calc((100% - 700px) / 2 * -1));
+">
 
-</style>
-<h2 id="book-contents">Book Contents</h2>
-<p>The book consists of two parts. Part I presents a <em>detailed</em>, <em>step-by-step</em> guide on how to develop a small “baseline” compiler that can compile simple programs to ARM assembly.</p>
-<p>By the end of Part I, you will have a working compiler that can compile simple functions like this one:</p>
-<!--table>
+</div>
+<div style=" height: 500px;">
+
+</div>
+<p>
+</p>
+<div style="margin: 0px 0;">
+<a class="big-round-btn" href="https://www.lulu.com/shop/vladimir-keleshev-and-katiuska-pino/compiling-to-assembly-from-scratch/hardcover/product-579gk7z.html" style="width:220px; margin-left:86px; padding: 5px 0 4px 0;">
+<center>
+<table style="border: none">
 <tr>
 <td>
-```js
-function gcd(a, b) {
-  while (a != b) {
-    if (a > b) {
-      a = a - b;
-    } else {
-      b = b - a;
-    }
-  }
-  return a;
-}                              &#8202;
-```
 </td>
-<td>
+<td rowspan="2">
+<center>
+   <b>$49</b>
+</center>
 </td>
 </tr>
+<tr>
+<td>
+<center>
+Buy hardcover<br/> <small> at <em><b>lulu.com</b></em> </small>
+</center>
+</td>
+</tr>
+</table>
+</center>
+</a> <a href="#table-of-contents" class="big-round-btn-inverted" style="width:220px; margin-left:86px; padding: 15.5px 0 16.5px 0;">
+<center>
+<table style="border: none">
+<tr>
+<td>
+<center>
+Read online for <b>free<b>
+</center>
+</td>
+</tr>
+<tr>
+</tr>
+</table>
+</center>
+</a>
+</div>
+<p><br/></p>
+<p><big><em>Have you been trying to learn how <strong>compilers</strong> and <strong>programming languages</strong> work?</em></big></p>
+<!--table style="width: 100%">
+  <tr>
+    <td style="width:50%">
+      <center>
+        <a class="big-round-btn" href="#" style="width:66%">
+          <table>
+            <tr>
+              <td>
+              </td>
+              <td rowspan="2"><center> &nbsp;&nbsp; <b>$49</b> </center></td>
+            </tr>
+            <tr>
+              <td>
+                <center>
+                  Buy hardcover<br/>
+                  <small> at <em><b>lulu.com</b></em> </small>
+                </center>
+              </td>
+            </tr>
+          </table>
+        <a>
+      </center>
+    </td>
+    <td style="width:50%">
+      <center>
+        <a href="#Contents" class="big-round-btn-inverted" style="width:66%">
+          <table>
+            <tr>
+              <td><center>Read online for <b>free<b></center></td>
+            </tr>
+            <tr>
+            </tr>
+          </table>
+        </a>
+      </center>
+    </td>
+  </tr>
 </table-->
-<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">factorial</span>(n) {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="op">==</span> <span class="dv">0</span>) {</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n <span class="op">*</span> <span class="fu">factorial</span>(n <span class="op">-</span> <span class="dv">1</span>)<span class="op">;</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Into ARM assembly code like this:</p>
-<pre class="arm"><code>.global factorial
-factorial:
-  push {fp, lr}
-  mov fp, sp
-  push {r0, r1}
-  ldr r0, =0
-  push {r0, ip}
-  ldr r0, [fp, #-8]
-  pop {r1, ip}
-  cmp r0, r1
-  moveq r0, #1
-  movne r0, #0
-  cmp r0, #0
-  beq .L1
-  ldr r0, =1
-  b .L2
-.L1:
-  ldr r0, =1
-  mov r1, r0
-  ldr r0, [fp, #-8]
-  sub r0, r0, r1
-  bl factorial
-  mov r1, r0
-  ldr r0, [fp, #-8]
-  mul r0, r0, r1
-.L2:
-  mov sp, fp
-  pop {fp, pc}</code></pre>
-<p>This code won’t win any awards, and an optimizing compiler could do much better, but it’s a start!</p>
-<p>Part II talks about <em>more advanced</em> topics in <em>less details</em>. It explores several different (often mutually exclusive) directions in which you can take your compiler.</p>
-<hr />
-<style>#excerpt:hover { border-bottom: 0 !important; }</style>
-<center>
-<a id=excerpt href=./excerpt-compiling-to-assembly-from-scratch.pdf><img style="box-shadow: black 0px 0px 46px -23px;"  src=./book-preview.png width=400 height=300 /></a>
-</center>
-<br/>
-<center>
-<a class=btn href=./excerpt-compiling-to-assembly-from-scratch.pdf> Read excerpt </a>
-</center>
-<h2 id="print-edition">Print edition?</h2>
-<p>At the moment, I’m working on bringing the print edition of the book to reality. However, there’s no timeline for it yet. You know, print is a bit harder than digital. I need to be 100% confident about each word in the book before it is sent to the press. However, I know that nobody likes buying the same book twice. So, if you buy the ebook today, I make a promise to give you a discount, once the print edition is out.</p>
-<h2 id="cant-afford-it">Can’t afford it?</h2>
-<p>If due to circumstances you can’t afford to buy the book—write me an email at <a href="mailto:vladimir@keleshev.com">vladimir@keleshev.com</a>, and I’m sure we can figure something out!</p>
+<p>Then come along! Let’s make a compiler that goes all the way from <em>source</em> to <em>assembly</em> from scratch—no shortcuts!</p>
+<p>This book will teach you enough compiler theory and assembly programming to get going. It uses a subset of <strong>TypeScript</strong> that reads like pseudocode and targets <strong>ARM</strong> 32-bit instruction set.</p>
+<p><span id="table-of-contents" style="position:absolute"> </span></p>
+<h2>
+Table of Contents
+</h2>
+<ol type="1">
+<li><a href="./01-introduction#fold">Introduction</a></li>
+<li><a href="./02-typescript-basics#fold">TypeScript Basics</a></li>
+</ol>
+<p><em>Part I: Baseline Compiler</em></p>
+<ol start="3" type="1">
+<li><a href="./03-high-level-compiler-overview#fold">High-level Compiler Overview</a></li>
+<li><a href="./04-abstract-syntax-tree#fold">Abstract Syntax Tree</a></li>
+<li><a href="./05-parser-combinators#fold">Parser Combinators</a></li>
+<li><a href="./06-first-pass-the-parser#fold">First Pass: The Parser</a></li>
+<li><a href="./07-arm-assembly-programming#fold">ARM Assembly Programming</a></li>
+<li><a href="./08-second-pass-code-generation#fold">Second Pass: Code Generation</a></li>
+</ol>
+<p><em>Part II: Compiler Extensions</em></p>
+<ol start="9" type="1">
+<li><a href="./09-introduction-to-part-2#fold">Introduction to Part II</a></li>
+<li><a href="./10-primitive-scalar-data-types#fold">Primitive Scalar Data Types</a></li>
+<li><a href="./11-arrays-and-heap-allocation#fold">Arrays and Heap Allocation</a></li>
+<li><a href="./12-visitor-pattern#fold">Visitor Pattern</a></li>
+<li><a href="./13-static-type-checking-and-inference#fold">Static Type Checking and Inference</a></li>
+<li><a href="./14-dynamic-typing#fold">Dynamic Typing</a></li>
+<li><a href="./15-garbage-collection#fold">Garbage Collection</a></li>
+</ol>
+<p><em>Appendices</em></p>
+<ol type="A">
+<li>
+<a href="./appendix-a-running-arm-programs#fold">Running ARM Programs</a>
+</li>
+<li>
+<a href="./appendix-b-gas-v-armasm-syntax#fold">GAS <em>v.</em> ARMASM Syntax</a>
+</li>
+</ol>
 <center>
 <img src=/keleshev.jpg width=200 height=200 style="float:right; border-radius:200px; margin-top:50px" />
 </center>
-<h2 id="about-me">About me</h2>
-<p>My name is Vladimir Keleshev, I have worked with compilers both commercially and in open-source. My fondness of ARM assembly stems from my previous work in embedded systems. Currently, I work in finance with domain-specific languages.</p>
-<h2 id="questions">Questions?</h2>
-<p>Contact me at <a href="mailto:vladimir@keleshev.com">vladimir@keleshev.com</a> or on Twitter at <a href="https://twitter.com/keleshev"><span class="citation" data-cites="keleshev">@keleshev</span></a>.</p>
+<h2 id="author">Author</h2>
+<p>My name is Vladimir Keleshev. I am a software developer living and working just outside of Copenhagen. I have worked with embedded systems, safety-critical systems, compilers, and now in finance with domain-specific languages.</p>
+<h2 id="illustrator">Illustrator</h2>
+<p>The cover is illustrated by <a href="https://katiuskapino.com/#links">Katiuska Pino</a>. She also drew 15 chapter illustrations that are exclusive to the print edition of the book.</p>
+<h2 id="print-edition">Print edition</h2>
+<p>Print edition consists of 207 pages, size 6×9” (152×229 mm), in matte hard cover, available at <a href="https://www.lulu.com/shop/vladimir-keleshev-and-katiuska-pino/compiling-to-assembly-from-scratch/hardcover/product-579gk7z.html">lulu.com</a>. ISBN: 978-87-980078-0-7.</p>
+<h2 id="ebook-edition">Ebook edition</h2>
+<p>This book was originally published in 2020 as ebook. The online edition replaces the ebook edition.</p>
+<h2 id="citation">Citation</h2>
+<p><small></p>
+<pre><code>@book{Keleshev:2024,
+  author=&quot;Vladimir Keleshev&quot;,
+  title=&quot;Compiling to Assembly from Scratch&quot;,
+  publisher=&quot;keleshev.com&quot;,
+  year=2024,
+  isbn=&quot;978-87-980078-0-7&quot;,
+  note=&quot;Originally published in 2020 as ebook&quot;,
+}</code></pre>
+<p></small></p>
+<h2 id="source-code">Source code</h2>
+<p>Source code from the book is available on <a href="https://github.com/keleshev/compiling-to-assembly-from-scratch">GitHub</a>. <a href="https://github.com/keleshev/compiling-to-assembly-from-scratch/tree/main/contrib/python">Python</a> and <a href="https://github.com/keleshev/compiling-to-assembly-from-scratch/tree/main/contrib/ocaml">OCaml</a> ports of the compiler are available as well.</p>
+<h2 id="questions-comments-feedback">Questions? Comments? Feedback?</h2>
+<ul>
+<li>Email me at <a href="mailto:vladimir@keleshev.com">vladimir@keleshev.com</a>,</li>
+<li>DM me at <a href="https://twitter.com/keleshev"><span class="citation" data-cites="keleshev">@keleshev</span></a>, or</li>
+<li>Open an issue or a pull request on <a href="https://github.com/keleshev/keleshev.com">GitHub</a>.</li>
+</ul>
 <p><br /></p>
 <!--
 > <h2 class=h2-card >Be the first to know when the book is finalized!</h2>
@@ -261,15 +215,30 @@ factorial:
 
 -->
 <!--script async data-uid="129429cd71" src="https://motivated-writer-7421.ck.page/129429cd71/index.js"></script-->
-<center>
-<img src=/dragon.png width=256 height=260 />
+<style>
+#spike { opacity: 1}
+#spike:hover { opacity: 1.0}
+#spike-2 { opacity: 0.0}
+#spike-2:hover { opacity: 0}
+</style>
+<center style="height:122px; overflow: hidden; position:relative;">
+<img id="spike" style="position:relative" src=./spike.png width=256 height=260 /> <!--img id="spike-2" style="position:relative" src=./spike-2.png width=256 height=260 /-->
 </center>
-<br/>
-<center>
-<em>Illustrations by <a href="https://twitter.com/PbKatiuska"><span class="citation" data-cites="PbKatiuska">@PbKatiuska</span></a></em>
-</center>
+<!--
+<footer style="height:122px; overflow:hidden; position:relative;">
+<div style="position:absolute; bottom:-138px; left:50%; transform:translateX(-50%); width:256px; height:260px;">
+<img src="./spike.png" alt="Footer Image" style="width:100%; height:100%; object-fit:cover;"/>
+</div>
+</footer>
+-->
+<!--
+<footer style="height:260px; overflow:hidden; position:relative;">
+<div style="position:absolute; top:-138px; left:50%; transform:translateX(-50%); width:256px; height:260px;">
+<img src="./spike.png" alt="Footer Image" style="width:100%; height:100%; object-fit:cover;"/>
+</div>
+</footer>
+-->
 
 
-  <hr class="fleuron" />
 </body>
 </html>

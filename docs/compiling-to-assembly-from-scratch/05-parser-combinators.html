@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>5. Parser Combinators • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 5</small></small><br/>Parser Combinators<br/><br/></h1>
+<p> </p>
+<p>A parser is a function that converts some textual source into structured data. In our case, it converts a program’s source into the corresponding AST.</p>
+<p>There’s a myriad of parsing techniques and approaches. Which one to choose often depends on the source language and its syntactic features.</p>
+<p>The technique that we’ll use is called <em>parser combinators</em>. We’ll also use some <em>regular expressions</em> since they are so handy in JavaScript.</p>
+<p>The idea of parser combinators is to create a small number of <em>primitive</em> parsers that could be <em>combined</em> into more complex parsers. Each primitive parser is very simple and barely does anything useful on its own, but combining those we can parse increasingly complex languages.</p>
+<p>Parser combinators can be used to implement pretty much any parsing algorithm. They can parse immediately, or produce a data structure representing grammar that is used later. They can even be used for code generation. In practice (and historically), many parser combinators are <em>scanerless</em> (token-less), <em>greedy</em>, <em>backtracking</em>, and with <em>prioritized choice</em>. (We’ll get to what these mean in a minute). And our parsing combinators will be no exception.</p>
+<p>Parsing combinators are my go-to technique when I need to parse something “by hand”: they are easy to implement and are powerful. After implementing a few primitive combinator functions, you get something comparable to a full-blown parser generator.</p>
+<h2 id="lexing-scanning-or-tokenization">Lexing, scanning, or tokenization</h2>
+<p>Lexing, scanning, and tokenization are all synonymous when talking about parsing. They refer to convertion of the source program into an intermediate representation called <em>token stream</em>. The token stream structure consists of individual “words” of our program, also called <em>tokens</em>, <em>lexemes</em>, or <em>lexical elements</em>. This terminology originated in linguistics, the field which pioneered grammars and parsing.</p>
+<p>A token stream is a linear representation, unlike the tree-like representation of AST.</p>
+<p>A lexer would convert source like <code>x + y</code> into linear token stream like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>[</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">TokenId</span>(<span class="st">&quot;x&quot;</span>)<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">TokenOperator</span>(<span class="st">&quot;+&quot;</span>)<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">TokenId</span>(<span class="st">&quot;y&quot;</span>)<span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<p>And only then a parser would convert this to an AST like <code class="sourceCode javascript"><span class="kw">new</span> <span class="fu">Addition</span>(<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;x&quot;</span>)<span class="op">,</span> <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;y&quot;</span>))</code>.</p>
+<p>We’ve represented it using an array, but more often, it is some kind of lazy or streaming collection.</p>
+<p>This is all to say that we won’t use a lexer: our parser will be <em>scannerless</em>. The way to think about scannerless parsing is you treat each character as a token. However, we will still use the word token when we talk about parsing single logical lexical elements. We also won’t go into details of the benefits and shortcomings of lexing or scannerless parsing. Here we’ve picked scannerless because of the implementation simplicity.</p>
+<h2 id="grammars">Grammars</h2>
+<p>When making parsers, we want to discuss what language constructs those parsers can recognize. For that, we will use <em>grammars</em>. There are several notations to describe grammars. You might have heard about <em>Extended Backus-Naur Form</em> (EBNF). In our case, we will use <em>Parsing Expression Grammar</em> (PEG) notation. PEG notation is a good fit for us because it’s designed for <em>scannerless</em>, <em>greedy</em>, <em>backtracking</em> parsers, and can express <em>prioritized choice</em>. It borrows notation from EBNF and regular expressions.</p>
+<p>As we introduce each parser combinator, we will also show the corresponding grammar. You will see that our parser combinators are designed to mimic the grammar notation.</p>
+<h2 id="interface">Interface</h2>
+<p>Let’s say that a parser is an object with a <code>parse</code> method that takes something called <code>Source</code> and returns either something called <code>ParseResult</code> or <code class="sourceCode javascript"><span class="kw">null</span></code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parse</span>(<span class="dt">s</span><span class="op">:</span> Source)<span class="op">:</span> ParseResult<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">|</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>TypeScript allows us to explicitly say that the <code>parse</code> method may return <code class="sourceCode javascript"><span class="kw">null</span></code>, and it will also enforce this in its <em>strict null checking</em> mode.</p>
+<p>What are <code>Source</code> and <code>ParseResult</code>? Why couldn’t we use <code>string</code> for the source?</p>
+<p>When parsing, we need to keep track of the string that we parse and the location in the string where we are currently matching. Thus, <code>Source</code> is a pair consisting of:</p>
+<ul>
+<li>the string that we parse, and</li>
+<li>the index into that string that points to where we are parsing right now.</li>
+</ul>
+<!-- -->
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Source {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">string</span><span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>              <span class="kw">public</span> <span class="dt">index</span><span class="op">:</span> number) {}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>But also, <code>Source</code> allows us to avoid having tight coupling with the <code>string</code> type. For example, we can later make another implementation of <code>Source</code> that lazily reads from a file.</p>
+<p><code>Source</code> will be quite efficient for our use case since most <code>Source</code> objects will share the same <code>string</code> during parsing.</p>
+<p>What about <code>ParseResult</code>? It is a simple data object that can hold some value produced by the parser and the source with the updated index position. The <code>value</code> will often be an <code>AST</code>, in our case. The <code>source</code> signifies where the parser left off, so another parser can continue from there.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ParseResult<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">value</span><span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>              <span class="kw">public</span> <span class="dt">source</span><span class="op">:</span> Source) {}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>However, parsers are allowed to return not only <code>ParseResult</code>, but also <code class="sourceCode javascript"><span class="kw">null</span></code>. When returning <code class="sourceCode javascript"><span class="kw">null</span></code> parser signifies that it didn’t match anything. It is not an error: during a single pass, many rules will not match, but others will.</p>
+<p>Right now, <code>Source</code> doesn’t have any operations defined. Many choices are possible. One of them is to expose a <code>match</code> method, very similar to <code>string.match</code> that takes a regular expression. The difference with <code>string.match</code> is that we need to match from a particular <code>source.index</code> position. This is possible with so-called “sticky” regular expressions.</p>
+<p>Sticky regular expressions in JavaScript are specified with a flag “<code>y</code>”, like this: <code>/hello/y</code>. They are special in the way that they have a <code>lastIndex</code> property. By setting this property to some index, we can control where the regular expression will be matched. It’s an odd design, but it works for us. Other programming languages have different ways to match a regular expression from a particular index.</p>
+<p>Let’s write our <code>match</code> method:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Source {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">string</span><span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>              <span class="kw">public</span> <span class="dt">index</span><span class="op">:</span> number) {}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">match</span>(<span class="dt">regexp</span><span class="op">:</span> <span class="bu">RegExp</span>)<span class="op">:</span> (ParseResult<span class="op">&lt;</span>string<span class="op">&gt;</span> <span class="op">|</span> <span class="kw">null</span>) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(regexp<span class="op">.</span><span class="at">sticky</span>)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    regexp<span class="op">.</span><span class="at">lastIndex</span> <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">index</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> match <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">string</span><span class="op">.</span><span class="fu">match</span>(regexp)<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (match) {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> value <span class="op">=</span> match[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> newIndex <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">index</span> <span class="op">+</span> value<span class="op">.</span><span class="at">length</span><span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> source <span class="op">=</span> <span class="kw">new</span> <span class="fu">Source</span>(<span class="kw">this</span><span class="op">.</span><span class="at">string</span><span class="op">,</span> newIndex)<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">new</span> <span class="fu">ParseResult</span>(value<span class="op">,</span> source)<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>First, we assert that the regexp we got is sticky; otherwise, this will not work. Then we set <code>lastIndex</code> on the regexp to match from the source index. Then we delegate to <code>string.match</code> method to do the matching. If the match object is <code class="sourceCode javascript"><span class="kw">null</span></code>, we return <code class="sourceCode javascript"><span class="kw">null</span></code>: we couldn’t match the regular expression. Otherwise, we got a regexp “match” object. It is an array-like object where the first item is the substring that matched the regular expression. We use that substring in two ways: First, it’s the value of the <code>ParseResult</code> that we use. Second, we count the length of the matched string to advance the new <code>Source</code> index that we return as the second component of <code>ParseResult</code>.</p>
+<p>As you can see, <code>Source</code> already <em>almost</em> satisfies our <code>Parser</code> interface.</p>
+<p>A natural way to implement parser combinators that satisfy the <code>Parser</code> interface in TypeScript would be to create a class for each parser, with different <code>parser</code> methods. However, since <code>Parser</code> interface has only one method, and many of our parser combinators will have one-liner implementations, let’s use a more light-weight approach. Instead, we’ll have a single <code>Parser</code> class that takes <code>parse</code> method (as an arrow function) as a parameter:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">parse</span><span class="op">:</span> (<span class="dt">s</span><span class="op">:</span> Source) <span class="kw">=&gt;</span> (ParseResult<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">|</span> <span class="kw">null</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  ) {}</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="primitive-combinators">Primitive combinators</h2>
+<p>Now, let’s start defining the <em>primitive</em> parser combinators. Some of them will be <code>Parser</code> instance methods; some will be static methods. We pick one or another purely based on notation: whether <code>f(x)</code> or <code>x.f()</code> is more readable for each combinator. While making this choice, we will try to mimic the corresponding grammar.</p>
+<h2 id="regexp-combinator">Regexp combinator</h2>
+<p>Our first combinator called <code>regexp</code> creates a parser that matches a regexp. It only delegates to the <code>source.match</code> method that we’ve just defined.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="fu">regexp</span>(<span class="dt">regexp</span><span class="op">:</span> <span class="bu">RegExp</span>)<span class="op">:</span> Parser<span class="op">&lt;</span>string<span class="op">&gt;</span> {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">Parser</span>(source <span class="kw">=&gt;</span> source<span class="op">.</span><span class="fu">match</span>(regexp))<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<!--
+
+X: It took me more time to understand section 5.5 compared to what I read so far. I think there’s a transition missing between the regexp combinator and the hello example. Also it might have been nice to show an example of what it parses. hello1 for example. The last paragraph’s structure seemed muddy to me.
+
+-->
+<p>When using this combinator, we must remember to pass “sticky” regular expressions with the “<code>y</code>” flag. Otherwise, the assertion that we defined earlier will remind us.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> hello <span class="op">=</span> Parser<span class="op">.</span><span class="fu">regexp</span>(<span class="ss">/hello</span><span class="sc">[0-9]</span><span class="ss">/y</span>)<span class="op">;</span></span></code></pre></div>
+<p>The corresponding PEG grammar is:</p>
+<pre><code>hello &lt;- &quot;hello&quot; [0-9]</code></pre>
+<p>The arrow defines a grammar rule called <code>hello</code>. As you can see, the PEG notation borrows from regular expression notation. A string in double-quotes matches literally, while <code>[0-9]</code> is a character class, a concept borrowed from regular expressions. Outside the quotes and the character class, whitespace does not matter.</p>
+<p>Let’s try to use our <code>hello</code> parser to parse a string:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> source <span class="op">=</span> <span class="kw">new</span> <span class="fu">Source</span>(<span class="st">&quot;hello1 bye2&quot;</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result <span class="op">=</span> Parser<span class="op">.</span><span class="fu">regexp</span>(<span class="ss">/hello</span><span class="sc">[0-9]</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">parse</span>(source)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(result<span class="op">.</span><span class="at">value</span> <span class="op">===</span> <span class="st">&quot;hello1&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(result<span class="op">.</span><span class="at">source</span><span class="op">.</span><span class="at">index</span> <span class="op">===</span> <span class="dv">6</span>)<span class="op">;</span></span></code></pre></div>
+<p>Here we create a new source from string <code>"hello1 bye2"</code>. We want it to parse from the beginning so we set the source index to zero. We call <code>parse</code> with the constructed source, and we get back a <code>ParseResult</code> object. Then we assert that the value being parsed is <code>"hello1"</code> and the resulting source index has advanced to column six, where the rest of the string is located: <code>" bye2"</code>.</p>
+<h2 id="constant-combinator">Constant combinator</h2>
+<p>Next combinator might seem a little silly: it’s a parser that always succeeds, returns a constant value, does not consume any input (so, does not advance the source). We call it <code>constant</code>. How is it good for anything? Soon, you will see. For now, let’s say that it allows, when combined with other parsers, to change the return value (and the type) of a parser.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> constant<span class="op">&lt;</span>U<span class="op">&gt;</span>(<span class="dt">value</span><span class="op">:</span> U)<span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;</span> {</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">Parser</span>(source <span class="kw">=&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">new</span> <span class="fu">ParseResult</span>(value<span class="op">,</span> source))<span class="op">;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In PEG it would correspond to an empty string:</p>
+<pre><code>empty &lt;- &quot;&quot;</code></pre>
+<p>The notation does not concern itself with what value is produced, only with what string is recognized.</p>
+<h2 id="error-combinator">Error combinator</h2>
+<p>Next is <code>error</code>: a parser that just throws an exception. The exception is not intended to be handled. It is expected to terminate the program.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> error<span class="op">&lt;</span>U<span class="op">&gt;</span>(<span class="dt">message</span><span class="op">:</span> string)<span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;</span> {</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">Parser</span>(source <span class="kw">=&gt;</span> {</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">Error</span>(message)<span class="op">;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>There’s no correspondence with PEG notation.</p>
+<blockquote>
+<p><strong>Explore</strong></p>
+<p>A better implementation of the <code>error</code> combinator would inspect the source, convert the source index into a line-column pair, and display it together with the offending line and some context.</p>
+</blockquote>
+<p>We can use these combinators with a fully qualified names, like <code>Parser.regexp</code>, or we can “import” them into the current namespace:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> {regexp<span class="op">,</span> constant<span class="op">,</span> error} <span class="op">=</span> Parser<span class="op">;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> hello <span class="op">=</span> <span class="fu">regexp</span>(<span class="ss">/hello</span><span class="sc">[0-9]</span><span class="ss">/y</span>)<span class="op">;</span></span></code></pre></div>
+<p>From now on, we will assume that the names of the parser combinators we define are imported, and we don’t need to qualify them.</p>
+<h2 id="choice-operator">Choice operator</h2>
+<p>Next primitive parser combinator is the <em>choice operator</em> that we define as the <code>or</code> instance method on parsers. It allows us to select between two (or more) alternative parser choices. Unlike the previous primitive combinators, this is an instance method, not a static method. We use an instance method here purely for syntactic reasons. We would like to write <code>x.or(y).or(z)</code>, instead of <code>or(or(x, y), z)</code>, so it mimics the corresponding PEG grammar: <code>x / y / z</code>.</p>
+<p>A parser like <code>left.or(right)</code> first tries to parse using the <code>left</code> parser. If successful, the result is returned. If not, the <code>right</code> parser is tried, and its result is returned.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">or</span>(<span class="dt">parser</span><span class="op">:</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span>)<span class="op">:</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">Parser</span>((source) <span class="kw">=&gt;</span> {</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> result <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="fu">parse</span>(source)<span class="op">;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (result)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> parser<span class="op">.</span><span class="fu">parse</span>(source)<span class="op">;</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Such choice operator is called <em>prioritized choice</em> operator. In contrast with <em>unordered choice</em> operator, it tries the alternative parsers in a (prioritized) order from left to right.</p>
+<p>PEG notation helps us be precise about the fact that we use prioritized choice by using forward slash (<code>/</code>) as opposed to the unordered choice operator, which is usually denoted with a horizontal bar (<code>|</code>).</p>
+<p>Unordered choice can be handled in different ways too: a parser could explore several choices simultaneously, or the choice that could be determined unresolvable by looking at one (or <em>n</em> characters) could be rejected outright, ahead of any parsing.</p>
+<p>The choice operator is one of the central topics in parsing, and its choice is often the decisive factor in parser performance and recognition power.</p>
+<p>Given a parser like <code>left.or(right)</code>, we say that it <em>backtracks</em> because it will try parser <code>left</code> and, if that does not succeed, will <em>backtrack</em> (or return) to the same source index and try the <code>right</code> parser. We say that our parser has <em>unlimited look-ahead</em> because it will try to parse <code>left</code> completely, no matter how long the match is, in other words, without any <em>limit</em>. Other techniques look ahead at one (or <em>n</em> characters, or tokens) to decide which choice to take.</p>
+<p>Theoretically, the way we implemented our choice operator is not very efficient and could be improved with caching. However, if we take some care with combining our parsers, it could be a non-problem. The key is not to combine parsers that can parse the same long prefix, but instead combine alternative parsers so that they can quickly recognize that they don’t match and move to the next one.</p>
+<p>Consider a parser constructed from the following two: one matches a hundred consecutive characters “a” followed by a single “b”, and another matches a hundred consecutive characters “a” followed by a single “c”. Given an input that matches the latter, it will have to scan one hundred characters <em>twice</em>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">regexp</span>(<span class="ss">/a</span><span class="sc">{100}</span><span class="ss">b/y</span>)<span class="op">.</span><span class="fu">or</span>(<span class="fu">regexp</span>(<span class="ss">/a</span><span class="sc">{100}</span><span class="ss">c/y</span>))</span></code></pre></div>
+<p>On the other hand, if we have one parser that parses a letter, and another one that parses a digit, we can combine them with <code>or</code> and it takes only one character to check if the first parser matches or not, before moving to the next parser.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> letterOrDigit <span class="op">=</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[a-z]</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">or</span>(<span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]</span><span class="ss">/y</span>))<span class="op">;</span></span></code></pre></div>
+<p>This parser can be described with the following grammar:</p>
+<pre><code>letterOrDigit &lt;- [a-z] / [0-9]</code></pre>
+<h2 id="repetition-zero-or-more">Repetition: zero or more</h2>
+<p>The next primitive parser combinator is <code>zeroOrMore</code> that handles repetition. Given a parser that returns some result, it will return a new parser that returns an array of results, instead. The implementation is as follows.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> zeroOrMore<span class="op">&lt;</span>U<span class="op">&gt;</span>(</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">parser</span><span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  )<span class="op">:</span> Parser<span class="op">&lt;</span><span class="bu">Array</span><span class="op">&lt;</span>U<span class="op">&gt;&gt;</span> {</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">Parser</span>(source <span class="kw">=&gt;</span> {</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> results <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> item <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">while</span> (item <span class="op">=</span> parser<span class="op">.</span><span class="fu">parse</span>(source)) {</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>        source <span class="op">=</span> item<span class="op">.</span><span class="at">source</span><span class="op">;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>        results<span class="op">.</span><span class="fu">push</span>(item<span class="op">.</span><span class="at">value</span>)<span class="op">;</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">new</span> <span class="fu">ParseResult</span>(results<span class="op">,</span> source)<span class="op">;</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We apply the same parser several times in a <code>while</code> loop. Each time we advance the <code>source</code> and push the resulting value into an array. As soon as one of the parses does not match and returns <code class="sourceCode javascript"><span class="kw">null</span></code>, we return that array as the result in a new <code>ParseResult</code> object that bundles the last <code>source</code>.</p>
+<p>For example, this parser will match zero or more letters or digits, given <code>letterOrDigit</code> that we have just defined.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> someLettersOrDigits <span class="op">=</span> <span class="fu">zeroOrMore</span>(letterOrDigit)<span class="op">;</span></span></code></pre></div>
+<p>This combinator function corresponds to the star (<code>*</code>) operator in PEG, similar to the regular expressions notation.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>someLettersOrDigits <span class="op">-&gt;</span> letterOrDigit<span class="op">*</span></span></code></pre></div>
+<p>We can also inline <code>letterOrDigit</code> and rewrite this as:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>someLettersOrDigits <span class="op">-&gt;</span> ([a<span class="op">-</span>z] <span class="op">/</span> [<span class="dv">0-9</span>])<span class="op">*</span></span></code></pre></div>
+<p>We say that our <code>zeroOrMore</code> or “star” operator is <em>greedy</em>. It matches the PEG semantics, but differs from regular expressions. A regular expression like <code>a*a</code> will match one or more letters <code>a</code>. However, <code>a*a</code> in PEG (and our parser combinators) will never match anything: the <code>a*</code> part of the expression will “greedily” consume input as long as it can match, and without any respect for what follows it.</p>
+<h2 id="bind">Bind</h2>
+<p>The next parser combinator is an interesting one. It is another key combinator, on par with the choice operator. As the name alludes, it <em>binds</em> a value that is being parsed to a name. By binding a value to a name, we can manipulate and construct values that our parser produces.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  bind<span class="op">&lt;</span>U<span class="op">&gt;</span>(</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">callback</span><span class="op">:</span> (<span class="dt">value</span><span class="op">:</span> T) <span class="kw">=&gt;</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;,</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  )<span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;</span> {</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">Parser</span>((source) <span class="kw">=&gt;</span> {</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> result <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="fu">parse</span>(source)<span class="op">;</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (result) {</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> value <span class="op">=</span> result<span class="op">.</span><span class="at">value</span><span class="op">;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> source <span class="op">=</span> result<span class="op">.</span><span class="at">source</span><span class="op">;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">callback</span>(value)<span class="op">.</span><span class="fu">parse</span>(source)<span class="op">;</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>It takes a callback, which usually will be an arrow function. The callback takes the parsed result as the parameter and returns a new parser that should continue parsing. This way, we can combine several parsers and bind their values to construct a new return value.</p>
+<p>For example, here we are constructing a parser for comma-separated pairs of numbers, like <code>"12,34"</code>.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((first) <span class="kw">=&gt;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">regexp</span>(<span class="ss">/,/y</span>)<span class="op">.</span><span class="fu">bind</span>((_) <span class="kw">=&gt;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((second) <span class="kw">=&gt;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>([first<span class="op">,</span> second]))))<span class="op">;</span></span></code></pre></div>
+<p>We bind the first numeric parser to the <code>first</code> parameter. We ignore the result of the comma regexp (by binding it to an underscore), then bind the second numeric regexp to the <code>second</code> parameter. From those, we construct an array, and we “return” this array by constructing a constant parser.</p>
+<p>The corresponding grammar is:</p>
+<pre><code>pair &lt;- [0-9]+ &quot;,&quot; [0-9]+</code></pre>
+<p>As always, the grammar ignores the value of the parser constructs; it is only concerned with which language constructs it can recognize.</p>
+<h2 id="non-primitive-parsers">Non-primitive parsers</h2>
+<p>In the first example of using <code>bind</code>, we have seen two patterns that keep repeating when you use <code>bind</code> in practice. That’s why we will introduce them now as non-primitive parsers.</p>
+<h2 id="and-and-map">And and map</h2>
+<p>The first repeating pattern is using <code>bind</code>, but ignoring the value. It effectively creates a sequence of parsers. We call this non-primitive combinator <code>and</code>. It allows to sequence parsers just like <code>bind</code>, but without binding a value to a name:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  and<span class="op">&lt;</span>U<span class="op">&gt;</span>(<span class="dt">parser</span><span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;</span>)<span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;</span> {</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="fu">bind</span>((_) <span class="kw">=&gt;</span> parser)<span class="op">;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The next pattern that we’ll see a lot is binding name only to return a constant parser immediately. We call it <code>map</code>.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  map<span class="op">&lt;</span>U<span class="op">&gt;</span>(<span class="dt">callback</span><span class="op">:</span> (<span class="dt">t</span><span class="op">:</span> T) <span class="kw">=&gt;</span> U)<span class="op">:</span> Parser<span class="op">&lt;</span>U<span class="op">&gt;</span> {</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="fu">bind</span>((value) <span class="kw">=&gt;</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">constant</span>(<span class="fu">callback</span>(value)))<span class="op">;</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>It is worth mentioning that this <code>map</code> method is in a way similar to the <code>array.map</code> method.</p>
+<hr />
+<p>Now, let’s try to rewrite our pair parser using the new methods:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((first) <span class="kw">=&gt;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">regexp</span>(<span class="ss">/,/y</span>)<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>))<span class="op">.</span><span class="fu">map</span>((second) <span class="kw">=&gt;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>        [first<span class="op">,</span> second]))<span class="op">;</span></span></code></pre></div>
+<p>Note that the value produced by the left parser in <code>left.and(right)</code> is ignored. If you don’t want to ignore it, you need to <code>bind</code> it.</p>
+<p>Writing code in this way is not unlike writing code that involves JavaScript promises. It can be tricky sometimes, but fortunately, given a grammar, we can make the corresponding parser almost mechanically.</p>
+<p>Let’s look at it in another way. Let’s say we have in mind a grammar, like our pair grammar:</p>
+<pre><code>pair &lt;- [0-9]+ &quot;,&quot; [0-9]+</code></pre>
+<p>Say, we want to produce a parser for it. We use <code class="sourceCode javascript"><span class="kw">let</span></code> to define the named rule, and use the <code>and</code> method for all sequences (and the <code>or</code> method for any alternatives):</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">regexp</span>(<span class="ss">/,/y</span>)<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)))<span class="op">;</span></span></code></pre></div>
+<p>And now, we should think about which values we want to extract. We want to extract the two numeric values, so we replace <code>and</code> with <code>bind</code> for them:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((first) <span class="kw">=&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">regexp</span>(<span class="ss">/,/y</span>)<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((second) <span class="kw">=&gt;</span> …)))<span class="op">;</span></span></code></pre></div>
+<p>And in the last bind we construct the value we want with the <code>constant</code> parser:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((first) <span class="kw">=&gt;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">regexp</span>(<span class="ss">/,/y</span>)<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((second) <span class="kw">=&gt;</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">constant</span>([first<span class="op">,</span> second])))<span class="op">;</span></span></code></pre></div>
+<p>We’re done, but if we want, we can replace the second <code>bind</code> with <code>map</code> since it returns a constant parser:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pair <span class="op">=</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">bind</span>((first) <span class="kw">=&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">regexp</span>(<span class="ss">/,/y</span>)<span class="op">.</span><span class="fu">and</span>(</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">regexp</span>(<span class="ss">/</span><span class="sc">[0-9]+</span><span class="ss">/y</span>)<span class="op">.</span><span class="fu">map</span>((second) <span class="kw">=&gt;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        [first<span class="op">,</span> second])))<span class="op">;</span></span></code></pre></div>
+<!--
+It can seem first that `map` and `and` don't have a tremendous utility.
+And I agree with that.
+What's important is to get fluent with using `bind`, and when you get comfortable with that, use `map` and `and` where it improves readability for you.
+-->
+<h2 id="maybe">Maybe</h2>
+<p>The <code>maybe</code> combinator allows us to parse something, or return <code class="sourceCode javascript"><span class="kw">null</span></code>, optionally. We can achieve this by combining the <code>or</code> operator with <code class="sourceCode javascript"><span class="fu">constant</span>(<span class="kw">null</span>)</code> parser:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> maybe<span class="op">&lt;</span>U<span class="op">&gt;</span>(</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">parser</span><span class="op">:</span> Parser<span class="op">&lt;</span>U <span class="op">|</span> <span class="kw">null</span><span class="op">&gt;,</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  )<span class="op">:</span> Parser<span class="op">&lt;</span>U <span class="op">|</span> <span class="kw">null</span><span class="op">&gt;</span> {</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> parser<span class="op">.</span><span class="fu">or</span>(<span class="fu">constant</span>(<span class="kw">null</span>))<span class="op">;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Here we are optionally parsing a letter or a digit:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> maybeLetterOrDigit <span class="op">=</span> <span class="fu">maybe</span>(letterOrDigit)<span class="op">;</span></span></code></pre></div>
+<p>This combinator corresponds to the “<code>?</code>” operator in PEG, also similar to the regular expressions notation:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>maybeLetterOrDigit <span class="op">&lt;-</span> letterOrDigit<span class="op">?</span></span></code></pre></div>
+<p>Like in PEG, and unlike regular expressions, our <code>maybe</code> combinator is <em>greedy</em>.</p>
+<p>Often it is useful to have a different default rather than <code class="sourceCode javascript"><span class="kw">null</span></code>, for example, an empty array. In those cases we can simply say <code class="sourceCode javascript">parser<span class="op">.</span><span class="fu">or</span>(<span class="fu">constant</span>([]))</code>.</p>
+<h2 id="parsing-a-string">Parsing a string</h2>
+<p>Although each parser has a <code>parse</code> method, this method is more convenient for composing parsers rather than using them in practice. So let’s define a helper method, that’s a little different, called <code>parseStringToCompletion</code>.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parser<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parseStringToCompletion</span>(<span class="dt">string</span><span class="op">:</span> string)<span class="op">:</span> T {</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> source <span class="op">=</span> <span class="kw">new</span> <span class="fu">Source</span>(string<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="fu">parse</span>(source)<span class="op">;</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>result)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">Error</span>(<span class="st">&quot;Parse error at index 0&quot;</span>)<span class="op">;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> index <span class="op">=</span> result<span class="op">.</span><span class="at">source</span><span class="op">.</span><span class="at">index</span><span class="op">;</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (index <span class="op">!=</span> result<span class="op">.</span><span class="at">source</span><span class="op">.</span><span class="at">string</span><span class="op">.</span><span class="at">length</span>)</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">Error</span>(<span class="st">&quot;Parse error at index &quot;</span> <span class="op">+</span> index)<span class="op">;</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">.</span><span class="at">value</span><span class="op">;</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>As the name suggests, instead of taking a <code>Source</code> object, this method takes a string. It makes it more convenient for testing and using the resulting parsers. This method creates a <code>Source</code> for you and calls the <code>parse</code> method. However, unlike the <code>parse</code> method, it throws an exception if the result could not be parsed, and in case the parsing did not consume all of the input string. It also unpacks the <code>ParseResult</code> to give us only the resulting value.</p>
+<hr />
+<p>Now that we have learned how to construct parsers, let’s make the parser pass for our baseline compiler!</p>
+<center><a href="./06-first-pass-the-parser#fold">Next: Chapter 6. First Pass: The Parser</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

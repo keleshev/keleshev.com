@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>3. High-level Compiler Overview • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 3</small></small><br/>High-level Compiler Overview<br/><br/></h1>
+<p> </p>
+<p>A <em>compiler</em> is a program that translates another program from one language to another.</p>
+<p>In our case, it transforms from what we call the <em>baseline language</em> to ARM assembly language.</p>
+<h2 id="types-of-compilers">Types of compilers</h2>
+<p>Our compiler will be an <em>ahead-of-time</em> (AOT) compiler. Only once the compilation is finished can the resulting program be run.</p>
+<p>There are also <em>just-in-time</em> (JIT) compilers that compile a program as it runs.</p>
+<p>Think of AOT compilers as translator services for foreign languages: you might send them a few papers to translate from English to Japanese, and when they are done, they send the results back. On the other hand, JIT compilers are more like simultaneous translators at a business meeting: they translate participants as they speak.</p>
+<p>Our compiler <em>targets</em> an <em>assembly language</em>, i.e. produces assembly code. An <em>assembly language</em> is a textual representation of a binary <em>machine language</em> that processors can execute directly. It has a straightforward translation to such binary. Such translation is called <em>assembling</em> and is much less sophisticated than what is found in a compiler. The program that performs this translation is called an <em>assembler</em>. In most cases for ARM, one assembly instruction is translated into one 32-bit binary integer. Think of assembly language as an API for directly accessing your processor’s functionality.</p>
+<p>Some compilers target binary <em>machine code</em> directly, but this is increasingly rare. Instead, most compilers compile to assembly and then call the assembler behind the scenes.</p>
+<p>Some compilers target <em>byte code</em> instead of assembly. Byte code is similar to assembly: it consists of similar instructions. However, these do not target a real processor, but instead an <em>abstract machine</em>, which is a processor that is implemented in software. This could be done for portability reasons, or to add security features that are not available in the hardware. Often byte code, in turn, is translated to machine code by a JIT compiler.</p>
+<p>A possible compiler target could be another programming language. We call these compilers <em>source-to-source</em> compilers. For example, the TypeScript compiler is a source-to-source compiler that targets JavaScript.</p>
+<h2 id="compiler-passes-and-intermediate-representations">Compiler passes and intermediate representations</h2>
+<p>Compilers are structured into several <em>passes</em>. At the high-level, each pass is a function that takes one representation of the program and converts it to a different representation of the program. The first such representation is the source of the program. The last one is the compiled program in the target language. In between them, we have representations that are <em>internal</em> to the compiler. We call them <em>intermediate representations</em> or IR.</p>
+<p>In the figure you can see an example diagram of a three-pass compiler.</p>
+<figure>
+<img src="figures/compiler-passes.svg" alt="An example of a three-pass compiler" /><figcaption aria-hidden="true">An example of a three-pass compiler</figcaption>
+</figure>
+<p>Intermediate representations of a program are data structures convenient for us to manipulate at different stages of the compiler. For one stage, we might want to use a tree-like representation. For another, we might pick a graph-like one. For some, a linear array-like representation is appropriate.</p>
+<p>To convert from one IR to another one, each pass needs to traverse it once (or iterate through it). That’s why it’s called a <em>pass</em>.</p>
+<p>The number of passes in a compiler ranges wildly, from single-pass compilers to multiple-pass compilers with dozens of passes (sometimes called <em>nano-pass</em> compilers).</p>
+<p>The number of compiler passes presents a trade-off. On the one hand, we want to write many small passes that do one thing and are maintainable and testable in isolation. We also want to write more passes that do sophisticated analysis to improve the resulting programs’ performance. On the other hand, we want to minimize the number of traversals to improve our compiler’s performance: how fast it compiles the programs.</p>
+<p>Our baseline compiler is a two-pass compiler. The first pass converts the source into an IR called <em>abstract syntax tree</em> or AST. This process is called <em>parsing</em>. The second pass converts from AST to assembly. It is called <em>emitting code</em> or <em>code generation</em>.</p>
+<figure>
+<img src="figures/source-ast-assembly.svg" alt="Baseline compiler structure" /><figcaption aria-hidden="true">Baseline compiler structure</figcaption>
+</figure>
+<p>In <em>Part II</em> of the book, we will introduce some more passes.</p>
+<p>Abstract syntax trees are the most common type of intermediate representations. Let’s talk about them in detail.</p>
+<center><a href="./04-abstract-syntax-tree#fold">Next: Chapter 4. Abstract Syntax Tree</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

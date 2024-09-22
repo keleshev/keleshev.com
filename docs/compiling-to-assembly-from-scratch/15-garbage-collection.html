@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>15. Garbage Collection • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 15</small></small><br/>Garbage Collection<br/><br/></h1>
+<p> </p>
+<p>So far, we have used <code>malloc</code> to allocate memory dynamically, but we have never released it back to the operating system. You would need to call <code>free</code> to achieve that, otherwise your program’s memory consumption will only grow.</p>
+<p>When a programmer needs to deallocate memory manually, it’s called <em>manual memory management</em>. For some languages that might be appropriate. However, most languages offer <em>automatic memory management</em> in the form of <em>garbage collection</em>.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>Garbage collection is one several approaches to automatic memory management. The others are <em>reference counting</em> and <em>region-based memory management</em>.</p>
+</blockquote>
+<p>The easiest way to incorporate a garbage collector into your compiler is to use an off-the-shelf component, such as Boehm–Demers–Weiser garbage collector (or Boehm GC) which is available as a library. You can link this library and replace all the calls to <code>malloc</code> with <code>GC_malloc</code> from Boehm GC, and you’re done!</p>
+<p>But you are here not for the easy answers, are you? Right! Then, let’s implement a simple garbage collector from scratch.</p>
+<h2 id="cheneys-algorithm">Cheney’s algorithm</h2>
+<p>We will be implementing a garbage collection algorithm called Cheney’s algorithm, named after Chris J. Cheney. Here’s a simplified description of it. We will get to more details in the following sections.</p>
+<p>At program startup, a large memory area is allocated (for example, using <code>malloc</code> from <code>libc</code>). This area is referred to as a <em>semi-space</em>. You will see why shortly. Our existing use of <code>malloc</code> for allocating arrays is replaced with a new function, that we call <code>allocate</code>, which places the allocations (also called <em>blocks</em>) one after another in the semi-space. Once there’s not enough memory in the semi-space for allocation, a function we call <code>collect</code> is run. It allocates a new semi-space and copies there only <em>live</em> objects from the old semi-space. The old semi-space is referred to as the <em>from-space</em>, and the new one is referred to as the <em>to-space</em>. The objects are <em>live</em> if they are reachable (by pointers) from the so-called <em>roots</em>. The <em>roots</em> are pointers that point to objects that we know we want to keep ahead of time. Examples of such pointers are pointers on the stack and in global variables. When all live objects are copied to the to-space, the from-space is discarded (for example, using <code>free</code>).</p>
+<p>When we run out of space again, we <code>malloc</code> a new semi-space. Now the old semi-space that used to be the to-space becomes the from-space, and the process repeats.</p>
+<p>The first challenge is to figure out which objects are live. The other challenge is that when we copy blocks their addresses change, and that means that we need to update all pointers that point to those objects.</p>
+<h2 id="allocation-and-collection">Allocation and collection</h2>
+<p>We will start by writing a custom allocator function that will replace our current use of <code>malloc</code>. Instead of calling <code>malloc</code> for each allocation, we will allocate a larger memory region and then will allocate many arrays (or other objects) there. Such a memory region is usually—confusingly—called a <em>heap</em>, but in the context of Cheney’s algorithm, it is typically referred to as a <em>semi-space</em>.</p>
+<p>When talking about garbage collectors, we call individual spans of memory <em>blocks</em>. Our flat, non-resizable arrays are precisely one block each. Still, more complicated data structures (such as resizable arrays that we also talked about) could be implemented as several blocks connected with pointers. In this chapter, we’ll use the term <em>block</em>, even though for our simple language it is synonymous with an array.</p>
+<p>At program startup, we allocate a large space using <code>malloc</code>. We need to manage three pointers:</p>
+<ul>
+<li>The pointer returned by <code>malloc</code> that we will call <em>semi-space start</em>.</li>
+<li>The <em>allocation pointer</em> which points to the first word in a space that is not occupied by a block.</li>
+<li>The pointer to the end of the semi-space (which is <em>semi-space start</em> plus the size of the space) that we’ll call <em>semi-space end</em>.</li>
+</ul>
+<p>We can store these pointers in a <code>.data</code> section of our program. We can also store one or two of them in call-preserved registers.</p>
+<figure>
+<img src="figures/gc-0.svg" alt="State of the program at startup" /><figcaption aria-hidden="true">State of the program at startup</figcaption>
+</figure>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>We haven’t talked about using call-preserved registers this way, but they can be used to hold global variables. For example, we can reserve, say, <code>r10</code> to hold a particular global variable. We can agree that we won’t use this register for anything else in our code generator. Foreign function will also keep it put, since it is a call-preserved register. Registers are a precious resource, but sometimes it makes sense to reserve one of them for something important. It is common to assign the <em>allocation pointer</em> to a register this way.</p>
+</blockquote>
+<p>The start and end pointers will not change until we create a new space. The allocation pointer, however, will change with each allocation. It starts out pointing at the same address as the semi-space start, and with each allocation moves towards the semi-space end.</p>
+<p>Now we can implement the <code>allocate</code> function. When it is called (with a number of bytes to allocate), we check if the area between the allocation pointer and the space end is enough to hold it. Then, we increment the allocation pointer by the requested number of bytes and return the previous value of the allocation pointer as the result. In other words, with each allocation, we pack blocks one after another from semi-space start to semi-space end.</p>
+<p>After several allocations, the state of our program may look like in the figure on the next page.</p>
+<!--
+
+\begin{center}
+    \vfill
+        \textit{(This space is reserved for jelly stains)}
+    \vfill
+\end{center}
+-->
+<figure>
+<img src="figures/gc-1.svg" alt="The state of our program: stack and heap" /><figcaption aria-hidden="true">The state of our program: stack and heap</figcaption>
+</figure>
+<p>Here, we have a stack with three frames allocated. The frames are connected using frame pointers. The frames contain several pointers to the blocks that were previously allocated in our semi-space. Those blocks have pointers between them (for example, an array with a nested array). The pointers may have cycles (an array element points to the array itself). The non-pointer words (left blank) hold some scalar data like numbers or booleans (both on the stack and in the semi-space).</p>
+<p>The blocks have their length as the first word (as we did with arrays). We call such word in a block a <em>header</em>. (Headers usually occupy one or two words and can contain more data, such as object type, for example.) In the figure, we denote each header with a letter “<code>H</code>” and group the words in the same block using rounded corners, so we can see the length of the block. From the figure, you can see that we have allocated five blocks with lengths two and three words.</p>
+<figure>
+<img src="figures/gc-2.svg" alt="The two semi-spaces and their pointers" /><figcaption aria-hidden="true">The two semi-spaces and their pointers</figcaption>
+</figure>
+<p>Let’s say that the program wants to allocate a block of four words now. However, there’s not enough space in the semi-space (from the allocation pointer to the end of the semi-space). When the <code>allocate</code> function is running, this condition must trigger garbage collection.</p>
+<p>We start by allocating a new semi-space called the <em>to-space</em>, while we refer to the old one as the <em>from-space</em>. They are named that because blocks are copied <em>from</em> the from-space <em>to</em> the to-space during collection. In the figure, you can see the two semi-spaces. They both use three pointers: <em>start</em>, <em>allocation</em>, and <em>end</em> pointers.</p>
+<p>We will walk down the stack, frame-by-frame, and look at each word in a frame: is it a pointer or not? With our existing tagging scheme, we can easily distinguish pointers from scalars. This process is called <em>scanning</em>, and we use the <em>scan pointer</em> to track where we are right now in the scanning process.</p>
+<p>In the figure, you can see the <em>scan pointer</em> and the newly allocated <em>to-space</em>.</p>
+<figure>
+<img src="figures/gc-3.svg" alt="Scanninng the stack: first pointer" /><figcaption aria-hidden="true">Scanninng the stack: first pointer</figcaption>
+</figure>
+<p>As we scan down the stack, we encounter our first pointer. We copy the corresponding block to the to-space and bump the value of the to-space allocation pointer. In the figure, you can see the two-word block copied to the to-space. The pointer on the stack is updated to point to the new block. (The previous value of the pointer is shown with a dashed line.) We also update the same block in the from-space: we replace the header word with a so-called <em>forwarding pointer</em>, shown in grey.</p>
+<p>If in future we encounter other pointers pointing to the block that we just moved, we will need to update them. That’s why we store the forwarding pointer in the old block that points to the new block. It’s like when you move to a new address and leave a memo at the old one that you have moved, so your mail can be forwarded. When we reach a block, we can also distinguish whether it starts with the header (a number) or a forwarding pointer (a pointer) using our tagging scheme. Of course, the block length is lost, but we won’t need it for the old block.</p>
+<!--Since we allocated a block in the to-space, the allocation pointer is incremented by the size of the block.-->
+<figure>
+<img src="figures/gc-4.svg" alt="Scanninng the stack: second pointer" /><figcaption aria-hidden="true">Scanninng the stack: second pointer</figcaption>
+</figure>
+<p>In the same frame, we skip over one word which holds a scalar, and encounter another pointer. By following that pointer, we discover that it starts with a forwarding pointer instead of a header. You can recognize that it’s the same block that we have just moved. This time, we do not copy the block. Instead, we update the value on the stack with the value of the forwarding pointer.</p>
+<p>Stacks also hold values of the saved link registers. We know that their location is next to the saved frame pointers and can ignore them. Or, in our case, we don’t need special handling for them: since link registers are not tagged, they will be interpreted as scalars and skipped anyway.</p>
+<p>Another question is—how far down the stack should we go? At some point, we’ll need to stop. At the start of the program, in <code>main</code>, we can allocate a zero word on the stack and point the frame pointer there. This way, we can find out which is the last frame in our program and stop. There are also ways to achieve that without frame pointers.</p>
+<figure>
+<img src="figures/gc-5.svg" alt="Scanninng the stack: third pointer" /><figcaption aria-hidden="true">Scanninng the stack: third pointer</figcaption>
+</figure>
+<p>We move to the next (and last) frame and start scanning again. We encounter our last pointer on the stack. Same as before, we copy the pointed block from the from-space to the to-space and replace the old block’s header with a forwarding pointer. The forwarding pointer is in grey, and the old value of the pointer is shown with a dashed line.</p>
+<p>We have scanned the whole stack, and we should do similarly with other roots, such as global variables and registers. To scan registers, we can save them on the stack before scanning the stack.</p>
+<p>However, we are not finished: there’s a block in the to-space that points to another block in the from-space.</p>
+<figure>
+<img src="figures/gc-6.svg" alt="Scanninng the to-space: first pointer" /><figcaption aria-hidden="true">Scanninng the to-space: first pointer</figcaption>
+</figure>
+<p>Similarly to how we scanned the stack, we now start scanning the to-space by looking at one word at-a-time and checking if it’s a pointer. If it’s a pointer to a header—we copy the block to the to-space. If it’s a pointer to a forwarding pointer, we update the pointer to that value.</p>
+<!--Now, we point the scan pointer to the start of the to-space and begin scanning it one word at-a-time.-->
+<p>As we scan, we encounter our first pointer. We allocate the pointed block on the to-space, update the pointer to point to the newly allocated block, and store a forwarding pointer (grey) in the old block.</p>
+<p>You can see that, as we continued scanning the to-space, it grew by one block, so now we have more scanning to do.</p>
+<figure>
+<img src="figures/gc-7.svg" alt="Scanninng the to-space: second pointer" /><figcaption aria-hidden="true">Scanninng the to-space: second pointer</figcaption>
+</figure>
+<p>As we scan the newly-copied block, we encounter another pointer. It points to a block in the from-space that has a forwarding pointer, so we only update the pointer to the new value, without copying, since that block has already been copied. Once we finish that, there are no more blocks to scan—we have completed the collection phase.</p>
+<p>We can see that there are two blocks in the from-space (now highlighted grey) that were not copied. That means they are garbage. Now we can dispose the from-space (using <code>free</code>) and, finally, allocate that four-word block that we wanted to allocate in the very beginning, before the collection started. The program may now resume.</p>
+<p>In the last figure, you can see the state of the program after the collection has finished and the from-space has been deallocated.</p>
+<figure>
+<img src="figures/gc-8.svg" alt="The state of our program after collection" /><figcaption aria-hidden="true">The state of our program after collection</figcaption>
+</figure>
+<h2 id="tagging">Tagging</h2>
+<p>We have used tagging to distinguish between scalar values and pointers to blocks. If we didn’t use tagging, we could check if a word’s numeric value is between the from-space start and the from-space end. If it’s within that range, we can conclude that the value is a pointer; if it’s not—we treat it as a scalar. This is not always precise: our program might deal with some numeric value that just happens to be in that range. In this case, the algorithm might keep blocks in memory that are garbage. This is usually not a problem, in practice. Garbage collectors that are not <em>precise</em> are called <em>conservative</em>. Boehm GC is an example of such collector.</p>
+<h2 id="headers">Headers</h2>
+<p>Our implementation stored block length in the first word of the block, the header, matching our array layout. However, often headers hold additional data for the garbage collector. For example, a tag in the header can mean that the whole block consists only of scalars and should be skipped by the collector to save time. This is relevant, for example, for handling large strings.</p>
+<p>Also, when pointer tagging is not used, each block (and frame) can hold a field with information about which word is a pointer and which one is not. This could be done in the form of a bit map, with one bit per word. In other words, the tagging bits can be moved from each word to a central location in a block.</p>
+<h2 id="discussion">Discussion</h2>
+<p>In this example, our semi-spaces were only 16 words or 64 bytes. In reality, we need to allocate a larger area, and the larger it is, the fewer times we will need to collect garbage.</p>
+<p>Now that we had an in-depth overview of Cheney’s algorithm let’s discuss some of the properties of such garbage collector.</p>
+<p>First, it offers fast allocation. Most of the time, allocation only needs to check that there’s enough space left, and increment the allocation pointer—that’s it! This can be implemented in a hand-full of instructions and can be made even faster if the allocation pointer is assigned a dedicated call-preserved register. Compare this to <code>malloc</code> where a typical implementation needs to execute 50 to 200 instructions before returning.</p>
+<p>Second, it’s a <em>compacting</em> or <em>moving</em> collector. After the collection phase, all the blocks are allocated one-after-another without holes or fragmentation. This is good for data locality and cache performance.</p>
+<p>But not everything is perfect with this algorithm.</p>
+<p>It is a <em>stop-the-world</em>, <em>non-concurrent</em> collector. When collection happens, the program is paused until the collection finishes. In a concurrent collector, the collection happens a-little–at-a-time with each allocation, to avoid long pauses.</p>
+<p>Another property of this algorithm is that during the collection, when both semi-spaces are allocated the amount of memory consumed is twice as high.</p>
+<p>Our collector is also <em>non-generational</em>.</p>
+<h2 id="generational-garbage-collection">Generational garbage collection</h2>
+<p>It is observed that new blocks often become garbage fast. And then some blocks stay around for a long time. We want to scan new blocks more frequently to reclaim memory and scan older blocks more rarely, since they are less likely to become garbage. This can be achieved with <em>generational</em> collectors.</p>
+<p>For example, a collector with two generations G0 and G1 may have two heaps or spaces: a smaller one for G0 and a larger one for G1. Collections happen more frequently in G0 and more rarely in G1. They can also use different algorithms. All new objects are allocated in G0, and after G0 collection happens, the blocks that remained are copied to G1.</p>
+<p>Cheney’s algorithm is a good fit for G0 collectors because of fast allocation and because it is a moving collector. In such generational collector, we would copy blocks into G1 heap, and not into another semi-space.</p>
+<hr />
+<!--- TODO Wind down -->
+<p>And with this, our journey comes to an end. We have learned about parser combinators and made a parser for our language; learned about ARM assembly to implement the code generator; dipped our toes into static and dynamic typing, and learned a grabage collection algorithm.</p>
+<p>We hope that you’ve enjoyed the journey, and—who knows—maybe we’ll see each other again! <!--- TODO Wind down --></p>
+<!--\includegraphics{chapter-illustrations/1.png}--
+
+\newpage
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}-->
+<!-- # Transformations and Optimizations -->
+<!-- # System Calls -->
+<center style="height:122px; overflow: hidden; position:relative;">
+  <a href="./"><img id="spike" style="position:relative" src=./spike.png width=256 height=260 /></a>
+  <!--img id="spike-2" style="position:relative" src=./spike-2.png width=256 height=260 /-->
+</center>
+<!--
+TODO Add:
+
+    emit() {
+      if (this.left instanceof Integer) {
+        if (this.right instanceof Integer) {
+          new Integer(this.left.value + this.right.value).emit();
+        } else if (this.left.value < 256) {
+          this.right.emit();
+          emit(`add r0, r0, #${this.right.value}`);
+        } else {
+          this.right.emit();
+          emit(`mov r1, r0`);
+          this.left.emit();
+          emit(`add r0, r0, r1`);
+        }
+      } else {
+        this.right.emit();
+        emit(`push {r0, ip}`);
+        this.left.emit();
+        emit(`pop {r1, ip}`);
+        emit(`add r0, r0, r1`);
+      }
+    }
+-->
+
+
+</body>
+</html>

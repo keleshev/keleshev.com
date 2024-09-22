@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>7. ARM Assembly Programming • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 7</small></small><br/>ARM Assembly Programming<br/><br/></h1>
+<p> </p>
+<p>By the end of this chapter, you will learn enough ARM assembly programming to implement the rest of the compiler.</p>
+<p>We will be using the GNU Compiler Collection (GCC) toolchain, most notably, the GNU Assembler (GAS). See <em>Appendix B</em> for comparison between GAS and the legacy ARMASM syntax.</p>
+<p>First, we’ll take a bird’s eye view of a simple hello-world program to get a taste of assembly programming. After this rough initial overview, we will dive into details.</p>
+<h2 id="a-taste-of-assembly">A taste of assembly</h2>
+<p>This is not one of these <em>how to draw an owl</em> tutorials. I will assume that you have never done any assembly programming and walk your way through it. However, in the beginning, I wanted to start with a small, complete program to get a taste of assembly programming. After that, we’ll cover each part in detail.</p>
+<p>So here it is, our first assembly program:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Hello-world program.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">   Print &quot;Hello, assembly!&quot; and exit with code 42. */</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">data</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  hello<span class="op">:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="at">string</span> <span class="st">&quot;Hello, assembly!&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">text</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  main<span class="op">:</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    push {ip<span class="op">,</span> lr}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    ldr r0<span class="op">,</span> <span class="op">=</span>hello</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    bl printf</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    mov r0<span class="op">,</span> #<span class="dv">41</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>  <span class="co">// Increment</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    pop {ip<span class="op">,</span> lr}</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    bx lr</span></code></pre></div>
+<p>This program prints <code>Hello, assembly!</code> to the console and exits with error code <code>42</code>.</p>
+<p>Now, let’s discuss this piece of assembly code step-by-step.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  hello<span class="op">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="at">string</span> <span class="st">&quot;Hello, assembly!&quot;</span></span></code></pre></div>
+<p>The program starts with a <code>.data</code> directive. Under this directive, there are definitions of our global data, potentially mutable (or read-write). There we have only one definition, a byte string defined with a <code>.string</code> directive. It has a <em>label</em> named <code>hello:</code> which stands for the memory address of this string, which we can refer to. The data section ends, and the <code>.text</code> directive starts the <em>code</em> section.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">text</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  main<span class="op">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    push {ip<span class="op">,</span> lr}</span></code></pre></div>
+<p>This section is for immutable (read, no-write) data. It is used for constants, as well as for the actual assembly instructions. The only definition in the <code>.text</code> section is a function called <code>main</code> defined with the label <code>main:</code>. It is declared “public” using the <code>.global</code> directive. The function starts with an instruction <code>push</code> that saves some necessary registers on the stack. Then, it continues below.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>    ldr r0<span class="op">,</span> <span class="op">=</span>hello</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    bl printf</span></code></pre></div>
+<p>The function loads the address of the string that we defined earlier, by referring to the <code>hello</code> label. The instruction <code>ldr</code> <em>loads</em> the address into <em>register</em> <code>r0</code>. The instruction <code>bl printf</code> is the <em>call</em> instruction that calls the <code>printf</code> function to print the string. The register <code>r0</code> is used to pass a parameter to <code>printf</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>    mov r0<span class="op">,</span> #<span class="dv">41</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span></span></code></pre></div>
+<p>Next, we set up the exit code. First, we use the <code>mov</code> instruction to <em>move</em>, or copy a number <code>41</code> into register <code>r0</code>. Then the <code>add</code> instruction increments <code>r0</code> by one, resulting in <code>42</code>. There’s nothing special about the exit code <code>42</code>, and we didn’t have to compute it from <code>41</code>. But this taste of assembly would be incomplete without showing some basic instructions like <code>mov</code> and <code>add</code>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>    pop {ip<span class="op">,</span> lr}</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    bx lr</span></code></pre></div>
+<p>The <code>main</code> function ends with a return sequence. The registers that we saved, in the beginning, are now restored with the <code>pop</code> instruction, and then we return from the function with the <code>bx lr</code> instruction, assuming that the return value is in <code>r0</code>, which should be <code>42</code>.</p>
+<p>As you probably noticed, the familiar single- and multi-line comments are supported.</p>
+<h2 id="running-an-assembly-program">Running an assembly program</h2>
+<p>Here’s how you get this simple program running.</p>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>The instructions below assume that you are running the commands on an ARM-based computer (like a Raspberry Pi) with a 32-bit operating system. If this is not the case for you, check out <em>Appendix A</em> on how to adapt these instructions to other environments.</p>
+</blockquote>
+<p>Save the previous program into a file called <code>hello.s</code> using a text editor. Then type the following command into the console:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> gcc hello.s <span class="at">-o</span> hello</span></code></pre></div>
+<p>This will instruct GCC to assemble and link our program producing a <code>hello</code> executable. By default, GCC will link our assembly with a <code>libc</code> library, which provides us with basic functions such as <code>printf</code> that we used here.</p>
+<p>You see, the operating system kernel doesn’t provide such functions directly. For example, printing to the console is implemented in libraries like <code>libc</code> on top of (operating) <em>system calls</em> like <code>writev</code>. Without these basics, we would be stuck without even being able to print to the console.</p>
+<!-- However, in *Part II*, we will have a quick overview of how to make *system calls* directly. *-->
+<p>Now, you can run the resulting executable as usual:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> assembly!</span></code></pre></div>
+<p><em>Oh, hello there!</em></p>
+<p>We can check the exit code by printing the <code>$?</code> shell variable.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> echo <span class="va">$?</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">42</span></span></code></pre></div>
+<p>Now that we have a template to run our programs and a rough overview, we will dive deep into the details.</p>
+<p>We will start with the basic data structure of assembly programming, the <em>machine word</em>, then followed by an overview of how memory and registers work, and finally proceed to cover the different kinds of instructions that manipulate registers and memory.</p>
+<h2 id="machine-word">Machine word</h2>
+<p>ARM is a 32-bit instruction set. That means that most operations work with a 32-bit data structure called the <em>machine word</em>.</p>
+<p>In ARM, a word consists of 32 bits. Each bit is binary <code>0</code> or <code>1</code>.</p>
+<p>Another way to look at it, a word consists of <em>four</em> bytes, where each byte is 8 bits.</p>
+<p>There are also half-words and double-words. The names speak for themselves. Operations on them are not as common.</p>
+<p>Let’s look at the following word.</p>
+<!--(Figure) |ñop| 11000011101100010110111101110000-->
+<figure>
+<img src="figures/machine-word.svg" alt="An example machine word" /><figcaption aria-hidden="true">An example machine word</figcaption>
+</figure>
+<p>What does it mean? What does it stand for? Well, the processor doesn’t care. It doesn’t have a type system. It doesn’t have any information attached to words to help us distinguish what a word stands for in isolation.</p>
+<p>If interpreted as an unsigned integer, this word could stand for <code>3_283_185_520</code>. If interpreted as a signed integer, then it’s <code>-1_011_781_776</code>. It could be a byte array of four bytes, <code>[195, 177, 111, 112]</code>. It could be an array of bits, where each bit is a single flag. Or it could be a UTF-8–encoded string <code>"ñop"</code>, where <code>ñ</code> is encoded using as two bytes <code>195, 177</code>, while <code>o</code> and <code>p</code> are encoded as single-byte ASCII characters with codes <code>111</code> and <code>112</code>. It could also be an encoding of an ARM instruction with mnemonic <code>rsb</code>. Or it could be an address pointing to some data location in memory.</p>
+<!-- More precisely, RSBVC FP, PC, R3, ASR #3 -->
+<p>It is up to us (programmers and compiler writers) to assign meaning to each word and to keep track of what they stand for.</p>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>Throughout this book, we’ll use (non-overlapping) solid boxes of different shapes and sizes to refer to 32-bit words. Like here, we’ll use dashed lines to delimit individual bytes, where it adds clarity.</p>
+</blockquote>
+<h2 id="numeric-notation">Numeric notation</h2>
+<p>As we already did here, we’ll use JavaScript notation to refer to different interpretations of data. Modern JavaScript is quite good at that. We could refer to the above word using binary <em>(base-2)</em> notation, with <code>0b</code> prefix:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bn">0b11000011101100010110111101110000</span></span></code></pre></div>
+<p>JavaScript allows us to add underscores for readability; for example, to distinguish bit patterns of individual bytes:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bn">0b11000011</span>_10110001_01101111_01110000</span></code></pre></div>
+<p>We can use good old decimal <em>(base-10)</em> notation:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>3_283_185_520</span></code></pre></div>
+<p>We can also use hexadecimal <em>(base-16)</em> notation, with <code>0x</code> prefix;</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>0xC3_B1_6F_70</span></code></pre></div>
+<p>How do we decide which notation to use? Why would we ever use hexadecimal?</p>
+<p>Binary notation is straightforward: you can see the individual bits, and you can visually split a word into bytes, but it is very verbose!</p>
+<p>Decimal notation is much terser, you get a good understanding of the magnitude of the number, but it is hard to reason about the values of individual bytes and bits.</p>
+<p>Hexadecimal notation is terse, and it is easy to split a word into bytes visually. Each hexadecimal digit maps to four bits, no matter the position in a number, so two hexadecimal digits always map to a byte. All you need to remember is bit patterns of the 16 hexadecimal digits:</p>
+<table style="width:35%;">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Hexadecimal</th>
+<th style="text-align: center;">Binary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><code>0x0</code></td>
+<td style="text-align: center;"><code>0b0000</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0x1</code></td>
+<td style="text-align: center;"><code>0b0001</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0x2</code></td>
+<td style="text-align: center;"><code>0b0010</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0x3</code></td>
+<td style="text-align: center;"><code>0b0011</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0x4</code></td>
+<td style="text-align: center;"><code>0b0100</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0x5</code></td>
+<td style="text-align: center;"><code>0b0101</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0x6</code></td>
+<td style="text-align: center;"><code>0b0110</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0x7</code></td>
+<td style="text-align: center;"><code>0b0111</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0x8</code></td>
+<td style="text-align: center;"><code>0b1000</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0x9</code></td>
+<td style="text-align: center;"><code>0b1001</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0xA</code></td>
+<td style="text-align: center;"><code>0b1010</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0xB</code></td>
+<td style="text-align: center;"><code>0b1011</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0xC</code></td>
+<td style="text-align: center;"><code>0b1100</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0xD</code></td>
+<td style="text-align: center;"><code>0b1101</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0xE</code></td>
+<td style="text-align: center;"><code>0b1110</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0xF</code></td>
+<td style="text-align: center;"><code>0b1111</code></td>
+</tr>
+</tbody>
+</table>
+<p>This way we can easily translate from hexadecimal to binary and back. Take <code>0xC3_B1_6F_70</code>, as an example:</p>
+<ul>
+<li><code>0xC3</code> is <code>0b1100_0011</code></li>
+<li><code>0xB1</code> is <code>0x1011_0001</code></li>
+<li><code>0x6F</code> is <code>0b0110_1111</code></li>
+<li><code>0x70</code> is <code>0b0111_0000</code></li>
+</ul>
+<p>Thus we can conclude that <code>0xC3_B1_6F_70</code> is the same as:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bn">0b11000011</span>_10110001_01101111_01110000</span></code></pre></div>
+<p>Can’t do this with decimal notation!</p>
+<h2 id="memory">Memory</h2>
+<p>Think of memory as a large continuous byte array. It contains our program instructions encoded as binary words. It contains the data that our program works with: data segment, code segment, stack, and heap (more on these later).</p>
+<p>Like a byte array, you can access a single byte from memory given an index into this array. We call this index, a <em>memory address</em>. Memory addresses are 32-bit on ARM (how it all aligns, eh?).</p>
+<p>However, not only can you access single bytes from memory, you can also access whole 32-bit words. But there is a restriction: you can only access <em>aligned</em> words. In this case, <em>aligned</em> means non-overlapping words or words which address is divisible by <em>four</em>. One word contains four bytes, and each byte has its own address, but we address words only by the address of the first byte in the word.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>Newer ARM processors support unaligned access, but not for all relevant instructions, and it incurs a performance penalty. In this book, we avoid it.</p>
+</blockquote>
+<p>In the following figure, you can see a stretch of memory starting from address <code>0x00</code> that shows how individual bytes and their addresses map to aligned words and their addresses.</p>
+<figure>
+<img src="figures/memory-bytes.svg" alt="An example stretch of memory on byte-level" /><figcaption aria-hidden="true">An example stretch of memory on byte-level</figcaption>
+</figure>
+<p>From here on, we won’t need this much detail when talking about memory, so we will use a simplified (but still as precise) word-level diagrams. Like the next one that describes the same stretch of memory.</p>
+<figure>
+<img src="figures/memory-words.svg" alt="Same stretch of memory on word-level" /><figcaption aria-hidden="true">Same stretch of memory on word-level</figcaption>
+</figure>
+<p>Sometimes we store a memory address in a memory word. We call that a <em>pointer</em>. In our diagrams, we will use arrows to show where a memory word is pointing. We will omit the actual memory addresses in our diagrams since the exact value is not important. The important part is where it points to, not the value itself.</p>
+<figure>
+<img src="figures/pointer-notation.svg" alt="Pointer notation: left—with arrows, right—with actual values" /><figcaption aria-hidden="true">Pointer notation: left—with arrows, right—with actual values</figcaption>
+</figure>
+<p>As we already mentioned, the memory contains our data segment, code segment, stack, and heap. However, what it does <em>not</em> contain (on most architectures, anyway) is <em>registers</em>.</p>
+<h2 id="registers">Registers</h2>
+<p>Registers are special memory words that are <em>outside</em> of the main memory. They are used for intermediate values, sort of like temporary variables. There’s a limited number of these—usually 8, 16, or 32.</p>
+<p>ARM has 16 main registers and a special <em>status</em> register (CPSR). The main registers are called <code>r0</code> to <code>r15</code>, but some of them have alternative names. See the next figure for more details.</p>
+<figure>
+<img src="figures/registers.svg" alt="Registers in ARM" /><figcaption aria-hidden="true">Registers in ARM</figcaption>
+</figure>
+<p>First, why do we need registers? Couldn’t instructions work directly with memory? They could, and there are other architectures such as accumulator-based and stack-based architectures that need only one register or no registers at all. However, ARM is a <em>load-store</em> architecture.</p>
+<p>With <em>load-store</em> architecture, the basic workflow is as follows:</p>
+<ul>
+<li>data is loaded from memory into registers, then</li>
+<li>operations are performed on registers, and finally</li>
+<li>the data is stored back into memory.</li>
+</ul>
+<p>It turns out this workflow is quite efficient, and most modern architectures follow it.</p>
+<p>Most ARM registers are general-purpose and can be used for any intermediate values. We’ll cover the more <em>special-purpose</em> registers like <code>fp</code>, <code>ip</code>, <code>sp</code>, <code>lr</code>, <code>pc</code>, and CPSR as we discover instructions that work with them.</p>
+<hr />
+<p>You may have heard that <em>registers are fast</em>. What does that even mean? Why couldn’t we use the same technology for memory?</p>
+<p>Two reasons.</p>
+<p>There are only 16 registers. That means you can refer to a register using only 4 bits. At the same time, memory addresses are 32-bit. So you need fewer bytes (and instructions) to encode an operation on three registers, rather than an operation on three memory addresses. And a processor can decode fewer instructions faster.</p>
+<p>Second, computer memory has several <em>levels</em> of caches, usually referred to as <em>L1</em>–<em>L4</em>. And even if the fastest cache uses the same technology as registers, there could still be a <em>cache miss</em>. But such a cache miss can never happen in the case of registers.</p>
+<h2 id="the-add-instruction">The add instruction</h2>
+<p>Let’s get to our first instruction, <code>add</code>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>add r1<span class="op">,</span> r2<span class="op">,</span> r3     <span class="co">/* r1 = r2 + r3; */</span></span></code></pre></div>
+<p>It consists of a mnemonic name <code>add</code> as well as three register <em>operands</em>, <code>r1</code>, <code>r2</code>, and <code>r3</code>. In this case, <em>operand 1</em> is <code>r2</code>, <em>operand 2</em> is <code>r3</code>, and <code>r1</code> is the result, also called the <em>destination</em> operand. This kind of instruction is called three-operand instruction.</p>
+<p>As a comment, we provided a pseudo-code that describes the effect of the instruction. Note that the order of operands in the instructions is the same as in the pseudo-code. ARM assembly was designed such that this is always the case.</p>
+<p>All ARM instructions are encoded into single 32-bit words in memory. In this figure, you can see how this particular instruction is encoded into binary form. We’ve left the meaning of some bits unexplained.</p>
+<figure>
+<img src="figures/add-register.svg" alt="The encoding of: add r1, r2, r3" /><figcaption aria-hidden="true">The encoding of: <code>add r1, r2, r3</code></figcaption>
+</figure>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>Most ARM processors support several instruction sets. They have been historically called ARM, Thumb, and ARM64, but recently renamed to A32, T32, and A64.</p>
+<p>T32 (or Thumb 2), for example, is a variable-length instruction set with both 16-bit and 32-bit instructions.</p>
+</blockquote>
+<h2 id="immediate-operand">Immediate operand</h2>
+<p>The <code>add</code> instruction has a second form, where the <em>last</em> operand is a small number encoded directly into the instruction. It is called an <em>immediate</em> operand, and the notation uses a <code>#</code> sign:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>add r1<span class="op">,</span> r2<span class="op">,</span> #<span class="dv">64000</span>     <span class="co">/* r1 = r2 + 64000; */</span></span></code></pre></div>
+<p>GNU Assembler allows familiar syntax for hexadecimal values with <code>0x</code> prefix and binary values with <code>0b</code> prefix. However, it doesn’t allow underscores in them. So, the previous instruction can be rewritten as:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>add r1<span class="op">,</span> r2<span class="op">,</span> #<span class="bn">0xFA00</span>     <span class="co">/* r1 = r2 + 0xFA00; */</span></span></code></pre></div>
+<p>In the following figure you can see how this instruction is encoded.</p>
+<figure>
+<img src="figures/add-immediate.svg" alt="The encoding of: add r1, r2, #0xFA00" /><figcaption aria-hidden="true">The encoding of: <code>add r1, r2, #0xFA00</code></figcaption>
+</figure>
+<p>From the figure, you can see that there are 8 bits dedicated to the immediate operand, so you might conclude that it can represent any single byte value. But—wait!—we’ve just used <code>64000</code> in our example, and that does not fit in a byte! It turns out, there are four more bits in the instruction that encode how many <em>even</em> number of bits the immediate should be shifted. This way we can represent <code>0xFA</code>, or <code>0xFA0</code>, or <code>0xFA00</code>, or <code>0xFA000</code> and so on.</p>
+<p>This is an ingenious way to encode a vast amount of interesting constants in a very tight space!</p>
+<h2 id="signed-unsigned-twos-complement">Signed, unsigned, two’s complement</h2>
+<p>What are we adding with the <code>add</code> instruction? Unsigned integers? Signed integers?</p>
+<p>It turns out that it works correctly both when all the operands are treated as unsigned integers, and in the case where they are all treated as signed integers. This is thanks to the signed number representation that most computers use, called <em>two’s complement</em>. It was specifically designed for this trick: to use the same hardware adder for both signed and unsigned numbers.</p>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>Even though <code>add</code> and most ARM instructions work on 32-bit words, in this section we’ll show examples using signed and unsigned 8-bit bytes, to make them more manageable.</p>
+</blockquote>
+<p>For example, if we try to add <code>0b1111_1100</code> and <code>0b0000_0010</code> using a hardware adder, we get <code>0b1111_1110</code>, which could be interpreted as an unsigned operation <span class="math inline">252 + 2 ⇒ 254</span>, or as a signed operation <span class="math inline"> − 4 + 2 ⇒  − 2</span>. In the following table, you can see how a range of binary patterns can be interpreted as an unsigned or a signed integer.</p>
+<table>
+<caption>Two’s complement representation of integers</caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 39%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Bit pattern</th>
+<th style="text-align: center;">Unsigned interpretation</th>
+<th style="text-align: center;">Signed<br />
+interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><code>0b0000_0000</code></td>
+<td style="text-align: center;"><code>0</code></td>
+<td style="text-align: center;"><code>0</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b0000_0001</code></td>
+<td style="text-align: center;"><code>1</code></td>
+<td style="text-align: center;"><code>1</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b0000_0010</code></td>
+<td style="text-align: center;"><code>2</code></td>
+<td style="text-align: center;"><code>2</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b0000_0011</code></td>
+<td style="text-align: center;"><code>3</code></td>
+<td style="text-align: center;"><code>3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b0111_1100</code></td>
+<td style="text-align: center;"><code>124</code></td>
+<td style="text-align: center;"><code>124</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b0111_1101</code></td>
+<td style="text-align: center;"><code>125</code></td>
+<td style="text-align: center;"><code>125</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b0111_1110</code></td>
+<td style="text-align: center;"><code>126</code></td>
+<td style="text-align: center;"><code>126</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b0111_1111</code></td>
+<td style="text-align: center;"><code>127</code></td>
+<td style="text-align: center;"><code>127</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><em>— signed overflow —</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b1000_0000</code></td>
+<td style="text-align: center;"><code>128</code></td>
+<td style="text-align: center;"><code>-128</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b1000_0001</code></td>
+<td style="text-align: center;"><code>129</code></td>
+<td style="text-align: center;"><code>-127</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b1000_0010</code></td>
+<td style="text-align: center;"><code>130</code></td>
+<td style="text-align: center;"><code>-126</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b1000_0011</code></td>
+<td style="text-align: center;"><code>131</code></td>
+<td style="text-align: center;"><code>-125</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b1111_1100</code></td>
+<td style="text-align: center;"><code>252</code></td>
+<td style="text-align: center;"><code>-4</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b1111_1101</code></td>
+<td style="text-align: center;"><code>253</code></td>
+<td style="text-align: center;"><code>-3</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b1111_1110</code></td>
+<td style="text-align: center;"><code>254</code></td>
+<td style="text-align: center;"><code>-2</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b1111_1111</code></td>
+<td style="text-align: center;"><code>255</code></td>
+<td style="text-align: center;"><code>-1</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><em>— unsigned overflow —</em></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b0000_0000</code></td>
+<td style="text-align: center;"><code>0</code></td>
+<td style="text-align: center;"><code>0</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b0000_0001</code></td>
+<td style="text-align: center;"><code>1</code></td>
+<td style="text-align: center;"><code>1</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>0b0000_0010</code></td>
+<td style="text-align: center;"><code>2</code></td>
+<td style="text-align: center;"><code>2</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>0b0000_0011</code></td>
+<td style="text-align: center;"><code>3</code></td>
+<td style="text-align: center;"><code>3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+<td style="text-align: center;"><span class="math inline">⋮</span></td>
+</tr>
+</tbody>
+</table>
+<p>Two’s complement is an elegant system, but we won’t go into its details here.</p>
+<h2 id="arithmetic-and-logic-instructions">Arithmetic and logic instructions</h2>
+<p>So, we have covered our first instruction. Took a while, huh? And I have good news for you! All arithmetic and logic instructions in ARM have precisely the same three-operand form!</p>
+<p>Here are just some of them:</p>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 27%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Instruction</th>
+<th style="text-align: center;">Mnemonic</th>
+<th style="text-align: center;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><code>add  r1, r2, r3</code></td>
+<td style="text-align: center;">Add</td>
+<td style="text-align: center;"><code>r1 = r2 + r3;</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>sub  r1, r2, r3</code></td>
+<td style="text-align: center;">Subtract</td>
+<td style="text-align: center;"><code>r1 = r2 - r3;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>mul  r1, r2, r3</code></td>
+<td style="text-align: center;">Multiply</td>
+<td style="text-align: center;"><code>r1 = r2 * r3;</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>sdiv r1, r2, r3</code></td>
+<td style="text-align: center;">Signed divide</td>
+<td style="text-align: center;"><code>r1 = r2 / r3;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>udiv r1, r2, r3</code></td>
+<td style="text-align: center;">Unsigned divide</td>
+<td style="text-align: center;"><code>r1 = r2 / r3;</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>bic  r1, r2, r3</code></td>
+<td style="text-align: center;">Bitwise clear</td>
+<td style="text-align: center;"><code>r1 = r2 &amp; ~r3;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>and  r1, r2, r3</code></td>
+<td style="text-align: center;">And (bitwise)</td>
+<td style="text-align: center;"><code>r1 = r2 &amp; r3;</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>orr  r1, r2, r3</code></td>
+<td style="text-align: center;">Or (bitwise)</td>
+<td style="text-align: center;"><code>r1 = r2 | r3;</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>eor  r1, r2, r3</code></td>
+<td style="text-align: center;">Exclusive or (bitwise)</td>
+<td style="text-align: center;"><code>r1 = r2 ^ r3;</code></td>
+</tr>
+</tbody>
+</table>
+<p>Neat, isn’t it? We have now basically covered a big chunk of the instruction set. Let’s move on.</p>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>Division is one of those operations that differs for signed and unsigned integers. As JavaScript doesn’t have proper support for unsigned integers, we can’t express the difference easily with our pseudo-code notation. Also, some ARM versions do not have hardware support for <code>sdiv</code> and <code>udiv</code> instructions (primarily, constrained embedded systems). To use them, you will need to pass an assembler parameter to specify an architecture version that supports them, for example, <code>gcc -march=armv7ve</code>.</p>
+</blockquote>
+<h2 id="move-instructions">Move instructions</h2>
+<p>Move instructions copy a word from one register to another, or from an immediate operand to a register. An immediate operand has the same restrictions as before. There’s also a “move–not” instruction that does bitwise negation.</p>
+<table style="width:94%;">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 33%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Instruction</th>
+<th style="text-align: center;">Mnemonic</th>
+<th style="text-align: center;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><code>mov r1, r2</code></td>
+<td style="text-align: center;">Move</td>
+<td style="text-align: center;"><code>r1 = r2;</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>mvn r1, r2</code></td>
+<td style="text-align: center;">Move-not</td>
+<td style="text-align: center;"><code>r1 = ~r2;</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="program-counter">Program counter</h2>
+<p>We know that each instruction is encoded into a word. We also know that instructions are located in memory one after another. How does execution go from one instruction to the next one?</p>
+<p>For that, the <em>program counter</em> is used. The program counter is the register <code>r15</code>, but more often, it is referred to by its alternative name: <code>pc</code>. On some architectures, it is called the <em>instruction pointer</em>. The program counter is a pointer that points to the currently executing instruction. By manipulating <code>pc</code>, we can change which instruction is executing next.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>Because of instruction pipelining (which we won’t cover here) program counter usually points two instructions ahead of the currently executing instruction. But, for the most part, we can safely ignore that.</p>
+</blockquote>
+<!-- Restructure this? First talk about auto-increment pc. -->
+<p>For example, if register <code>r0</code> contains some address that we want to <em>jump</em> to we can do that by moving that address into <code>pc</code> and the execution will continue from there:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>mov pc<span class="op">,</span> r0        <span class="co">/* pc = r0; */</span></span></code></pre></div>
+<p>By <em>jump</em>, we mean that execution is transferred to a different instruction, not the next one.</p>
+<p>It is worth highlighting that <em>every</em> instruction affects the program counter. At the very least, each instruction increments program counter by four bytes (one word) so that execution can transfer to the next instruction. (Otherwise, we would always be stuck executing the same instruction). So the <em>effect</em> of each instruction that we listed so far requires <code>pc += 4;</code> to be prepended:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>add r1<span class="op">,</span> r2<span class="op">,</span> r3     <span class="co">/* pc += 4; r1 = r2 + r3; */</span></span></code></pre></div>
+<p>Here’s a little snippet of assembly where we increment <code>r0</code> by one (at a time), but by adding to <code>pc</code> we jump over two instructions.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* This is not a recommended practice.    */</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>mov r0<span class="op">,</span> #<span class="dv">0</span>       <span class="co">/* pc += 4; r0 = 0;      */</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* pc += 4; r0 = r0 + 1; */</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* pc += 4; r0 = r0 + 1; */</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>add pc<span class="op">,</span> pc<span class="op">,</span> #<span class="dv">8</span>   <span class="co">/* pc += 4; pc = pc + 8; */</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* …skipped…             */</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* …skipped…             */</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* pc += 4; r0 = r0 + 1; */</span></span></code></pre></div>
+<p>Here, we made all the changes in <code>pc</code> explicit. Note that even though <code>add</code> typically increments <code>pc</code> by 4, this is overridden if the result is written to <code>pc</code>.</p>
+<p>From here on, we will resume omitting <code>pc += 4;</code> in pseudo-code.</p>
+<p>We can conclude that the program counter is the most special register of all. By changing it, we change which instruction is executed in our program next. So don’t use it for storing some temporary values!</p>
+<h2 id="branch-instruction">Branch instruction</h2>
+<p>We could jump forward and backward in code by adding to and subtracting from the program counter, but it is very cumbersome. <!--Every time we add an instruction to our program, the offset of all the following instructions addresses.--> <!-- TODO "what does that mean" --></p>
+<p>We can use a little bit of help from the assembler. The assembler allows us to insert textual <em>labels</em> that represent particular instruction addresses. Then we can use them with <em>branch</em> instruction <code>b</code>, and the assembler will take care of calculating the offset that is necessary to apply to <code>pc</code> to land at the correct instruction.</p>
+<p>This way, our previous snippet can be rewritten as:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">0</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  b myLabel        <span class="co">/* pc = myLabel; */</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* …skipped… */</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span>   <span class="co">/* …skipped… */</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>myLabel<span class="op">:</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span></span></code></pre></div>
+<p>Even though the <code>b</code> instruction jumps to an offset relative to <code>pc</code>, and not to an absolute address, it helps to think of labels as constants with absolute addresses stored in them. And that is how we will use them in pseudo-code that describes the effect of each instruction:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>  b myLabel        <span class="co">/* pc = myLabel; */</span></span></code></pre></div>
+<h2 id="branch-and-exchange">Branch and exchange</h2>
+<p>While the <code>b</code> instruction allows us to make a relative jump computed from a label, <code>bx</code>—or <em>branch and exchange</em>—allows us to jump to an address stored in a register:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>  bx r0       <span class="co">/* pc = r0; */</span></span></code></pre></div>
+<p>How is it different from <code>mov pc, r0</code>? For our purpose, it is the same. Some would say it’s a bit more readable.</p>
+<p>However, it also allows to <em>exchange</em> instruction sets from ARM to Thumb and back. But we won’t be dealing with that in this book.</p>
+<h2 id="branch-and-link">Branch and link</h2>
+<p><em>Branch and link</em>, or <code>bl</code> is a relative jump just like <code>b</code>. The only difference is that it saves the program counter’s value into a particular register, <code>r14</code>, more often referred to as <code>lr</code>, or <em>link register</em>.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>  bl myLabel    <span class="co">/* lr = pc; pc = myLabel; */</span></span></code></pre></div>
+<p>What it effectively does is it <em>saves</em> the previous value of <code>pc</code> before overriding it (and thus, losing it).</p>
+<p>We could achieve the same with the following two instructions:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>  mov lr<span class="op">,</span> pc<span class="op">;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  b myLabel<span class="op">;</span></span></code></pre></div>
+<p>However, this is such a common operation that it deserved its own instruction. It is common because it is used to implement function calls.</p>
+<h2 id="intra-procedurecall-scratch-register">Intra-procedure–call scratch register</h2>
+<!-- XXX: seriously, start with "Note that"? -->
+<p>Note that, under the hood, the instructions that branch to a label (<code>b</code> and <code>bl</code>) encode a 24-bit immediate value for the relative jump. That allows us to jump forward and backward within ±32 MB of code space. But you don’t have to deal with this limitation. The linker will arrange a so-called <em>veneer</em>: jump to a special place within the ±32 MB limit and then load the full 32-bit address into <code>pc</code>, if a longer jump is necessary.</p>
+<p>To do that, it will need to generate code that loads the full address into a temporary register. For this to be predictable, a special register was designated for the role: the <em>intra-procedure–call scratch register</em>, referred to as <code>r12</code> or <code>ip</code>. This is mostly relevant for procedure (in other words, function) calls since other jumps to a label are usually relatively short. Why <em>intra</em>? Because it is used <em>between</em> the calls: after the call is made by the caller, but before the control switches to the callee function. It is also referred to as a <em>scratch</em> register, meaning, a short-lived temporary. We can still use this register for our temporary values; we just can’t rely that the value will be preserved after a call is made. So it is best-suited for short-lived temporary values.</p>
+<h2 id="function-call-basics">Function call basics</h2>
+<p>The thing special about function calls that distinguishes them from other kinds of control-flow jumps is that function calls <em>return back</em>. When programming in a higher-level language, we don’t think much about that, but at assembly level, we have to implement the whole <em>return back</em> thing ourselves.</p>
+<p>The value that the <code>bl</code> instruction stores into <code>lr</code> is called the <em>return address</em>. When the function finishes, it can jump to it to continue execution from where it was called.</p>
+<p>Let’s implement a very primitive function, <code>addFourtyTwo</code>, that takes a single parameter and adds <code>42</code> to it. ARM calling convention (which will talk more about later) says that we should pass the first four arguments in registers <code>r0</code>–<code>r3</code> (if any), and provide a return value in <code>r0</code> (if any, again). In our case, <code>addFourtyTwo</code> takes one parameter and returns one value so that we use <code>r0</code> for both.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">0</span>         <span class="co">/* r0 = 0;                     */</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  bl addFourtyTwo    <span class="co">/* lr = pc; pc = addFourtyTwo; */</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  sub r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">3</span>     <span class="co">/* r0 = r0 - 3;                */</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>addFourtyTwo<span class="op">:</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">42</span>    <span class="co">/* r0 = r0 + 42;               */</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  bx lr              <span class="co">/* pc = lr;                    */</span></span></code></pre></div>
+<p>The <em>caller</em> that calls <code>addFourtyTwo</code> first sets register <code>r0</code> to <code>0</code>, then uses <code>bl</code> to jump to <code>addFourtyTwo</code>, which saves the return address into <code>lr</code>. At the end of <code>addFourtyTwo</code>, it branches back, with <code>bx lr</code> and the caller continues (with subtracting <code>3</code>, in this case).</p>
+<p>Another way to look at this is that we pass <code>lr</code> as a special parameter to each function, so the function knows where to return back.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>I cannot help myself but mention the words <em>continuation-passing style</em> here. We won’t cover it, but it is a powerful compiler technique that makes passing the return address (or <em>continuation</em>) explicit early in the compiler pipeline.</p>
+</blockquote>
+<h2 id="link-register">Link register</h2>
+<p>The link register <code>lr</code> or <code>r14</code> is only special in the sense that <code>bl</code> works with <code>lr</code> and only <code>lr</code>. We could decide to use a different register for the return address, say <code>r8</code> (with the <code>mov r8, pc; b myLabel</code> sequence that we mentioned before), but <code>bl</code> is so convenient that we’ll be using only <code>lr</code> for that purpose.</p>
+<p>I must admit that the name <em>link register</em> is not perfect. It’s called that because it creates a <em>link</em> that can be followed back to the callee. On some other architectures (like RISC-V), this register is called the <em>return address</em>, or <code>ra</code>.</p>
+<h2 id="conditional-execution-and-the-cpsr-register">Conditional execution and the CPSR register</h2>
+<p>So far, all the instructions we’ve covered were executed <em>unconditionally</em>. As long as <code>pc</code> could reach those instructions, they were executed. However, sometimes we want <em>conditional execution</em>. This is when we want to decide whether to execute an instruction or not depending on some <em>condition</em>. This is done in two steps in ARM:</p>
+<ul>
+<li>A comparison instruction <code>cmp</code> compares two registers (or a register and an immediate), and saves the result of the comparison into the CPSR register.</li>
+<li>One or more instructions with a <em>condition code</em> reads the result of the comparison from CPSR and executes (or not), depending on the condition code.</li>
+</ul>
+<p>CPSR stands for the <em>current program status register</em>.</p>
+<p>Here’s an example, where a bunch of <code>mov</code> instructions are executed depending on a condition:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  cmp   r1<span class="op">,</span> r2     <span class="co">/* cpsr = compare(r1, r2);    */</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  moveq r1<span class="op">,</span> #<span class="dv">10</span>    <span class="co">/* if (eq(cpsr)) { r1 = 10; } */</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  mov   r2<span class="op">,</span> #<span class="dv">20</span>    <span class="co">/* r2 = 20;                   */</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  moval r3<span class="op">,</span> #<span class="dv">20</span>    <span class="co">/* r3 = 20;                   */</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  movne r4<span class="op">,</span> #<span class="dv">30</span>    <span class="co">/* if (ne(cpsr)) { r4 = 30; } */</span></span></code></pre></div>
+<p>First, <code>cmp</code> instruction compares registers <code>r1</code> and <code>r2</code> and saves the result of the comparison into CPSR. It set a few bits in CPSR, but it’s not important for us which exact bits are set, so in the pseudo-code, we’ve hidden that inside an opaque <code>compare</code> function.</p>
+<p>Next, we see a bunch of instructions starting with <code>mov</code>. Those are: <code>moveq</code>, <code>moval</code>, <code>movne</code>. They are not separate instructions from <code>mov</code>, but are just <code>mov</code> with a condition code suffix. For example, <code>mov</code> with <code>eq</code> code executes if the last comparison made with <code>cmp</code> was equal; <code>mov</code> with <code>ne</code>—not equal, and so on. The <code>al</code> code stands for <em>always</em>, and is the default so it can be skipped, and thus, <code>mov</code> and <code>moval</code> is <em>exactly</em> the same instruction.</p>
+<p>In the following table, you can see a summary of some condition codes. These are not all, but it’s more than enough for our use case.</p>
+<table>
+<caption>Summary of select ARM condition codes</caption>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Code</th>
+<th style="text-align: center;">Operator</th>
+<th style="text-align: center;">Description</th>
+<th style="text-align: center;">Signed/Unsigned</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><code>eq</code></td>
+<td style="text-align: center;"><code>==</code></td>
+<td style="text-align: center;">Equal</td>
+<td style="text-align: center;">Either</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>ne</code></td>
+<td style="text-align: center;"><code>!=</code></td>
+<td style="text-align: center;">Not equal</td>
+<td style="text-align: center;">Either</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><code></code></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>gt</code></td>
+<td style="text-align: center;"><code>&gt;</code></td>
+<td style="text-align: center;">Greater than</td>
+<td style="text-align: center;">Signed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>ge</code></td>
+<td style="text-align: center;"><code>&gt;=</code></td>
+<td style="text-align: center;">Greater than or equal</td>
+<td style="text-align: center;">Signed</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>lt</code></td>
+<td style="text-align: center;"><code>&lt;</code></td>
+<td style="text-align: center;">Less than</td>
+<td style="text-align: center;">Signed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>le</code></td>
+<td style="text-align: center;"><code>&lt;=</code></td>
+<td style="text-align: center;">Less than or equal</td>
+<td style="text-align: center;">Signed</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><code></code></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>hi</code></td>
+<td style="text-align: center;"><code>&gt;</code></td>
+<td style="text-align: center;">Greater than</td>
+<td style="text-align: center;">Unsigned</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>hs</code></td>
+<td style="text-align: center;"><code>&gt;=</code></td>
+<td style="text-align: center;">Greater than or equal</td>
+<td style="text-align: center;">Unsigned</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><code>lo</code></td>
+<td style="text-align: center;"><code>&lt;</code></td>
+<td style="text-align: center;">Less than</td>
+<td style="text-align: center;">Unsigned</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>ls</code></td>
+<td style="text-align: center;"><code>&lt;=</code></td>
+<td style="text-align: center;">Less than or equal</td>
+<td style="text-align: center;">Unsigned</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><code></code></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><code>al</code></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">Always (default)</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+<p>The beautiful thing about the ARM instruction set is that these condition codes can be added to almost any instruction! Branch if equal? <code>beq</code>! Add if greater than? <code>addgt</code>! Compare—<em>again!</em>—if not equal? <code>cmpne</code>!</p>
+<p>That’s one of the features that makes the ARM instruction set <em>orthogonal</em>: conditional execution is available regardless of the instruction type.</p>
+<h2 id="conditional-branching">Conditional branching</h2>
+<p>Combining branch instructions like <code>b</code> and condition codes gives us <em>conditional branching</em>. Conditional branching is used to implement <code>if</code>/<code>else</code> statements and loops like <code>while</code> and <code>for</code>.</p>
+<h2 id="loader">Loader</h2>
+<p>How did our program get into memory? An operating system program called <em>loader</em> copied our program from disk into memory, and then set the program counter so that our program started execution from <code>main</code>.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>The real entry point is called <code>_start</code>, by convention, and it doesn’t need to be a <code>.global</code>. But we linked our program with <code>libc</code>, and it defines its own <code>_start</code> entry point, which sets up things like program’s command-line arguments and other machinery that is necessary for <code>libc</code> functions to work. In turn, it will call <code>main</code>, and that is why it needs to be declared <code>.global</code>.</p>
+</blockquote>
+<p>If the loader is an operating system program, then how did the operating system get into memory? That is done with the help of a program called <em>boot loader</em>.</p>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>In embedded systems, the program is often stored in read-only memory that doesn’t get erased on power-off, and when the system starts, the program counter starts executing from address 0.</p>
+</blockquote>
+<h2 id="data-and-code-sections">Data and code sections</h2>
+<p>Let’s look again at the data and code sections of our hello-world program.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">data</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  hello<span class="op">:</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="at">string</span> <span class="st">&quot;Hello, assembly!&quot;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">text</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  main<span class="op">:</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    push {ip<span class="op">,</span> lr}</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    ldr r0<span class="op">,</span> <span class="op">=</span>hello</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    …</span></code></pre></div>
+<p>The data section declared with <code>.data</code> assembly directive is a span of memory that you are allowed to:</p>
+<ul>
+<li>read,</li>
+<li>write,</li>
+<li>but not execute.</li>
+</ul>
+<p>The code section declared (confusingly) with <code>.text</code> is another span of memory that you are allowed to:</p>
+<ul>
+<li>read,</li>
+<li>but not write, and</li>
+<li>execute.</li>
+</ul>
+<p>Why do we need separate sections? Why the restrictions on writing and executing? The answer is many-fold.</p>
+<p>First, it is a security feature of many operating systems to forbid data section from executing and forbid modifying the code section at run-time. It makes it harder to inject malicious code by tricking the program to change its code, or to jump to an area that is not supposed to be executed. It also helps with caching and with running multiple instances of the same program on different data.</p>
+<p>Even simpler, in embedded systems, the code section will most often go into read-only memory, while the data section will be the main read-write memory.</p>
+<h2 id="segmentation-fault">Segmentation fault</h2>
+<p>In our hello-world program, we don’t modify the greeting string, do we? Does that mean that we can put it under the <code>.text</code> section? Yes; we can even omit the <code>.text</code> section, since it’s implicit:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>hello<span class="op">:</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">string</span> <span class="st">&quot;Hello, assembly!&quot;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  push {ip<span class="op">,</span> lr}</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> <span class="op">=</span>hello</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  bl printf</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">41</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>  pop {ip<span class="op">,</span> lr}</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>  bx lr</span></code></pre></div>
+<p>Try it out!</p>
+<p>Oh, no! Our program crashes with a <em>segmentation fault</em>! What happened? What’s a segmentation fault anyway?</p>
+<p>It can happen when we try to write to a read-only <em>segment</em>. But, in general, this term is applied to all kinds of <em>memory access violations</em>.</p>
+<p>So what did we violate here? Alignment! Our string—<code>"Hello, assembly!"</code>—is 17 bytes long (including the implicit zero-terminator <code>\0</code>). So it pushed our <code>main</code> function to a memory address that is not an aligned word. We can pad the string with zeros, so it occupies 20 bytes (divisible by four):</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>hello<span class="op">:</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">string</span> <span class="st">&quot;Hello, assembly!</span><span class="sc">\0\0\0</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Or, we can use an assembly directive called <code>.balign</code> to align it at a four-byte (word) boundary:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>hello<span class="op">:</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">string</span> <span class="st">&quot;Hello, assembly!&quot;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">balign</span> <span class="dv">4</span></span></code></pre></div>
+<blockquote>
+<p><strong>Well, actually…</strong></p>
+<p>There’s also an <code>.align</code> directive, but its exact meaning is inconsistent across architectures and assemblers. On the other hand, <code>.balign</code> always aligns at a boundary specified as a number of <em>bytes</em>.</p>
+</blockquote>
+<h2 id="data-directives">Data directives</h2>
+<p>One way to look at an assembly language: it is a way to encode binary data. As we know, each ARM instruction is encoded into a single machine word. However, the assembler has directives that allow us to encode literal data as well.</p>
+<p>Two directives that we’ll talk about are <code>.string</code> and <code>.word</code>, but there are more available.</p>
+<p>We’ve already seen the string directive. One notable feature of it is that it encodes a zero-terminated string. That is, the string is padded with a single zero byte: <code>\0</code>.</p>
+<p>The <code>.word</code> directive allows us to insert a literal machine word into our binary using a numeric notation:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>fourtyTwo<span class="op">:</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">42</span></span></code></pre></div>
+<p>It’s a good idea to put a label before a data directive so we can refer to it later, but it is not always necessary, as you’ll see below.</p>
+<p>What are data directives good for? They can be used for constants or global variables in our program, but they are simply another encoding for binary data. Consider the following program.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="bn">0xE3A0002A</span> <span class="co">/* Same as `mov r0, #42` */</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  bx lr</span></code></pre></div>
+<p>This is a short program that simply exits with code 42. But here, instead of writing <code>mov r0, #42</code>, we wrote <code>.word 0xE3A0002A</code>, which encodes the same value, as the instruction. As you might remember from instruction encoding, the last byte of an instruction encodes an immediate, which is <code>0x2A</code> in this case (<code>42</code> in decimal).</p>
+<p>Writing instructions this way <em>is definitely a bad idea</em>, but it is a way for us to dispel the magic of what the assembler does for us.</p>
+<h2 id="loading-data">Loading data</h2>
+<p>Loading means copying data from memory into one or more registers. We’ve already seen how to load data, given a label. For example, load a string address and pass it to <code>printf</code> to be printed to the console.</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> <span class="op">=</span>hello</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  bl printf</span></code></pre></div>
+<p>Similarly, you can load an address of a word. But this way, you only get the address of the word, and not the word itself.</p>
+<p>Once we have loaded an address of a word, we can load the word itself. For that we use another form of <code>ldr</code> instruction, with square brackets:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>  ldr r1<span class="op">,</span> <span class="op">=</span>myWord    <span class="co">/* r1 = myWord */</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> [r1]       <span class="co">/* r0 = M[r1]  */</span></span></code></pre></div>
+<p>This assumes that we have a word with that label stored somewhere:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>myWord<span class="op">:</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">42</span></span></code></pre></div>
+<p>When we load an address into a register, we call it a <em>pointer</em>. This pointer <em>references</em> another word, but it’s not that word itself. When we load the word that is referenced by that pointer, we say that we <em>dereference</em> a pointer.</p>
+<p>In this example, when the two instructions execute, <code>r1</code> will contain some seemingly random number, which is the address corresponding to the label <code>myWord</code>, while <code>r0</code> will contain the loaded value itself, that is <code>42</code>.</p>
+<p>In the listing, we used a new notation for our pseudo-code. We used <code>M[r1]</code> to refer to the memory word located at the address found in <code>r1</code>. Remember, how we said that memory is like a large array? This notation is easy to remember because the square brackets in the instruction syntax (<code>[r1]</code>) match the square brackets of array notation (<code>M[r1]</code>). This will always be the case.</p>
+<p>However, loading a single word known ahead of time is not very interesting. For that there’s a shortcut:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>  ldr r1<span class="op">,</span> <span class="op">=</span><span class="dv">42</span>    <span class="co">/* r1 = 42 */</span></span></code></pre></div>
+<p>Even better, if the constant that we are loading can fit into an immediate value, the assembler will translate this into:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>  mov r1<span class="op">,</span> #<span class="dv">42</span>    <span class="co">/* r1 = 42 */</span></span></code></pre></div>
+<p>However, if it doesn’t fit into an immediate, it will convert it into something roughly equivalent to our previous example:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>  ldr r1<span class="op">,</span> <span class="op">=</span>temporaryWord    <span class="co">/* r1 = temporaryWord; */</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  ldr r1<span class="op">,</span> [r1]              <span class="co">/* r1 = M[r1]; */</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>temporaryWord<span class="op">:</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">42</span></span></code></pre></div>
+<p>This version of <code>ldr</code> instruction is called a <em>pseudo-instruction</em>, because, as we have just seen, it will be converted to one or more actual instructions by the assembler.</p>
+<h2 id="load-with-immediate-offset">Load with immediate offset</h2>
+<p>It is not necessary to have a label for each word to load it. You can also load a word given an <em>offset</em> from another word.</p>
+<p>For example, if we have several consequtive words:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>myArray<span class="op">:</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">42</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">44</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">46</span></span></code></pre></div>
+<p>(Which we can also write as follows:)</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>myArray<span class="op">:</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="at">word</span> <span class="dv">42</span><span class="op">,</span> <span class="dv">44</span><span class="op">,</span> <span class="dv">46</span></span></code></pre></div>
+<p>Then, we can load the third word using the following syntax:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>  ldr r1<span class="op">,</span> <span class="op">=</span>myArray       <span class="co">/* r1 = myArray;   */</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> [r1<span class="op">,</span> #<span class="dv">8</span>]       <span class="co">/* r0 = M[r1 + 8]; */</span></span></code></pre></div>
+<p>Here we loaded a word given an 8-byte (and thus, 2-word) offset. As a result, we have loaded <code>46</code> into <code>r0</code>.</p>
+<p>The offset can be positive or negative. It can be an immediate (like in this case) or a register. For example:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> [r1<span class="op">,</span> <span class="op">-</span>r2]    <span class="co">/* r0 = M[r1 - r2]; */</span></span></code></pre></div>
+<h2 id="storing-data">Storing data</h2>
+<p>Storing means copying data from one or more registers into memory. In other words, we are modifying, or <em>mutating</em> memory.</p>
+<p>As we already mentioned, it is not possible to store data into the read-only segment that we declare with the <code>.text</code> directive: this will lead to a segmentation fault.</p>
+<p>However, we can store data into the <code>.data</code> segment, as well as into the stack and the heap (that we’ll get into in a short while).</p>
+<p>Store instructions use <code>str</code> mnemonic, and use the same syntax as <code>ldr</code> instruction. Some examples (with <code>ldr</code> for comparison):</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>  str r0<span class="op">,</span> [r1]         <span class="co">/* M[r1] = r0; */</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> [r1]         <span class="co">/* r0 = M[r1]; */</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  str r0<span class="op">,</span> [r1<span class="op">,</span> #<span class="dv">8</span>]     <span class="co">/* M[r1 + 8] = r0; */</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> [r1<span class="op">,</span> #<span class="dv">8</span>]     <span class="co">/* r0 = M[r1 + 8]; */</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>  str r0<span class="op">,</span> [r1<span class="op">,</span> <span class="op">-</span>r2]    <span class="co">/* M[r1 - r2] = r0; */</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> [r1<span class="op">,</span> <span class="op">-</span>r2]    <span class="co">/* r0 = M[r1 - r2]; */</span></span></code></pre></div>
+<p>The square brackets always remind us which part stands for the address.</p>
+<h2 id="stack">Stack</h2>
+<!--
+Call stack is another segment of memory, not unlike the code segment and the data segment.
+It is also pre-allocated for you by the operating system.
+However, unlike the other segments it requires a certain discipline or convention to follow.
+It is used for storing temporary values: function parameters, local variables, values of intermediate expressions, but also for function return addresses.
+-->
+<p>The <em>stack</em>, or the <em>call stack</em>, is used to implement nested, potentially recursive function calls. It is a segment of memory, not unlike the code segment and the data segment.</p>
+<p>In computing, a <em>stack</em> usually refers to a particular data structure. The word <em>stack</em> is used as a metaphor for stacks of things, like books. If you have a stack of books, it is easy to add one or few books at the top, and it is easy to remove one or few books at the top. However, it is trickier to add or remove books in the middle or at the bottom of the stack. A <em>stack</em> is a data structure that makes it easy (and efficient) to add and remove items from one end.</p>
+<p>In JavaScript you rarely see anyone defining such data structure. This is because the built-in <code>Array</code> is good enough as a stack: it has a <code>push</code> method to add a last element, and a <code>pop</code> method to remove it, and they are reasonably efficient.</p>
+<p>The <em>call stack</em> is not a data structure in the sense of <code>Array</code>. It is a segment of memory. However, unlike those other segments, it requires us to follow a particular discipline or convention to use it. This convention is called the <em>calling convention</em>. It is defined so that functions written in different languages, or using different compilers can call each other and interoperate on some basic level.</p>
+<p>For example, when we call some <code>libc</code> functions like <code>printf</code>, we need to follow this convention. If we want other functions to call a function we’ve defined (as in the case of <code>main</code>), we also need to follow it.</p>
+<p>First, we will look at the basic stack operations: push and pop, and then we will discuss the calling conventions, and how it can be implemented using these operations.</p>
+<h2 id="push-and-pop">Push and pop</h2>
+<p>The <em>stack pointer</em> is the central concept of the call stack. In ARM assembly, it is referred to as <code>r13</code> or, more often as <code>sp</code>. It holds the address of the <em>top of the stack</em>. As the stack pointer changes its value, we say that the stack grows or shrinks. The stack grows towards smaller addresses of the memory, and shrinks towards larger addresses. We say that a word is allocated on the stack if it is pointed by the stack pointer, or below.</p>
+<p>The following instruction pushes four words onto the stack.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>  push {r0<span class="op">,</span> r1<span class="op">,</span> r2<span class="op">,</span> r3}</span></code></pre></div>
+<p>In the next figure, you can see several registers and a stretch of memory belonging to the call stack, shown in two states. On the left, you can see the state before executing the push instruction, and on the right, you can see the state after executing it.</p>
+<figure>
+<img src="figures/stack-push.svg" alt="Call stack before and after executing: push {r0, r1, r2, r3}" /><figcaption aria-hidden="true">Call stack before and after executing: <code>push {r0, r1, r2, r3}</code></figcaption>
+</figure>
+<p>The effect is that the words are copied from registers to the stack, and the stack pointer is <em>decremented</em> by 16 bytes, and thus, four words. It is <em>decremented</em> because it grows towards lower addresses. The area above the stack pointer is greyed out to signify that this area is not allocated.</p>
+<p>We could have acheived the same effect using the following instructions:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>  sub sp<span class="op">,</span> sp<span class="op">,</span> #<span class="dv">16</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  str r0<span class="op">,</span> [sp<span class="op">,</span> #<span class="dv">0</span>]</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  str r1<span class="op">,</span> [sp<span class="op">,</span> #<span class="dv">4</span>]</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  str r2<span class="op">,</span> [sp<span class="op">,</span> #<span class="dv">8</span>]</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  str r3<span class="op">,</span> [sp<span class="op">,</span> #<span class="dv">12</span>]</span></code></pre></div>
+<p>Or the following sequence of individual <code>push</code> instructions:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>  push {r3}</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  push {r2}</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  push {r1}</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  push {r0}</span></code></pre></div>
+<p>The <code>push</code> instruction has a counterpart, <code>pop</code>:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>  pop {r0<span class="op">,</span> r1<span class="op">,</span> r2<span class="op">,</span> r3}</span></code></pre></div>
+<p>This reverses the previous action: <em>increments</em> <code>sp</code> by 16, and copies values from stack into registers. It does this in the reverse order, in other words, like this:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>  pop {r0}</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  pop {r1}</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  pop {r2}</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  pop {r3}</span></code></pre></div>
+<p>These instructions use curly braces that remind us of the set notation. This is to signify that the order in which you write them in the assembly does not matter.</p>
+<p>You can write it either way:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>  push {r3<span class="op">,</span> r1<span class="op">,</span> r2<span class="op">,</span> r0}  <span class="co">// push {r0, r1, r2, r3}</span></span></code></pre></div>
+<p>But the effect will be the same:</p>
+<ul>
+<li>Lower registers (think <code>r0</code>) are pushed to and popped from the lower memory addresses.</li>
+<li>Higher registers (think <code>r15</code>) are pushed to and popped from the higher memory addresses.</li>
+</ul>
+<p>The <code>push</code> and <code>pop</code> instructions’ encodings have 16 bit-flags dedicated to the 16 registers. So they can express which registers to push or pop, but not their order. The order was picked so that a pop operation would undo the effect of the corresponding push operation.</p>
+<!-- Figure showing an encoding? -->
+<h2 id="stack-alignment">Stack alignment</h2>
+<p>An essential peculiarity of the call stack is that the stack pointer should be aligned at the 8-byte (2-word) boundary at so-called <em>external interfaces</em>. In this book, we won’t discuss what this means and will just mention that calling a <code>libc</code> function is one of those cases. Our compiler will not distinguish between calling a <code>libc</code> foreign function from a baseline language function. For simplicity, we will assume an even stricter requirement that <em>the stack pointer should always be 8-byte (2-word) aligned</em>.</p>
+<p>So, what if we need to push a single word onto the stack? If we just do <code>push {r4}</code>, then our stack won’t be aligned. Thus, it is common to push some other register as a dummy to maintain the stack alignment when needed:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>  push {r4<span class="op">,</span> ip}</span></code></pre></div>
+<p>Here we used the <code>ip</code> registers for that purpose. The same as we did when we defined our <code>main</code> function:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  push {ip<span class="op">,</span> lr}</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  …</span></code></pre></div>
+<p>In general, we can always pad a push with a dummy register to maintain the stack alignment. When constructing the compiler, we will also talk about how we can maintain the stack alignment without wasting space unnecessarily.</p>
+<h2 id="arguments-and-return-value">Arguments and return value</h2>
+<!-- Joshua: Can you give me a hint about supporting more than 4 arguments? -->
+<p>Function arguments are passed in the first four registers: <code>r0</code>–<code>r3</code>. The rules are elaborate regarding differently-sized arguments, but in our compiler, all values are represented using a single word. Thus, we can say that the first four arguments are passed in the registers <code>r0</code>–<code>r3</code>. These registers are also sometimes called the <em>argument registers</em>.</p>
+<p>The rest of the arguments are passed by pushing them onto the stack.</p>
+<p>For example, if a function <code>f</code> takes six parameters, to make a call <code>f(10, 20, 30, 40, 50, 60)</code> we need to write the following assembly:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">50</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  mov r1<span class="op">,</span> #<span class="dv">60</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  push {r0<span class="op">,</span> r1}   <span class="co">// 50 and 60 go on stack</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">10</span>     <span class="co">// 10, 20, 30, 40 go in registers</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>  mov r1<span class="op">,</span> #<span class="dv">20</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>  mov r2<span class="op">,</span> #<span class="dv">30</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  mov r3<span class="op">,</span> #<span class="dv">40</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>  bl f            <span class="co">// The actual call</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>  add sp<span class="op">,</span> sp<span class="op">,</span> #<span class="dv">8</span>  <span class="co">// Deallocate 2 words of stack</span></span></code></pre></div>
+<p>It is also the caller’s responsibility to deallocate the stack space used for the arguments that didn’t fit into the four argument registers. After a function returns, the return value (if any) is expected to be in <code>r0</code>. (It can also span <code>r0</code>–<code>r1</code> in case of a 64-bit return value.)</p>
+<p>It is expected that the assembly programmer or the compiler writer knows (from external sources) about the correct signature of each function: the number of parameters, their size, and about the return value (if any). For a <code>libc</code> function, we can look them up in the documentation, and for a function defined in our language, we can see it from its definition.</p>
+<h2 id="register-conventions">Register conventions</h2>
+<p>After a call returns, the contents of registers <code>r0</code>–<code>r3</code> will be unpredictable and semi-random and should not be relied upon. (This is, of course, except for the registers that are used for the return value, if any.) In other words, these registers will contain <em>garbage</em> that is left over after the function call: the called function itself might have used them or called another function. That’s why we say that the registers <code>r0</code>–<code>r3</code> are <em>call-clobbered</em>. Another register that is a <em>call-clobbered</em> register is <code>r14</code> or <code>lr</code>. It is clobbered by the design of the “call” instruction <code>bl</code>, which overwrites the <code>lr</code> with the return address. Another <em>call-clobbered</em> register is <code>r12</code> or <code>ip</code>, which is clobbered by the linker-generated veneer. <!-- explain? --></p>
+<p>In contrast, all other registers are <em>call-preserved</em>. In other words, it is the responsibility of each function to preserve the values in these registers when a call returns. Can a function modify them at all? Yes, but it should make sure to restore the values before returning from the call.</p>
+<p>If <em>call-clobbered</em> registers are a good fit for arguments, then <em>call-preserved</em> registers are a good fit for variables. The registers <code>r4</code> to <code>r10</code> are sometimes referred to as <em>variable registers</em>. Other <em>call-preserved</em> registers are: frame pointer and stack pointer (<code>r11</code> or <code>fp</code> and <code>r13</code> or <code>sp</code>). (We’ll get to the frame pointer in a minute.) In other words, it is expected that the top of the stack will be at the same address as before the call. The program counter register (<code>r15</code> or <code>pc</code>) is a special register, but you can think of it as being call-preserved too: when the call returns back, the <code>pc</code> is restored to the previous value.</p>
+<table style="width:99%;">
+<caption>ARM register roles and conventions</caption>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 52%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Register</th>
+<th style="text-align: left;">Role</th>
+<th style="text-align: left;">Convention</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>r0</code></td>
+<td style="text-align: left;">Argument/return register</td>
+<td style="text-align: left;"><em>Call-clobbered</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r1</code></td>
+<td style="text-align: left;">Argument register</td>
+<td style="text-align: left;"><em>Call-clobbered</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r2</code></td>
+<td style="text-align: left;">Argument register</td>
+<td style="text-align: left;"><em>Call-clobbered</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r3</code></td>
+<td style="text-align: left;">Argument register</td>
+<td style="text-align: left;"><em>Call-clobbered</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r4</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r5</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r6</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r7</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r8</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r9</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r10</code></td>
+<td style="text-align: left;">Variable register</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r11</code> or <code>fp</code></td>
+<td style="text-align: left;">Frame pointer</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r12</code> or <code>ip</code></td>
+<td style="text-align: left;">Intra-procedure scratch register</td>
+<td style="text-align: left;"><em>Call-clobbered</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r13</code> or <code>sp</code></td>
+<td style="text-align: left;">Stack pointer</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>r14</code> or <code>lr</code></td>
+<td style="text-align: left;">Link register</td>
+<td style="text-align: left;"><em>Call-clobbered</em></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>r15</code> or <code>pc</code></td>
+<td style="text-align: left;">Program counter</td>
+<td style="text-align: left;"><em>Call-preserved</em></td>
+</tr>
+</tbody>
+</table>
+<p>So, how do we preserve the values of the call-preserved registers, in practice? When the call starts, we decide which call-preserved registers we want to use, so we push them onto the stack. Then we proceed with using them to our liking. Then we pop them off the stack before returning the call. It is also said that we are <em>saving</em> these registers on the stack.</p>
+<p>Thus, the terms <em>call-clobbered</em> and <em>call-preserved</em> have an alternative terminology: <em>callee-saved</em> and <em>caller-saved</em>. This refers to which side of the call is responsible for saving the registers onto the stack, <em>if they want them to be preserved</em>. So that’s another way to look at it.</p>
+<h2 id="frame-pointer">Frame pointer</h2>
+<p>The last register that we haven’t talked about is the <em>frame pointer</em> denoted as <code>r11</code> or <code>fp</code> in assembly. A function’s <em>frame</em> is an area of the stack which is allocated by that function. It is also referred to as a <em>stack frame</em>, a <em>call frame</em>, or an <em>activation record</em>. When it is used, the <em>frame pointer</em> is set to point to the <em>base</em> of the frame, in other words, to an address where the stack pointer used to point when the function was called. The area of the stack between the stack pointer and the frame pointer is the current function’s stack frame. The frame pointer is a call-preserved register. By convention, we save the frame pointer in the same stack slot where the new frame pointer points. This way, the frame pointer register gives a start to a <em>linked list</em> of stack frames, where intermediate links are the stack-saved frame pointers of the callers. See the diagram that follows.</p>
+<figure>
+<img src="figures/stack-frames.svg" alt="Example of a stack with several frames" /><figcaption aria-hidden="true">Example of a stack with several frames</figcaption>
+</figure>
+<p>Unlike in the diagram, each stack frame usually has a different size, depending on the number of local variables and intermediate values.</p>
+<p>It is optional to use the frame pointer register this way, and it is optional to maintain the linked list of stack frames. However, it is used by debuggers, introspection tools, and it may be necessary for certain language features, such as exception handling and non-local go-to statements. Since the frame pointer doesn’t change after the function is called, it is a convenient pointer to use when loading data from the stack frame, such as local variables. You know that <code>fp + 4</code> always refers to the same stack slot, where a variable can be stored. At the same time, loading local variables relative to the stack pointer is a bit trickier: stack pointer often changes its value, but it is certainly possible.</p>
+<!--
+Removed this, I don't think we deliver on the part 2 promise here:
+
+ The baseline compiler will use the frame pointer, but in *Part II*, we will talk about how we can get away without a frame pointer, and thus free up another variable registers. -->
+<!-- TODO: talk about not using the frame pointer in Part II -->
+<h2 id="function-definitions">Function definitions</h2>
+<p>We have already defined some functions previously, <code>main</code> and <code>addFourtyTwo</code>. The latter looks pretty simple:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>addFourtyTwo<span class="op">:</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">42</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  bx lr</span></code></pre></div>
+<p>Calling this function doesn’t allocate any stack at all! Neither for intermediate values, nor for saving registers. The return address is passed in the <code>lr</code> registers. And it doesn’t need to save any registers, because it doesn’t use any call-preserved registers.</p>
+<p>This all changes as soon as you want to define a function that calls another function, like the <code>main</code> function, that we have seen before:</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  push {ip<span class="op">,</span> lr}</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  ldr r0<span class="op">,</span> <span class="op">=</span>hello</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  bl printf</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">41</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>  add r0<span class="op">,</span> r0<span class="op">,</span> #<span class="dv">1</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>  pop {ip<span class="op">,</span> lr}</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>  bx lr</span></code></pre></div>
+<p>Since it calls <code>printf</code>, this call will potentially clobber all the call-clobbered registers, notably: the return address <code>lr</code>. If we want to be able to return from <code>main</code>, we better save this register onto the stack. And that’s exactly what we did in our <code>main</code> definition by doing <code>push {ip, lr}</code>. We have also saved a dummy <code>ip</code> register to maintain stack-alignment.</p>
+<p>Now, if we wanted to maintain the frame pointer and the linked-list of frames, we would do things differently. We would push both <code>lr</code> and <code>fp</code> onto the stack and then set the new frame pointer to match the stack pointer. Now we can push and pop the stack, and we will still have a solid frame of reference in <code>fp</code> for accessing local variables. Using the <code>fp</code> also makes it easy to deallocate the frame. You can do it with <code>mov sp, fp</code> at the end of your function. Alternatively, you could try to match all the pushes and pops, but it can be tricky. All this busywork has a name, or two in fact: function’s <em>prologue</em> and <em>epilogue</em>.</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  push {fp<span class="op">,</span> lr}  <span class="co">// Function&#39;s</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  mov fp<span class="op">,</span> sp     <span class="co">// prologue</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>  mov sp<span class="op">,</span> fp     <span class="co">// Function&#39;s</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>  pop {ip<span class="op">,</span> lr}   <span class="co">// epilogue</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>  bx lr          <span class="co">//</span></span></code></pre></div>
+<p>Function’s prologue saves the call-preserved registers, sets up the frame pointer, if necessary. Function’s epilogue reverses this and exits the function.</p>
+<p>In this epilogue, we <code>pop</code> the registers back, and return using <code>bx lr</code>. If you remember, in this case, <code>bx lr</code> is the same as <code>mov pc, lr</code>. So, why not pop the return address directly into <code>pc</code>, instead of <code>lr</code>? This way, we can make our epilogue shorter and more efficient:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>  mov sp<span class="op">,</span> fp     <span class="co">// Function&#39;s</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>  pop {ip<span class="op">,</span> pc}   <span class="co">// epilogue</span></span></code></pre></div>
+<p>This is a common way to organize a function’s prologue and epilogue in ARM.</p>
+<h2 id="heap">Heap</h2>
+<p>The other memory segment is called the <em>heap</em> or the <em>dynamic memory</em>. It is dynamic in the sense that a program can ask the operating system to allocate or deallocate a new region of memory at runtime. This is usually done by calling the <code>libc</code> functions (<code>malloc</code> and <code>free</code>), which eventually make the system calls for you. The function <code>malloc</code> takes a single argument in <code>r0</code> that specifies how many bytes we want to allocate. It returns a pointer in <code>r0</code>, which points to the newly allocated region of memory. The function <code>free</code> takes such pointer as its single parameter in <code>r0</code> and deallocates that region of memory. After that, you can’t use this region, and the operating system will use that memory somewhere else.</p>
+<p>Here’s a small snippet of assembly which allocates a single word on the heap, stores the number <code>42</code> into it, and then deallocates it.</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="at">global</span> main</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  push {ip<span class="op">,</span> lr}     <span class="co">// Prologue</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>  mov r0<span class="op">,</span> #<span class="dv">4</span>        <span class="co">// Allocate four</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>  bl malloc         <span class="co">// bytes (one word)</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>  mov r3<span class="op">,</span> #<span class="dv">42</span>       <span class="co">// Store 42 into</span></span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>  str r3<span class="op">,</span> [r0<span class="op">,</span> #<span class="dv">0</span>]  <span class="co">// that word</span></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>  bl free           <span class="co">// Free/deallocate</span></span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a>  pop {ip<span class="op">,</span> pc}      <span class="co">// Epilogue</span></span></code></pre></div>
+<p>It is common for high-level languages to allocate most of the objects and data structures on the heap, and the functions are only passing and returning pointers to these objects.</p>
+<hr />
+<p>There’s much more to discuss about ARM assembly and assembly programming, in general. But this chapter should be enough to get a solid grasp on it. And even more than enough to complete the second pass of our compiler.</p>
+<center><a href="./08-second-pass-code-generation#fold">Next: Chapter 8. Second Pass: Code Generation</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>

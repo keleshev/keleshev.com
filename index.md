@@ -16,15 +16,70 @@ Vladimir Keleshev
 
 
 
-My book
-----------------
+## Book
 
-* [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch)
+<span style="float:right">(2020, 2024)</span>
+
+[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch/)
+
+Articles
+--------
+
+<div style="text-align:left">
+
+<span style="float:right">(2024)</span>
+
+[Pretty Printing in OCaml—A Format Primer](/pretty-printing-in-ocaml-a-format-primer) 
+
+<span style="float:right">(2022)</span>
+
+[Abstract Syntax Tree—An Example in C](/abstract-syntax-tree-an-example-in-c) 
+
+<span style="float:right">(2021)</span>
+
+[Advanced Error Handling in OCaml](/advanced-error-handling-in-ocaml)
+
+<span style="float:right">(2020)</span>
+
+[LDM: My Favorite ARM Instruction](/ldm-my-favorite-arm-instruction) \
+[One-pass Compiler Primer](/one-pass-compiler-primer) \
+[Standard IO—Under the Hood](/standard-io-under-the-hood) \
+[Verbose Regular Expressions in JavaScript](/verbose-regular-expressions-in-javascript) \
+[Writing a Book with Pandoc, Make, and Vim](/my-book-writing-setup) \
+[EAX x86 Register—Meaning and History](/eax-x86-register-meaning-and-history) ★ \
+
+<span style="float:right">(2019)</span>
+
+[Automatic Compiler Pass Fusion](/automatic-compiler-pass-fusion) ★ \
+
+<span style="float:right">(2018)</span>
+
+[Point-free Pattern Matching](/point-free-pattern-matching) \
+[Interpretations of Fold](/interpretations-of-fold) \
+[Cortege—A Row-polymorphic Tuple](cortege-a-row-polymorphic-tuple) \
+[Map as a Recursion Scheme in OCaml](/map-as-a-recursion-scheme-in-ocaml) \
+[Composable Error Handling in OCaml](/composable-error-handling-in-ocaml) ★ \
+
+<span style="float:right">(2016)</span>
+
+[Parsing Ambiguity—Type Argument *v.* Less Than](/parsing-ambiguity-type-argument-v-less-than) \
+
+<span style="float:right">(2015)</span>
+
+[Namespacing Variants in ML](/namespacing-variants-in-ml) \
+
+<span style="float:right">(2014)</span>
+
+[WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction) \
+[Dissecting a Code Golf Challenge](/dissecting-a-code-golf-challenge) \
+
+</div>
+
+<!--
 
 Blog
 ----
 
-* 2024
 <!--
   * Trickery that makes printf in OCaml work
   * Let's use JavaScript pp to compile something to it
@@ -32,11 +87,12 @@ Blog
   * Tagless Final Primer: JSON Example
   * Composable Pretty Printing in OCaml: JSON Example
   * JSON ADT design example?
--->
+
+* 2024
   * [Pretty Printing in OCaml: A Format Primer](/pretty-printing-in-ocaml-a-format-primer)
 * 2022
   * [Abstract Syntax Tree: An Example in C](/abstract-syntax-tree-an-example-in-c) 
-* 2021
+* 2023
   * [Advanced Error Handling in OCaml](/advanced-error-handling-in-ocaml)
 * 2020
   * [LDM: My Favorite ARM Instruction](/ldm-my-favorite-arm-instruction)
@@ -61,6 +117,7 @@ Blog
   * [WWDC14 Developer Fan Fiction](/wwdc14-developer-fan-fiction)
   * [Dissecting a Code Golf Challenge](/dissecting-a-code-golf-challenge)
 
+-->
 <!--
 
 Talks
@@ -84,15 +141,14 @@ In 2010 I made a series of videos about Boolean Algebra.
 
 <img src=./keleshev.jpg width=200 height=200 style="float:right; border-radius:100px; margin-top:50px" />
 
-About me
---------
+## About
 
 
 My name is Vladimir Keleshev.
 I am a software developer living and working just outside of Copenhagen.
 I have worked with embedded systems, safety-critical systems,
 compilers, and now with finance.
-Recently, I have published an ebook called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
+Recently, I have published a book called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
 
 * Twitter: [\@keleshev](http://twitter.com/keleshev)
 * GitHub: [\@keleshev](http://github.com/keleshev)

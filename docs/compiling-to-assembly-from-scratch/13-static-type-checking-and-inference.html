@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <title>13. Static Type Checking and Inference • Compiling to Assembly from Scratch</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <span id="home-menu"><a title="Home" href="/">☰</a></span>
+
+
+
+
+
+<header id="title-block-header">
+</header>
+<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
+<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
+<span id="fold"> </span>
+<h1><br/><small><small>Chapter 13</small></small><br/>Static Type Checking<small style="line-height:0"><small><small><br/>and<br/></small></small></small>Inference<br/><br/></h1>
+<p> </p>
+<p>In this chapter, we will implement a type checker for our language with <em>local type inference</em>. Local type inference means that local variables do not need a type annotation, so you can write the following:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span></code></pre></div>
+<p>The type of <code>a</code> will be inferred as <code>Array&lt;number&gt;</code>.</p>
+<p>Our type checker will cover such types as <code class="sourceCode javascript">number</code>, <code class="sourceCode javascript">boolean</code>, <code class="sourceCode javascript"><span class="kw">void</span></code>, and <code>Array&lt;T&gt;</code> where <code>T</code> could be any other type, for example <code>Array&lt;Array&lt;boolean&gt;&gt;</code>. We will also deal with function types, such as <code>(x: boolean, y: number) =&gt; number</code>, when type checking function calls.</p>
+<p>First, we need to refer to different types to manipulate them. We will represent them similarly to AST nodes, with an interface called <code>Type</code> and one class that implements it per type.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Type {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equals</span>(<span class="dt">other</span><span class="op">:</span> Type)<span class="op">:</span> boolean<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">toString</span>()<span class="op">:</span> string<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We will need equality and a <code>toString</code> method to be able to display type errors.</p>
+<table>
+<caption>Summary of Type constructor signatures with examples</caption>
+<colgroup>
+<col style="width: 61%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type Constructor Signature</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BooleanType</span>()</span></code></pre></div></td>
+<td><div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>boolean</span></code></pre></div></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">NumberType</span>()</span></code></pre></div></td>
+<td><div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>number</span></code></pre></div></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">VoidType</span>()</span></code></pre></div></td>
+<td><div class="sourceCode" id="cb8"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">void</span></span></code></pre></div></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><div class="sourceCode" id="cb9"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ArrayType</span>(element<span class="op">:</span> Type)</span></code></pre></div></td>
+<td><div class="sourceCode" id="cb10"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">Array</span><span class="op">&lt;</span>number<span class="op">&gt;</span></span></code></pre></div></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><pre><code>FunctionType(
+  parameters: Map&lt;string, Type&gt;,
+  returnType: Type,
+)</code></pre></td>
+<td><pre><code>(x: boolean,
+ y: number)
+  =&gt; number</code></pre></td>
+</tr>
+</tbody>
+</table>
+<p>Implementing <code>toString</code> and <code>equals</code> for these data classes is straightforward. However, <code>FunctionType</code> requires some comments:</p>
+<ul>
+<li>First, <code>Map</code> in JavaScript preserves the order of elements, which is important to be able to match parameter positions at a call site.</li>
+<li>When comparing two instances of <code>FunctionType</code> it makes sence to ignore parameter names, since <code>(x: boolean, y: number) =&gt; number</code> is the same type as <code>(p1: boolean, p2: number) =&gt; number</code>.</li>
+</ul>
+<p>Our language will change to allow functions to be type-annotated. We will first change our <code>Function</code> AST node to store its signature as <code>FunctionType</code>, instead of just parameter names:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="bu">Function</span> <span class="kw">implements</span> AST {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(<span class="kw">public</span> <span class="dt">name</span><span class="op">:</span> string<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>              <span class="kw">public</span> <span class="dt">signature</span><span class="op">:</span> FunctionType<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>              <span class="kw">public</span> <span class="dt">body</span><span class="op">:</span> AST) {}</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  visit<span class="op">&lt;</span>T<span class="op">&gt;</span>(<span class="dt">v</span><span class="op">:</span> Visitor<span class="op">&lt;</span>T<span class="op">&gt;</span>) {…}</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">equals</span>(<span class="dt">other</span><span class="op">:</span> AST)<span class="op">:</span> boolean {…}</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We will also need to change our grammar and parser. After introducing the necessary tokens, we can define the following grammar for types.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>arrayType <span class="op">&lt;-</span> ARRAY LESS_THAN type GREATER_THAN</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>type <span class="op">&lt;-</span> VOID <span class="op">|</span> BOOLEAN <span class="op">|</span> NUMBER <span class="op">|</span> arrayType</span></code></pre></div>
+<p>The <code>type</code> rule is recursive, just like <code>expression</code> and <code>statement</code>.</p>
+<p>Next, we need to change the grammar and parser for functions, to include optional type annotations:</p>
+<pre><code>optionalTypeAnnotation &lt;- (COLON type)?
+parameter &lt;- ID optionalTypeAnnotation
+parameters &lt;- (parameter (COMMA parameter)*)?
+functionStatement &lt;-
+  FUNCTION ID LEFT_PAREN
+    parameters
+  RIGHT_PAREN optionalTypeAnnotation
+    blockStatement</code></pre>
+<p>We allow optional type annotations for function parameters and function return type. Why optional? Some languages do infer parameter and return types, but we do it so we can use the same parser unmodified later with dynamic types. If a type annotation is missing, we default it to <code>number</code>, which also gives us some backwards compatibility with our test suite.</p>
+<p>Now, the parser will accept functions with type annotations, like the following:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">pair</span>(x<span class="op">:</span> number<span class="op">,</span> y<span class="op">:</span> number)<span class="op">:</span> <span class="bu">Array</span><span class="op">&lt;</span>number<span class="op">&gt;</span> {</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [x<span class="op">,</span> y]<span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>For such function, the parser will produce a <code>Function</code> node with <code>FunctionType</code> signature like this:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">new</span> <span class="bu">Function</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;pair&quot;</span><span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">FunctionType</span>(</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="bu">Map</span>([[<span class="st">&quot;x&quot;</span><span class="op">,</span> <span class="kw">new</span> <span class="fu">NumberType</span>()]<span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>             [<span class="st">&quot;y&quot;</span><span class="op">,</span> <span class="kw">new</span> <span class="fu">NumberType</span>()]])<span class="op">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="fu">ArrayType</span>(<span class="kw">new</span> <span class="fu">NumberType</span>())<span class="op">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  )<span class="op">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> <span class="fu">Block</span>([</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="fu">Return</span>(<span class="kw">new</span> <span class="fu">ArrayLiteral</span>([<span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;x&quot;</span>)<span class="op">,</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                                 <span class="kw">new</span> <span class="fu">Id</span>(<span class="st">&quot;y&quot;</span>)]))<span class="op">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  ])<span class="op">,</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>Next, for type checking, we will use a function that asserts that two types are the same and otherwise raises an exception to signal an error. We call it <code>assertType</code>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">assertType</span>(expected<span class="op">:</span> Type<span class="op">,</span> got<span class="op">:</span> Type)<span class="op">:</span> <span class="kw">void</span> {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>expected<span class="op">.</span><span class="fu">equals</span>(got)) {</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">throw</span> <span class="bu">TypeError</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>      <span class="vs">`Expected </span><span class="sc">${</span>expected<span class="sc">}</span><span class="vs">, but got </span><span class="sc">${</span>got<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>It uses both the <code>equals</code> method and the <code>toString</code> method, which is invoked implicitly for template string variables. Here, we are slightly abusing the built-in <code>TypeError</code> exception, which has a different purpose (run-time type errors); it is better to define a custom exception type.</p>
+<p>Our <code>TypeChecker</code> pass will walk the AST and will either abort with a <code>TypeError</code>, or will return the inferred <code>Type</code> of an expression. Thus, <code>TypeChecker</code> implements <code>Visitor&lt;Type&gt;</code>.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TypeChecker <span class="kw">implements</span> Visitor<span class="op">&lt;</span>Type<span class="op">&gt;</span> {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">constructor</span>(</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">locals</span><span class="op">:</span> <span class="bu">Map</span><span class="op">&lt;</span>string<span class="op">,</span> Type<span class="op">&gt;,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">functions</span><span class="op">:</span> <span class="bu">Map</span><span class="op">&lt;</span>string<span class="op">,</span> FunctionType<span class="op">&gt;,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">currentFunctionReturnType</span><span class="op">:</span> Type <span class="op">|</span> <span class="kw">null</span><span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  ) {}</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>It maintains two environments:</p>
+<ul>
+<li><code>locals</code>—an environment that stores types of local variables in a function, and</li>
+<li><code>functions</code>—an environment that stores signatures of each function.</li>
+</ul>
+<p>We need two separate environments for these since functions are not first-class in our language: they cannot be assigned to a variable and passed around. So, when we encounter a <code>Call</code>, we will search for a function in the <code>functions</code> map, and when we encounter an <code>Id</code>, we will search for a non-function type in the <code>locals</code> map.</p>
+<p>We also maintain an instance variable <code>currentFunctionReturnType</code> which will help us type-check <code>Return</code> statements.</p>
+<p>Now, we get to the actual type checking and inference.</p>
+<h2 id="scalars">Scalars</h2>
+<p>The type of literal scalars is the easiest to infer. We know that the type of a number literal is <code>number</code>, the type of a boolean node is <code>boolean</code>, and so forth.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitNumber</span>(node<span class="op">:</span> <span class="bu">Number</span>) {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">NumberType</span>()<span class="op">;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitBoolean</span>(node<span class="op">:</span> <span class="bu">Boolean</span>) {</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">BooleanType</span>()<span class="op">;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>In TypeScript the <code class="sourceCode javascript"><span class="kw">void</span></code> type is inferred for expressions or statements that return <code class="sourceCode javascript"><span class="kw">undefined</span></code>.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitUndefined</span>(node<span class="op">:</span> Undefined) {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<h2 id="operators">Operators</h2>
+<p>Now, let’s look at the most straightforward operator—negation. That’s not exactly how it works in TypeScript, but let’s assume that the negation operator expects strictly boolean parameter. To enforce that, we first infer the inner term’s type by calling the <code>visit</code> method on it. Then we assert that it is boolean:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitNot</span>(node<span class="op">:</span> Not) {</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(<span class="kw">new</span> <span class="fu">BooleanType</span>()<span class="op">,</span> node<span class="op">.</span><span class="at">term</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>))<span class="op">;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">BooleanType</span>()<span class="op">;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>We return the <code>boolean</code> type since this will always be the result of negation.</p>
+<p>To type-check numeric operators like <code>Add</code>, we infer the type of <code>left</code> and <code>right</code> parameters and assert that they are both numbers. Then we return <code>number</code> as the resulting type.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitAdd</span>(node<span class="op">:</span> Add) {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(<span class="kw">new</span> <span class="fu">NumberType</span>()<span class="op">,</span> node<span class="op">.</span><span class="at">left</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>))<span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(<span class="kw">new</span> <span class="fu">NumberType</span>()<span class="op">,</span> node<span class="op">.</span><span class="at">right</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>))<span class="op">;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">NumberType</span>()<span class="op">;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>Now we get to something more interesting. Operations such as equality are generic: they can work with any type as long as the type on the left-hand side is the same as the one on the right-hand side. We infer the types on both sides by visiting them, and then assert that the two are the same.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitEqual</span>(node<span class="op">:</span> Equal) {</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> leftType <span class="op">=</span> node<span class="op">.</span><span class="at">left</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> rightType <span class="op">=</span> node<span class="op">.</span><span class="at">right</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(leftType<span class="op">,</span> rightType)<span class="op">;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">BooleanType</span>()<span class="op">;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<h2 id="variables">Variables</h2>
+<p>For a new variable defined with <code class="sourceCode javascript"><span class="kw">var</span></code>, we infer its type by visiting its value, and then we add that type to the <code>locals</code> environment.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitVar</span>(node<span class="op">:</span> Var) {</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> type <span class="op">=</span> node<span class="op">.</span><span class="at">value</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">locals</span><span class="op">.</span><span class="fu">set</span>(node<span class="op">.</span><span class="at">name</span><span class="op">,</span> type)<span class="op">;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>When we encounter a variable, we look it up in the <code>locals</code> environment and return its type. If the variable is not defined—we raise a <code>TypeError</code>.</p>
+<!--print layout omitttion: , which makes a similar check at the code generation level obsolete. -->
+<div class="sourceCode" id="cb26"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitId</span>(node<span class="op">:</span> Id) {</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> type <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">locals</span><span class="op">.</span><span class="fu">get</span>(node<span class="op">.</span><span class="at">value</span>)<span class="op">;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>type) {</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(<span class="vs">`Undefined variable </span><span class="sc">${</span>node<span class="op">.</span><span class="at">value</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> type<span class="op">;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>When assigning a new value to a variable, we check that the variable was previously defined, and that the assignment does not change the type of the variable.</p>
+<!--
+When assigning a new value to a variable, we check two things:
+
+* First, that the variable is previously defined.
+* Second, that the assignment does not change the type of the variable.
+-->
+<!-- -->
+<div class="sourceCode" id="cb27"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitAssign</span>(node<span class="op">:</span> Assign) {</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> variableType <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">locals</span><span class="op">.</span><span class="fu">get</span>(node<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>variableType) {</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(<span class="vs">`Undefined variable </span><span class="sc">${</span>node<span class="op">.</span><span class="at">name</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> valueType <span class="op">=</span> node<span class="op">.</span><span class="at">value</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(variableType<span class="op">,</span> valueType)<span class="op">;</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<h2 id="arrays">Arrays</h2>
+<p>Inferring the type of array literals is a bit trickier than the other literals that we’ve covered. We know that any array literal is of type <code>Array&lt;T&gt;</code>, but we need to figure out what <code>T</code> is. First of all, we can’t infer the type of an empty array—there’s simply not enough information at this point. There are bi-directional type inference algorithms that handle this, but often this is solved by requiring a type annotation.</p>
+<p>If the array is non-empty, we infer the type of each element and then assert pair-wise that they are the same type.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitArrayLiteral</span>(node<span class="op">:</span> ArrayLiteral)<span class="op">:</span> Type {</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (node<span class="op">.</span><span class="at">args</span><span class="op">.</span><span class="at">length</span> <span class="op">==</span> <span class="dv">0</span>) {</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(<span class="st">&quot;Can&#39;t infer type of empty array&quot;</span>)<span class="op">;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> argsTypes <span class="op">=</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>      node<span class="op">.</span><span class="at">args</span><span class="op">.</span><span class="fu">map</span>((arg) <span class="kw">=&gt;</span> arg<span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>))<span class="op">;</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> elementType <span class="op">=</span> argsTypes<span class="op">.</span><span class="fu">reduce</span>((prev<span class="op">,</span> next) <span class="kw">=&gt;</span> {</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">assertType</span>(prev<span class="op">,</span> next)<span class="op">;</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> prev<span class="op">;</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">ArrayType</span>(elementType)<span class="op">;</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<!--layout // Assert all arguments have the same type, pair-wise-->
+<p>For something like our array length primitive, we need to assert that the parameter type is an array, but we don’t care about the element type. So, instead of using <code>assertType</code> we manually check that the type is an instance of <code>ArrayType</code>, and raise a <code>TypeError</code> otherwise. The inferred type of such expression is <code>number</code>.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitLength</span>(node<span class="op">:</span> Length) {</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> type <span class="op">=</span> node<span class="op">.</span><span class="at">array</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (type <span class="kw">instanceof</span> ArrayType) {</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">new</span> <span class="fu">NumberType</span>()<span class="op">;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(<span class="vs">`Expected an array, got: </span><span class="sc">${</span>type<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>When handling array lookup, we assert that the <code>index</code> is a number, and that the <code>array</code> is of type array:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitArrayLookup</span>(node<span class="op">:</span> ArrayLookup)<span class="op">:</span> Type {</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(<span class="kw">new</span> <span class="fu">NumberType</span>()<span class="op">,</span> node<span class="op">.</span><span class="at">index</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>))<span class="op">;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> type <span class="op">=</span> node<span class="op">.</span><span class="at">array</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (type <span class="kw">instanceof</span> ArrayType) {</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> type<span class="op">.</span><span class="at">element</span><span class="op">;</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(<span class="vs">`Expected an array, got: </span><span class="sc">${</span>type<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<h2 id="functions">Functions</h2>
+<p>When encountering a function, we add its signature to the <code>functions</code> environment. We do not need to infer it, because it is parsed from the source. Before type-checking the body of the function, we create a new visitor with a modified environment. Since we use mutable maps, we need to pass a new <code>Map</code> to each function, to avoid modifying the wrong function’s environment. We also set the <code>currentFunctionReturnType</code> to the one in the signature.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitFunction</span>(node<span class="op">:</span> <span class="bu">Function</span>) {</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">functions</span><span class="op">.</span><span class="fu">set</span>(node<span class="op">.</span><span class="at">name</span><span class="op">,</span> node<span class="op">.</span><span class="at">signature</span>)<span class="op">;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> visitor <span class="op">=</span> <span class="kw">new</span> <span class="fu">TypeChecker</span>(</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>      <span class="kw">new</span> <span class="bu">Map</span>(node<span class="op">.</span><span class="at">signature</span><span class="op">.</span><span class="at">parameters</span>)<span class="op">,</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">functions</span><span class="op">,</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>      node<span class="op">.</span><span class="at">signature</span><span class="op">.</span><span class="at">returnType</span><span class="op">,</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="fu">visit</span>(visitor)<span class="op">;</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>When visiting a <code>Call</code>, we fetch that function’s signature from the <code>functions</code> environment. Then we infer the type of the function being called and compare it to the type from the environment. When inferring the type of the function we visit each argument, and since <code>FunctionType</code> requires a name for each parameter, we assign them dummy names, such as <code>x0</code>, <code>x1</code>, <code>x2</code>, etc. When it comes to the function’s return type, we use the one from the type annotation.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitCall</span>(node<span class="op">:</span> Call) {</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> expected <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">functions</span><span class="op">.</span><span class="fu">get</span>(node<span class="op">.</span><span class="at">callee</span>)<span class="op">;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>expected) {</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(<span class="vs">`Function </span><span class="sc">${</span>node<span class="op">.</span><span class="at">callee</span><span class="sc">}</span><span class="vs"> undefined`</span>)<span class="op">;</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> argsTypes <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>()<span class="op">;</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">args</span><span class="op">.</span><span class="fu">forEach</span>((arg<span class="op">,</span> i) <span class="kw">=&gt;</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>      argsTypes<span class="op">.</span><span class="fu">set</span>(<span class="vs">`x</span><span class="sc">${</span>i<span class="sc">}</span><span class="vs">`</span><span class="op">,</span> arg<span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>))</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> got <span class="op">=</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>      <span class="kw">new</span> <span class="fu">FunctionType</span>(argsTypes<span class="op">,</span> expected<span class="op">.</span><span class="at">returnType</span>)<span class="op">;</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assertType</span>(expected<span class="op">,</span> got)<span class="op">;</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> expected<span class="op">.</span><span class="at">returnType</span><span class="op">;</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>When checking a return statement, we infer the type of the returned value and compare it with the one from the function annotation, which we saved conveniently in <code>currentFunctionReturnType</code> instance variable.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitReturn</span>(node<span class="op">:</span> Return) {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> type <span class="op">=</span> node<span class="op">.</span><span class="at">term</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">this</span><span class="op">.</span><span class="at">currentFunctionReturnType</span>) {</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">assertType</span>(<span class="kw">this</span><span class="op">.</span><span class="at">currentFunctionReturnType</span><span class="op">,</span> type)<span class="op">;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="bu">TypeError</span>(</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;Return statement outside of any function&quot;</span>)<span class="op">;</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<h2 id="if-and-while">If and While</h2>
+<p>When checking <code>If</code> and <code>While</code> we visit each inner node to make sure that their type is checked, but we don’t enforce any type. The <code>conditional</code> could be checked to be boolean, but in TypeScript (as in many languages) it is not required to be such. We could also enforce that the statements inside the branches return <code class="sourceCode javascript"><span class="kw">void</span></code>, but this is not usually required either.</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitIf</span>(node<span class="op">:</span> If) {</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">conditional</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">consequence</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">alternative</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visitWhile</span>(node<span class="op">:</span> While) {</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">conditional</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    node<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="fu">visit</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">VoidType</span>()<span class="op">;</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>However, if we had a ternary conditional operation, we would need to ensure that the two branches return the same type.</p>
+<h2 id="soundness">Soundness</h2>
+<p>Our type checker is complete. But is it <em>sound</em>? A type system is sound if the types at compile time are always consistent with run time. Can you find a soundness issue in our type checker?</p>
+<p>Although we check that each <code class="sourceCode javascript"><span class="cf">return</span></code> statement is consistent with the annotated return type, we don’t check that each control-flow path has a return statement. Here’s an example that demonstraits this issue:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">wrongReturnType</span>(x<span class="op">:</span> boolean)<span class="op">:</span> <span class="bu">Array</span><span class="op">&lt;</span>number<span class="op">&gt;</span> {</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (x) {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [<span class="dv">42</span>]<span class="op">;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">main</span>() {</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> a <span class="op">=</span> <span class="fu">wrontReturnType</span>(<span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  a[<span class="dv">0</span>]<span class="op">;</span> <span class="co">// Segmentation fault</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Checking that each control flow path leads to a return statement requires a bit of control-flow analysis which is outside of the scope of this book.</p>
+<h2 id="error-messages">Error messages</h2>
+<p>We can improve our error messages by specializing them to each situation instead of relying on a generic message produced by <code>assertType</code>.</p>
+<center><a href="./14-dynamic-typing#fold">Next: Chapter 14. Dynamic Typing</a></center>
+
+
+  <hr class="fleuron" />
+</body>
+</html>
