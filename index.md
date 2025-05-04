@@ -150,9 +150,9 @@ I have worked with embedded systems, safety-critical systems,
 compilers, and now with finance.
 Recently, I have published a book called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
 
-* Twitter: [\@keleshev](http://twitter.com/keleshev)
 * GitHub: [\@keleshev](http://github.com/keleshev)
 * Mailto: [vladimir@keleshev.com](mailto:vladimir@keleshev.com)
+* Bsky: [\@keleshev.com](https://bsky.app/profile/keleshev.com)
 
 <!--* [Résumé](/about) -->
 

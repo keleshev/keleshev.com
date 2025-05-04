@@ -190,7 +190,7 @@ Source code from the book is available on [GitHub](https://github.com/keleshev/c
 ## Questions? Comments? Feedback?
 
  * Email me at [vladimir@keleshev.com](mailto:vladimir@keleshev.com),
- * DM me at <a href="https://twitter.com/keleshev">@keleshev</a>, or
+ * Bsky me at <a href="https://bsky.app/profile/keleshev.com">@keleshev.com</a>, or
  * Open an issue or a pull request on [GitHub](https://github.com/keleshev/keleshev.com).
 
 
