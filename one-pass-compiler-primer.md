@@ -110,7 +110,7 @@ We can get fancier later if we need to, but for now, let's define our emit funct
 #define emit printf
 ```
 
-Thus, we'll spit assembly instructions directly to the standard output channel, which we can pipe to a file if needed.
+Thus, we'll spew assembly instructions directly to the standard output channel, which we can pipe to a file, if needed.
 
 And now, onto the semantic actions.
 Each time we encounter a number, we push it onto the stack:
@@ -153,7 +153,7 @@ We do nothing, since the inner expression is already emitted.
 
 Now, we can generate assembly snippets given an arithmetic expression.
 However, a bunch of pushes and pops don't make for a complete assembly listing.
-We need a `main` (assuming we link to `libc`) or a `_start`.
+We need a `main` (assuming we link to `libc`) or a `_start` label.
 
 We can use a [mid-rule](https://www.gnu.org/software/bison/manual/html_node/Mid_002dRule-Actions.html) semantic action to generate our `main` label:
 
