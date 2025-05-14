@@ -1,7 +1,7 @@
 ---
 title: Advanced Error Handling in OCaml
 fancy-title: "Advanced Error Handling<br/><small><small>in OCaml</small></small>"
-subtitle: Multiple Errors, Error Recovery, Warnings
+subtitle: Multiple errors, error recovery, warnings
 date: 2021-07-21
 cta: {}
 ---

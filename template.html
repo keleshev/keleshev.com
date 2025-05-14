@@ -51,16 +51,17 @@ $include-before$
 $endfor$
 
 $if(fancy-title)$
+<header>
   <h1>$fancy-title$</h1>
-$endif$
-
 $if(subtitle)$
-<center style="margin: 25.46px;" ><em>$subtitle$</em></center>
+<p><em>$subtitle$</em><p>
+$endif$
+$if(date)$
+<a href="/">Vladimir Keleshev</a> • $date$
+$endif$
+</header>
 $endif$
 
-$if(date)$
-<center style="margin: 25.46px;" >Vladimir Keleshev • $date$</center>
-$endif$
 
 $if(toc)$
 <nav id="$idprefix$TOC" role="doc-toc">

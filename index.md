@@ -6,7 +6,7 @@ title: Vladimir Keleshev
 <h1>
 Vladimir Keleshev
 </h1>
-Programming, compilers, writing
+<!--em>Programming • compilers • writing</em!-->
 </header>
 
 

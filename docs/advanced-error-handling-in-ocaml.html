@@ -73,11 +73,12 @@
 <body>
 
 
+<header>
   <h1>Advanced Error Handling<br/><small><small>in OCaml</small></small></h1>
+<p><em>Multiple errors, error recovery, warnings</em><p>
+<a href="/">Vladimir Keleshev</a> • 2021-07-21
+</header>
 
-<center style="margin: 25.46px;" ><em>Multiple Errors, Error Recovery, Warnings</em></center>
-
-<center style="margin: 25.46px;" >Vladimir Keleshev • 2021-07-21</center>
 
 <p>In a <a href="/composable-error-handling-in-ocaml">previous blog post</a>, we discussed using an OCaml feature called <em>polymorphic variants</em> for error handling. Here, let’s discuss some more advanced forms of this error-handling approach: returning multiple errors, performing error recovery, as well as handling warnings.</p>
 <p>In many programs (for example, in a compiler or an IDE), we want to report all detected errors, instead of quitting on the first error. We also often want to collect warnings that are not critical for the execution of the program.</p>
