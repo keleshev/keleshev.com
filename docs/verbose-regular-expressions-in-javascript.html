@@ -1,314 +1,203 @@
-<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Verbose Regular Expressions in JavaScript</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="icon" sizes="109x109" href="/favicon.gif" />
-    </head>
-    <body>
-        <p><style> #home { position:absolute; line-height: inherit; } </style></p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
 
-<p><span id=home><a title=Home href=/>☰</a></span></p>
+  <meta name="dcterms.date" content="2020-05-02" />
+  <title>Verbose Regular Expressions in JavaScript</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
 
-<h1>
-  Verbose Regular Expressions<br/>
-  <small><small>in JavaScript</small></small><br/>
-</h1>
 
-<p><center>2020-05-02</center></p>
+<header>
+  <h1>Verbose Regular Expressions<br/><small><small>in JavaScript</small></small><br/></h1>
+<a href="/">Vladimir Keleshev</a> • 2020-05-02
+</header>
 
-<p>Recently, I&#8217;ve been writing a lexer for my
-<a href="/compiling-to-assembly-from-scratch-the-book">compiler book</a>
-in JavaScript.
-Fortunately, JavaScript regular expressions are a useful tool for writing
-lexers. However, I&#8217;ve been missing one feature that I particularly
-like from Python: <em>verbose</em> regular expressions.</p>
 
+<p>Recently, I’ve been writing a lexer for my <a href="/compiling-to-assembly-from-scratch-the-book">compiler book</a> in JavaScript. Fortunately, JavaScript regular expressions are a useful tool for writing lexers. However, I’ve been missing one feature that I particularly like from Python: <em>verbose</em> regular expressions.</p>
 <p>What are those?</p>
-
-<p>Imagine we wanted to parse a floating-point number.
-In Python, we could write a regular expression
-like this:</p>
-
-<pre>re.compile(<em>r"(0|[1-9][0-9]*)\.[0-9]*([eE][+-]?[0-9]+)?"</em>)
-</pre>
-
-<p>Or, we could instead supply a <code>VERBOSE</code> flag and write
-the same regular expression like that:</p>
-
-<!--
-re.compile(r"""
-x (0 | [1-9] [0-9]*)   # Integer part with no leading zeroes
-  \.                   # Dot
-  [0-9]*               # Fractional part (optional)
-  ([eE] [+-]? [0-9]+)? # Exponent part (optional)
-""<span><span style="position: absolute">,</span>&rdquo;</span> re.VERBOSE)
--->
-
-<pre>
+<p>Imagine we wanted to parse a floating-point number. In Python, we could write a regular expression like this:</p>
+<pre class="python3"><code>re.compile(r&quot;(0|[1-9][0-9]*)\.[0-9]*([eE][+-]?[0-9]+)?&quot;)</code></pre>
+<p>Or, we could instead supply a <code>VERBOSE</code> flag and write the same regular expression like that:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>re.<span class="bu">compile</span>(<span class="vs">r&quot;&quot;&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="vs">  (0 | [1-9] [0-9]*)   # Integer part with no leading zeroes</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  \.                   # Dot</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  [0-9]*               # Fractional part (optional)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="vs">  ([eE] [+-]? [0-9]+)? # Exponent part (optional)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="vs">&quot;&quot;&quot;</span>, re.VERBOSE)</span></code></pre></div>
+<!--pre>
 re.compile(<em>r"""
   (0 | [1-9] [0-9]*)   # Integer part with no leading zeroes
   \.                   # Dot
   [0-9]*               # Fractional part (optional)
   ([eE] [+-]? [0-9]+)? # Exponent part (optional)
 """</em>, re.VERBOSE)
-</pre>
-
+</pre-->
 <p>See the difference?</p>
-
 <ul>
-<li>Whitespace is ignored:
-you can space out your expression into logical chunks,
-just like your code.
-You can still match whitespace characters, but you need
-to escape them with a backslash, for example: &#8220;<code>\</code>  "
-or &#8220;<code>[\ ]</code><span><span style="position: absolute">.</span>&rdquo;</span></li>
-<li>Comments: in this case, Python-style comments are allowed.
-This can help make your expressions much more readable!</li>
+<li>Whitespace is ignored: you can space out your expression into logical chunks, just like your code. You can still match whitespace characters, but you need to escape them, for example, as “<code>\ </code>” or “<code>[\ ]</code>”.</li>
+<li>Comments: in this case, Python-style comments are allowed. This can help make your expressions much more readable!</li>
 <li>Multiline: expressions can span multiple lines.</li>
 </ul>
-
-<p>JavaScript regexp engine doesn&#8217;t have this feature.
-But when did something like that stopped us before?!</p>
-
-<h2>Raw strings</h2>
-
-<p>One problem with making verbose regular expressions
-work in JavaScript is that the usual <code>/slash/</code>-style regexp literals
-cannot be multiline in JavaScript.
-However, what <em>can</em> be multiline in JavaScript is the
-new ES2015 <em>template literals</em>:</p>
-
-<pre><b>let </b>example = <em>`hello
-world`</em>;
-</pre>
-
-<p>We can use those.
-The next problem is with escape sequences.
-Often regexes have a lot of backslashes,
-like <code>\.</code> for literal dot and <code>\s</code> for whitespace.
-In JavaScript regexp literals, you can write them raw:
-<code>/\.\s/</code>, but in a string or a template literal,
-you need to escape them like this: <code>"\\.\\s"</code>.
-This makes them less convenient for this use case.
-Python has <em>raw</em> strings with <code>r"</code> prefix
-and raw <em>multiline</em> strings with <code>r"""</code> prefix,
-where escapes are not necessary.
-But JavaScript, again, does not have this feature…
-Or does it?</p>
-
-<p>Turns out that template literals have a lesser-known
-feature called <em>tags</em>.
-Tags allow changing the meaning of a template literal.
-Here&#8217;s the syntax:</p>
-
-<pre><b>let </b>x = tag<code><em>&#96;hello&#96;</em></code>;
-</pre>
-
+<p>JavaScript regexp engine doesn’t have this feature. But when did something like that stopped us before?!</p>
+<h2 id="raw-strings">Raw strings</h2>
+<p>One problem with making verbose regular expressions work in JavaScript is that the usual <code>/slash/</code>-style regexp literals cannot be multiline in JavaScript. However, what <em>can</em> be multiline in JavaScript is the new ES2015 <em>template literals</em>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> example <span class="op">=</span> <span class="vs">`hello</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="vs">world`</span><span class="op">;</span></span></code></pre></div>
+<p>We can use those. The next problem is with escape sequences. Often regexes have a lot of backslashes, like <code>\.</code> for literal dot and <code>\s</code> for whitespace. In JavaScript regexp literals, you can write them raw: <code>/\.\s/</code>, but in a string or a template literal, you need to escape them like this: <code>"\\.\\s"</code>. This makes them less convenient for this use case. Python has <em>raw</em> strings with <code>r"</code> prefix and raw <em>multiline</em> strings with <code>r"""</code> prefix, where escapes are not necessary. But JavaScript, again, does not have this feature… Or does it?</p>
+<p>Turns out that template literals have a lesser-known feature called <em>tags</em>. Tags allow changing the meaning of a template literal. Here’s the syntax:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="fu">tag</span><span class="vs">`hello`</span><span class="op">;</span></span></code></pre></div>
 <p>Which will expand <em>roughly</em> to the following:</p>
-
-<pre><b>let </b>x = tag({raw: [<em>"hello"</em>]});
-</pre>
-
-<p>I&#8217;m simplifying a bit: the signature of such a tag
-function is a bit more complicated
-(to handle raw and &#8220;cooked"/escaped strings
- and interpolation parameters),
-but for our use, that&#8217;s enough.</p>
-
-<p>Using such tagged templates, we can implement Python&#8217;s
-raw strings as follows:</p>
-
-<pre><b>function </b>r(input) {
-  <b>return </b>input.raw[0];
-}
-
-<b>let </b>example = r<code><em>&#96;\hello&#96;</em></code>;
-
-console.assert(example === <em>"\\hello"</em>);
-</pre>
-
-<p>And like other template literals they work multiline too.</p>
-
-<p>In fact, JavaScript has this &#8220;<code>r</code>&#8221; function built-in,
-it is called <code>String.raw</code>:</p>
-
-<pre>console.assert(String.raw<code><em>&#96;\hello&#96;</em></code> === <em>"\\hello"</em>);
-
-<b>let </b>r = String.raw;
-console.assert(r<code><em>&#96;\hello&#96;</em></code> === <em>"\\hello"</em>);
-</pre>
-
-<p>Tagged literals basically allow us to make
-our own literals, for things like…
-verbose regular expressions!</p>
-
-<p>And that&#8217;s what we&#8217;ll do.
-But first, we need to <em>design</em> them.</p>
-
-<h2>Design</h2>
-
-<p>I don&#8217;t think verbose regular expressions in
-JavaScript should be exactly like those
-in Python.
-I think they should use JavaScript-style comments instead:</p>
-
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="fu">tag</span>({<span class="dt">raw</span><span class="op">:</span> [<span class="st">&quot;hello&quot;</span>]})<span class="op">;</span></span></code></pre></div>
+<p>I’m simplifying a bit: the signature of such a tag function is a bit more complicated (to handle raw and “cooked”/escaped strings and interpolation parameters), but for our use, that’s enough.</p>
+<p>Using such tagged templates, we can implement Python’s raw strings as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">r</span>(input) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> input<span class="op">.</span><span class="at">raw</span>[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> example <span class="op">=</span> <span class="fu">r</span><span class="vs">`</span><span class="sc">\h</span><span class="vs">ello`</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(example <span class="op">===</span> <span class="st">&quot;</span><span class="sc">\\</span><span class="st">hello&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>And like other template literals they work as multiline too.</p>
+<p>In fact, JavaScript has this “<code>r</code>” function built-in, it is called <code>String.raw</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(<span class="bu">String</span><span class="op">.</span><span class="fu">raw</span><span class="vs">`\hello`</span> <span class="op">===</span> <span class="st">&quot;</span><span class="sc">\\</span><span class="st">hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r <span class="op">=</span> <span class="bu">String</span><span class="op">.</span><span class="at">raw</span><span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">assert</span>(<span class="fu">r</span><span class="vs">`</span><span class="sc">\h</span><span class="vs">ello`</span> <span class="op">===</span> <span class="st">&quot;</span><span class="sc">\\</span><span class="st">hello&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Tagged literals basically allow us to make our own literals, for things like… verbose regular expressions!</p>
+<p>And that’s what we’ll do. But first, we need to <em>design</em> them.</p>
+<h2 id="design">Design</h2>
+<p>I don’t think verbose regular expressions in JavaScript should be exactly like those in Python. I think they should use JavaScript-style comments instead:</p>
 <ul>
 <li><code>// single-line</code>, <em>and</em></li>
 <li><code>/* multi-line */</code>.</li>
 </ul>
-
 <!--
 Next, Python verbose regular expressions
 do not ignore whitespace inside character classes,
 but I think it's quite useful.
 You could write aregular expression like this one:
 
-
-
-md5-afc01a23026c8936be39c166ab8a90cf
-
-
+```js
+[
+  a-z  // Letters
+  0-9  // Numbers
+  _    // Undescore
+]
+```
 -->
-
-<h2>Implementation</h2>
-
-<p>To implement verbose regular expressions in JavaScript
-we&#8217;ll use the tagged template literals as well as
-a regular, <em>ahem</em>, regular expression:</p>
-
-<pre><b>function </b>verboseRegExp(input) {
-  <b>if </b>(input.raw.length !== 1) { ❶
-    <b>throw </b>Error(<em>&#34;verboseRegExp: interpolation is not supported&#34;</em>);
-  }
-
-  <b>let </b>source = input.raw[0]; ❷
-  <b>let </b>regexp = /(?&lt;!\\)\s|[/][/].*|[/][*][\s\S]*[*][/]/g;
-  <b>let </b>result = source.replace(regexp, '');
-
-  <b>return </b><b>new </b>RegExp(result); ❸
-}
-</pre>
-
-<p>We call our tag <code>verboseRegExp</code>.
-Since it&#8217;s already <em>verbose</em>, it doesn&#8217;t hurt to be explicit
-about what this new tag means.</p>
-
-<p>❶ We add a guard that checks that only one string
-is supplied.
-That means that the string has no interpolations.
-It would be interesting to see what string interpolation
-could give us in this case, but let&#8217;s ignore it now.</p>
-
-<p>❷ Next, we extract the raw string from the input parameter.
-Using a regular expression, we remove the comments
-and the whitespace (except for whitespace escaped with
-a backslash).
-Too bad we can&#8217;t use a verbose regular expressions here,
-as you know, the cobbler&#8217;s son has no shoes.</p>
-
-<p>❸ Finally, we construct the regular expression out of the
-resulting string.</p>
-
-<h2>Examples</h2>
-
-<p>Now, we can finally use it!
-And, of course, the first example we&#8217;ll use will be the
-regular expression we just used to implement our verbose regular expressions:</p>
-
-<pre><b>let </b>example1 = <b>new </b>RegExp(verboseRegExp`
-    (?&lt;!\\) \s             <em>// Ignore whitespace, but not
-</em>                           <em>// when escaped with a backslash.
-</em>  | [/][/] .*              <em>// Single-line comment.
-</em>  | [/][*] [\s\S]* [*][/]  <em>// Multi-line comment.
-</em>
-  <em>// Note: /[\s\S]/ is same as /./s with dot-all flag (s),
-</em>  <em>// but we can't use dot-all here since that would break
-</em>  <em>// the single-line comment case.
-</em>`, <em>"g"</em>);
-</pre>
-
-<p>This also gives us a chance to explain well the
-meaning of that regular expression.</p>
-
-<p>One thing that the new regular expression syntax does not
-allow us is to specify is <em>flags</em> (such as <code>g</code> for <em>global</em>)
-directly.
-But since it&#8217;s <em>verbose</em>, it doesn&#8217;t hurt to wrap
-it into another <code>RegExp</code> call and pass <code>"g"</code> explicitly.</p>
-
-<p><center>⁂</center></p>
-
-<p>Next example covers the parsing of a floating-point
-number that we discussed in the beginning:</p>
-
-<pre><b>let </b>example2 = verboseRegExp`
-  (0 | [1-9] [0-9]*)   <em>// Integer part with no leading zeroes
-</em>  \.                   <em>// Dot
-</em>  [0-9]*               <em>// Fractional part (optional)
-</em>  ([eE] [+-]? [0-9]+)? <em>// Exponent part (optional)
-</em>`;
-</pre>
-
-<h2>Code</h2>
-
-<p>This code, together with some unit tests,
-is available as a
-<a href="https://gist.github.com/keleshev/c49465caed1f114b2bb3f2b730e221ca">GitHub gist</a>.</p>
-
-<p><center>⁂</center></p>
-
-<p>I hope that this lightweight technique
-will make your regular expressions more readable,
-and I hope you&#8217;ve learned a thing or two today!
-<a href="/" title="Home">&#9632;</a></p>
-
-<p><center></p>
-
-<p>⁂</p>
-
-<p><style>
-#cover {
-  border: 1px solid black;
-  width: 500px;
-  color: black;
-  display: block;
-}</p>
-
-<p></style></p>
-
-<h2>Did you know about my upcoming book?
-</h2>
-
-<div id=cover >
-<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
-
-<br/>
-
-<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
-
-— the book —<br/>
-<br/>
-<br/>
-
-<img src=/dragon.png width=256 height=260 />
-
-<br/>
-<br/>
-<br/>
-
-
-<p>Vladimir Keleshev</p>
-
-<em>TypeScript — ARM — Summer 2020</em>
-<br/>
-<br/>
-
-</a>
+<h2 id="implementation">Implementation</h2>
+<p>To implement verbose regular expressions in JavaScript we’ll use the tagged template literals as well as a regular, <em>ahem</em>, regular expression:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">verboseRegExp</span>(input) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (input<span class="op">.</span><span class="at">raw</span><span class="op">.</span><span class="at">length</span> <span class="op">!==</span> <span class="dv">1</span>) { ❶</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">throw</span> <span class="bu">Error</span>(<span class="st">&quot;verboseRegExp: interpolation is not supported&quot;</span>)<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> source <span class="op">=</span> input<span class="op">.</span><span class="at">raw</span>[<span class="dv">0</span>]<span class="op">;</span> ❷</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> regexp <span class="op">=</span> <span class="ss">/</span><span class="sc">(?</span><span class="ss">&lt;!</span><span class="sc">\\)\s|[/][/]</span><span class="ss">.</span><span class="sc">*|[/][*][\s\S]*[*][/]</span><span class="ss">/g</span><span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> result <span class="op">=</span> source<span class="op">.</span><span class="fu">replace</span>(regexp<span class="op">,</span> <span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">new</span> <span class="bu">RegExp</span>(result)<span class="op">;</span> ❸</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We call our tag <code>verboseRegExp</code>. Since it’s already <em>verbose</em>, it doesn’t hurt to be explicit about what this new tag means.</p>
+<div class="circled-numbers">
+<ol type="1">
+<li><p>We add a guard that checks that only one string is supplied. That means that the string has no interpolations. It would be interesting to see what string interpolation could give us in this case, but let’s ignore it now.</p></li>
+<li><p>Next, we extract the raw string from the input parameter. Using a regular expression, we remove the comments and the whitespace (except for whitespace escaped with a backslash). Too bad we can’t use a verbose regular expressions here, as you know, the cobbler’s son has no shoes.</p></li>
+<li><p>Finally, we construct the regular expression out of the resulting string.</p></li>
+</ol>
 </div>
+<h2 id="examples">Examples</h2>
+<p>Now, we can finally use it! And, of course, the first example we’ll use will be the regular expression we just used to implement our verbose regular expressions:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> example1 <span class="op">=</span> <span class="kw">new</span> <span class="bu">RegExp</span>(<span class="fu">verboseRegExp</span><span class="vs">`</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="vs">    (?&lt;!</span><span class="sc">\\</span><span class="vs">) </span><span class="sc">\s</span><span class="vs">             // Ignore whitespace, but not</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="vs">                           // when escaped with a backslash.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  | [/][/] .*              // Single-line comment.</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="vs">  | [/][*] [</span><span class="sc">\s\S</span><span class="vs">]* [*][/]  // Multi-line comment.</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="vs">  // Note: /[</span><span class="sc">\s\S</span><span class="vs">]/ is same as /./s with dot-all flag (s),</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="vs">  // but we can&#39;t use dot-all here since that would break</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="vs">  // the single-line comment case.</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">,</span> <span class="st">&quot;g&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>This also gives us a chance to fully explain the meaning of that regular expression.</p>
+<p>One thing that the new regular expression syntax does not allow us is to specify the <em>flags</em> (such as <code>g</code> for <em>global</em>) directly. But since it’s <em>verbose</em>, it doesn’t hurt to wrap it into another <code>RegExp</code> call and pass <code>"g"</code> explicitly, like we did above.</p>
+<p>Next example covers the parsing of a floating-point number that we discussed in the beginning:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> example2 <span class="op">=</span> <span class="fu">verboseRegExp</span><span class="vs">`</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="vs">  (0 | [1-9] [0-9]*)   // Integer part with no leading zeroes</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  </span><span class="sc">\.</span><span class="vs">                   // Dot</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  [0-9]*               // Fractional part (optional)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="vs">  ([eE] [+-]? [0-9]+)? // Exponent part (optional)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<p>I hope that this lightweight technique will make your regular expressions more readable!</p>
+<h2 id="source-code">Source code</h2>
+<p>This code, together with some unit tests, is available as a <a href="https://gist.github.com/keleshev/c49465caed1f114b2bb3f2b730e221ca">GitHub gist</a>.</p>
 
-<p></center></p>
 
-    </body>
+  <hr class="fleuron" />
+</body>
 </html>

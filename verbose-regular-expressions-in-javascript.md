@@ -1,18 +1,11 @@
 ---
 title: Verbose Regular Expressions in JavaScript
+fancy-title: "Verbose Regular Expressions<br/><small><small>in JavaScript</small></small><br/>"
+date: 2020-05-02
 ---
 
 
-<style> #home { position:absolute; line-height: inherit; } </style>
 
-<span id=home><a title=Home href=/>☰</a></span>
-
-<h1>
-  Verbose Regular Expressions<br/>
-  <small><small>in JavaScript</small></small><br/>
-</h1>
-
-<center>2020-05-02</center>
 
 Recently, I've been writing a lexer for my
 [compiler book](/compiling-to-assembly-from-scratch-the-book)
@@ -34,22 +27,22 @@ re.compile(r"(0|[1-9][0-9]*)\.[0-9]*([eE][+-]?[0-9]+)?")
 Or, we could instead supply a `VERBOSE` flag and write
 the same regular expression like that:
 
-<!--
+```python
 re.compile(r"""
-x (0 | [1-9] [0-9]*)   # Integer part with no leading zeroes
+  (0 | [1-9] [0-9]*)   # Integer part with no leading zeroes
   \.                   # Dot
   [0-9]*               # Fractional part (optional)
   ([eE] [+-]? [0-9]+)? # Exponent part (optional)
 """, re.VERBOSE)
--->
-<pre>
+```
+<!--pre>
 re.compile(<em>r"""
   (0 | [1-9] [0-9]*)   # Integer part with no leading zeroes
   \.                   # Dot
   [0-9]*               # Fractional part (optional)
   ([eE] [+-]? [0-9]+)? # Exponent part (optional)
 """</em>, re.VERBOSE)
-</pre>
+</pre-->
 
 See the difference?
 
@@ -57,7 +50,7 @@ See the difference?
   you can space out your expression into logical chunks,
   just like your code.
   You can still match whitespace characters, but you need
-  to escape them with a backslash, for example: "`\    `  "
+  to escape them, for example, as "<code>\\ </code>"
   or "`[\ ]`".
 * Comments: in this case, Python-style comments are allowed.
   This can help make your expressions much more readable!
@@ -76,8 +69,8 @@ However, what *can* be multiline in JavaScript is the
 new ES2015 *template literals*:
 
 ```js
-let example = <em>`hello
-world`</em>;
+let example = `hello
+world`;
 ```
 
 We can use those.
@@ -100,7 +93,7 @@ Tags allow changing the meaning of a template literal.
 Here's the syntax:
 
 ```js
-let x = tag`<em>&#96;hello&#96;</em>`;
+let x = tag`hello`;
 ```
 
 Which will expand *roughly* to the following:
@@ -123,21 +116,21 @@ function r(input) {
   return input.raw[0];
 }
 
-let example = r`<em>&#96;\hello&#96;</em>`;
+let example = r`\hello`;
 
 console.assert(example === "\\hello");
 ```
 
-And like other template literals they work multiline too.
+And like other template literals they work as multiline too.
 
 In fact, JavaScript has this "`r`" function built-in,
 it is called `String.raw`:
 
 ```js
-console.assert(String.raw`<em>&#96;\hello&#96;</em>` === "\\hello");
+console.assert(String.raw`\hello` === "\\hello");
 
 let r = String.raw;
-console.assert(r`<em>&#96;\hello&#96;</em>` === "\\hello");
+console.assert(r`\hello` === "\\hello");
 ```
 
 Tagged literals basically allow us to make
@@ -181,11 +174,11 @@ a regular, *ahem*, regular expression:
 ```js
 function verboseRegExp(input) {
   if (input.raw.length !== 1) { ❶
-    throw Error(<em>&#34;verboseRegExp: interpolation is not supported&#34;</em>);
+    throw Error("verboseRegExp: interpolation is not supported");
   }
 
   let source = input.raw[0]; ❷
-  let regexp = /(?&lt;!\\)\s|[/][/].*|[/][*][\s\S]*[*][/]/g;
+  let regexp = /(?<!\\)\s|[/][/].*|[/][*][\s\S]*[*][/]/g;
   let result = source.replace(regexp, '');
 
   return new RegExp(result); ❸
@@ -196,21 +189,24 @@ We call our tag `verboseRegExp`.
 Since it's already *verbose*, it doesn't hurt to be explicit
 about what this new tag means.
 
-❶ We add a guard that checks that only one string
+
+<div class="circled-numbers">
+1. We add a guard that checks that only one string
 is supplied.
 That means that the string has no interpolations.
 It would be interesting to see what string interpolation
 could give us in this case, but let's ignore it now.
 
-❷ Next, we extract the raw string from the input parameter.
+2. Next, we extract the raw string from the input parameter.
 Using a regular expression, we remove the comments
 and the whitespace (except for whitespace escaped with
 a backslash).
 Too bad we can't use a verbose regular expressions here,
 as you know, the cobbler's son has no shoes.
 
-❸ Finally, we construct the regular expression out of the
+3. Finally, we construct the regular expression out of the
 resulting string.
+</div>
 
 ## Examples
 
@@ -220,7 +216,7 @@ regular expression we just used to implement our verbose regular expressions:
 
 ```js
 let example1 = new RegExp(verboseRegExp`
-    (?&lt;!\\) \s             // Ignore whitespace, but not
+    (?<!\\) \s             // Ignore whitespace, but not
                            // when escaped with a backslash.
   | [/][/] .*              // Single-line comment.
   | [/][*] [\s\S]* [*][/]  // Multi-line comment.
@@ -231,16 +227,13 @@ let example1 = new RegExp(verboseRegExp`
 `, "g");
 ```
 
-This also gives us a chance to explain well the
-meaning of that regular expression.
+This also gives us a chance to fully explain the meaning of that regular expression.
 
 One thing that the new regular expression syntax does not
-allow us is to specify is *flags* (such as `g` for *global*)
+allow us is to specify the *flags* (such as `g` for *global*)
 directly.
 But since it's *verbose*, it doesn't hurt to wrap
-it into another `RegExp` call and pass `"g"` explicitly.
-
-<center>⁂</center>
+it into another `RegExp` call and pass `"g"` explicitly, like we did above.
 
 Next example covers the parsing of a floating-point
 number that we discussed in the beginning:
@@ -254,67 +247,12 @@ let example2 = verboseRegExp`
 `;
 ```
 
-## Code
+I hope that this lightweight technique
+will make your regular expressions more readable!
+
+## Source code
 
 This code, together with some unit tests,
 is available as a
 [GitHub gist](https://gist.github.com/keleshev/c49465caed1f114b2bb3f2b730e221ca).
 
-<center>⁂</center>
-
-I hope that this lightweight technique
-will make your regular expressions more readable,
-and I hope you've learned a thing or two today!
-[&#9632;](/ "Home")
-
-
-
-<center>
-
-
-⁂
-
-<style>
-#cover {
-  border: 1px solid black;
-  width: 500px;
-  color: black;
-  display: block;
-}
-
-</style>
-
-
-
-<h2>Did you know about my upcoming book?
-</h2>
-
-
-<div id=cover >
-<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
-
-<br/>
-
-<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
-
-— the book —<br/>
-<br/>
-<br/>
-
-<img src=/dragon.png width=256 height=260 />
-
-<br/>
-<br/>
-<br/>
-
-
-<p>Vladimir Keleshev</p>
-
-<em>TypeScript — ARM — Summer 2020</em>
-<br/>
-<br/>
-
-</a>
-</div>
-
-</center>
