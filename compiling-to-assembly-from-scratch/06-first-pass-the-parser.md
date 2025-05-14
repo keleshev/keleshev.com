@@ -3,10 +3,11 @@ title: "6. First Pass: The Parser • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 6</small></small><br/>First Pass: The Parser<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 6</small></small><br/>First Pass: The Parser</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{First Pass: The Parser}
@@ -647,5 +648,5 @@ console.assert(result.equals(expected));
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}-->
 
 ```{=html}
-<center><a href="./07-arm-assembly-programming#fold">Next: Chapter 7. ARM Assembly Programming</a></center>
+<center><a href="./07-arm-assembly-programming">Next: Chapter 7. ARM Assembly Programming</a></center>
 ```

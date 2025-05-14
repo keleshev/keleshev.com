@@ -36,6 +36,12 @@ body {
     background-color: white; #f3f3f3; #f0f0e9;
 }
 
+header {
+  margin: 6rem 0;
+  padding-top: 0.001rem;
+  text-align: center;
+}
+
 .icon, i {
         font-family: 'Friendly-Icons-Font';
         speak: none;

@@ -3,10 +3,11 @@ title: "7. ARM Assembly Programming • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 7</small></small><br/>ARM Assembly Programming<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 7</small></small><br/>ARM Assembly Programming</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{ARM Assembly Programming}
@@ -1505,5 +1506,5 @@ And even more than enough to complete the second pass of our compiler.
 
 
 ```{=html}
-<center><a href="./08-second-pass-code-generation#fold">Next: Chapter 8. Second Pass: Code Generation</a></center>
+<center><a href="./08-second-pass-code-generation">Next: Chapter 8. Second Pass: Code Generation</a></center>
 ```

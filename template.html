@@ -45,7 +45,6 @@ $for(header-includes)$
 $endfor$
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 $for(include-before)$
 $include-before$
@@ -63,10 +62,6 @@ $if(date)$
 <center style="margin: 25.46px;" >Vladimir Keleshev • $date$</center>
 $endif$
 
-$if(title)$
-<header id="title-block-header">
-</header>
-$endif$
 $if(toc)$
 <nav id="$idprefix$TOC" role="doc-toc">
 $if(toc-title)$

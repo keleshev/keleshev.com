@@ -3,10 +3,11 @@ title: "13. Static Type Checking and Inference • Compiling to Assembly from Sc
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 13</small></small><br/>Static Type Checking<small style="line-height:0"><small><small><br/>and<br/></small></small></small>Inference<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 13</small></small><br/>Static Type Checking and Inference</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \newpage
@@ -490,5 +491,5 @@ We can improve our error messages by specializing them to each situation instead
 
 
 ```{=html}
-<center><a href="./14-dynamic-typing#fold">Next: Chapter 14. Dynamic Typing</a></center>
+<center><a href="./14-dynamic-typing">Next: Chapter 14. Dynamic Typing</a></center>
 ```

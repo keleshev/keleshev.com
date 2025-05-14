@@ -3,10 +3,11 @@ title: "4. Abstract Syntax Tree • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 4</small></small> <br/>Abstract Syntax Tree<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 4</small></small><br/>Abstract Syntax Tree</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 
@@ -771,5 +772,5 @@ In the next two chapters, you will learn about converting a program from source 
 
 
 ```{=html}
-<center><a href="./05-parser-combinators#fold">Next: Chapter 5. Parser Combinators</a></center>
+<center><a href="./05-parser-combinators">Next: Chapter 5. Parser Combinators</a></center>
 ```

@@ -7,7 +7,12 @@ twitter-description: Black Friday — 40% off
 twitter-image: "https://keleshev.com/compiling-to-assembly-from-scratch/black-friday-card.png"
 ---
 
+```{=html}
+<header>
 <h1>Compiling to Assembly<br/><small><small>from Scratch </small></small> </h1>
+<a href="/">Vladimir Keleshev</a><br>Illustrated by <a href="https://katiuskapino.com/#links">Katiuska Pino</a>
+</header>
+```
 
 <div style="
     position: absolute;
@@ -110,36 +115,36 @@ It uses a subset of **TypeScript** that reads like pseudocode and targets **ARM*
 
 <h2>Table of Contents</h2>
 
-1. [Introduction](./01-introduction#fold)
-2. [TypeScript Basics](./02-typescript-basics#fold)
+1. [Introduction](./01-introduction)
+2. [TypeScript Basics](./02-typescript-basics)
 
 *Part I: Baseline Compiler*
 
-3. [High-level Compiler Overview](./03-high-level-compiler-overview#fold)
-4. [Abstract Syntax Tree](./04-abstract-syntax-tree#fold)
-5. [Parser Combinators](./05-parser-combinators#fold)
-6. [First Pass: The Parser](./06-first-pass-the-parser#fold)
-7. [ARM Assembly Programming](./07-arm-assembly-programming#fold)
-8. [Second Pass: Code Generation](./08-second-pass-code-generation#fold)
+3. [High-level Compiler Overview](./03-high-level-compiler-overview)
+4. [Abstract Syntax Tree](./04-abstract-syntax-tree)
+5. [Parser Combinators](./05-parser-combinators)
+6. [First Pass: The Parser](./06-first-pass-the-parser)
+7. [ARM Assembly Programming](./07-arm-assembly-programming)
+8. [Second Pass: Code Generation](./08-second-pass-code-generation)
 
 *Part II: Compiler Extensions*
 
-9. [Introduction to Part II](./09-introduction-to-part-2#fold)
-10. [Primitive Scalar Data Types](./10-primitive-scalar-data-types#fold)
-11. [Arrays and Heap Allocation](./11-arrays-and-heap-allocation#fold)
-12. [Visitor Pattern](./12-visitor-pattern#fold)
-13. [Static Type Checking and Inference](./13-static-type-checking-and-inference#fold)
-14. [Dynamic Typing](./14-dynamic-typing#fold)
-15. [Garbage Collection](./15-garbage-collection#fold)
+9. [Introduction to Part II](./09-introduction-to-part-2)
+10. [Primitive Scalar Data Types](./10-primitive-scalar-data-types)
+11. [Arrays and Heap Allocation](./11-arrays-and-heap-allocation)
+12. [Visitor Pattern](./12-visitor-pattern)
+13. [Static Type Checking and Inference](./13-static-type-checking-and-inference)
+14. [Dynamic Typing](./14-dynamic-typing)
+15. [Garbage Collection](./15-garbage-collection)
 
 *Appendices*
 
 <ol type="A">
  <li>
-   [Running ARM Programs](./appendix-a-running-arm-programs#fold)
+   [Running ARM Programs](./appendix-a-running-arm-programs)
  </li>
  <li>
-   [GAS *v.* ARMASM Syntax](./appendix-b-gas-v-armasm-syntax#fold)
+   [GAS *v.* ARMASM Syntax](./appendix-b-gas-v-armasm-syntax)
  </li>
 </ol>
 

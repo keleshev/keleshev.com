@@ -3,10 +3,11 @@ title: "2. TypeScript Basics • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 2</small></small><br/>TypeScript Basics<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 2</small></small><br/>TypeScript Basics</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{TypeScript Basics}
@@ -205,5 +206,5 @@ There's much more to TypeScript, but we will, for the most part, limit ourselves
 
 
 ```{=html}
-<center><a href="./03-high-level-compiler-overview#fold">Next: Chapter 3. High-level Compiler Overview</a></center>
+<center><a href="./03-high-level-compiler-overview">Next: Chapter 3. High-level Compiler Overview</a></center>
 ```

@@ -3,10 +3,11 @@ title: "1. Introduction • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 1</small></small><br/>Introduction<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 1</small></small><br/>Introduction</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 
@@ -159,5 +160,5 @@ Feel free to reach just for the parts you are interested in.
 No need to read both about *static typing* and *dynamic typing* if you want to focus only on one of these topics.
 
 ```{=html}
-<center><a href="./02-typescript-basics#fold">Next: Chapter 2. TypeScript Basics</a></center>
+<center><a href="./02-typescript-basics">Next: Chapter 2. TypeScript Basics</a></center>
 ```

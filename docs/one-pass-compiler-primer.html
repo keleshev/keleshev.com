@@ -71,7 +71,6 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
   <h1>One-pass Compiler<br/><small><small>Primer</small></small></h1>
@@ -79,8 +78,6 @@
 
 <center style="margin: 25.46px;" >Vladimir Keleshev • 2020-05-21</center>
 
-<header id="title-block-header">
-</header>
 <p>Let’s look at what is a one-pass compiler and try to implement one.</p>
 <!--So instead of parsing the source into AST and then traversing it to emit code, a compiler would emit code during parsing. -->
 <p>A one-pass compiler emits assembly (or binary code) right during parsing, without creating an intermediate representation, such as an AST. This is a rare technique that was used back in the days when computer memory was scarce. This limited both the language features that were possible and the quality of the produced code. But this techniques produced fast compilers that made Bill Gates envy.</p>

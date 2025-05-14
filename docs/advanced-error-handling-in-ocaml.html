@@ -71,7 +71,6 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
   <h1>Advanced Error Handling<br/><small><small>in OCaml</small></small></h1>
@@ -80,8 +79,6 @@
 
 <center style="margin: 25.46px;" >Vladimir Keleshev • 2021-07-21</center>
 
-<header id="title-block-header">
-</header>
 <p>In a <a href="/composable-error-handling-in-ocaml">previous blog post</a>, we discussed using an OCaml feature called <em>polymorphic variants</em> for error handling. Here, let’s discuss some more advanced forms of this error-handling approach: returning multiple errors, performing error recovery, as well as handling warnings.</p>
 <p>In many programs (for example, in a compiler or an IDE), we want to report all detected errors, instead of quitting on the first error. We also often want to collect warnings that are not critical for the execution of the program.</p>
 <p>To demonstrate the problem and the solutions, let’s use an artificial example: a type checker for a small language with types <code>t</code> and terms <code>e</code>, which is technically a subset of OCaml:</p>

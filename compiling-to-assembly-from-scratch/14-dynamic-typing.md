@@ -3,10 +3,11 @@ title: "14. Dynamic Typing • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 14</small></small><br/>Dynamic Typing<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 14</small></small><br/>Dynamic Typing</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{Dynamic Typing}
@@ -292,5 +293,5 @@ function main() {
 ```
 
 ```{=html}
-<center><a href="./15-garbage-collection#fold">Next: Chapter 15. Garbage Collection</a></center>
+<center><a href="./15-garbage-collection">Next: Chapter 15. Garbage Collection</a></center>
 ```

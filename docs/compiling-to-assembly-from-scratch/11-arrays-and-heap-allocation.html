@@ -70,18 +70,16 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
 
 
 
-<header id="title-block-header">
+<header>
+<h1><small><small>Chapter 11</small></small><br/>Arrays and Heap Allocation</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
 </header>
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 11</small></small><br/>Arrays and Heap Allocation<br/><br/></h1>
 <p> </p>
 <p>Let’s implement simple arrays that can be created using literal notation: <code>[10, 20, 30]</code>. We want to be able to extract elements by indexing into an array (<code>a[0]</code>), and to query for array’s length (<code>length(a)</code>).</p>
 <!--Let's implement simple arrays, which can be created using literal notation like `[10, 20, 30]`, extract an element by indexing (`a[0]`) and querying for their length (`length(a)`).-->
@@ -226,7 +224,7 @@
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h2 id="strings">Strings</h2>
 <p>Strings can be thought as arrays of bytes with a particular encoding. They can be implemented similarly to arrays, but using byte variants of the load and store instructions, <code>ldrb</code> and <code>strb</code>, instead of the regular <code>ldr</code> and <code>str</code>. However, when we see <code>a[i]</code> we need to know if it’s an array or a string to execute the right code. We either need to know the static type of the variable at compile time, or its dynamic type (or tag) by inspecting the data-structure at run time. But before we jump into that, we need to learn about one particular pattern that will help us maintain our code better.</p>
-<center><a href="./12-visitor-pattern#fold">Next: Chapter 12. Visitor Pattern</a></center>
+<center><a href="./12-visitor-pattern">Next: Chapter 12. Visitor Pattern</a></center>
 
 
   <hr class="fleuron" />

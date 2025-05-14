@@ -3,10 +3,11 @@ title: "5. Parser Combinators • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 5</small></small><br/>Parser Combinators<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 5</small></small><br/>Parser Combinators</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{Parser Combinators}
@@ -682,5 +683,5 @@ Now that we have learned how to construct parsers, let's make the parser pass fo
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 ```{=html}
-<center><a href="./06-first-pass-the-parser#fold">Next: Chapter 6. First Pass: The Parser</a></center>
+<center><a href="./06-first-pass-the-parser">Next: Chapter 6. First Pass: The Parser</a></center>
 ```

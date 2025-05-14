@@ -70,18 +70,16 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
 
 
 
-<header id="title-block-header">
+<header>
+<h1><small><small>Chapter 13</small></small><br/>Static Type Checking and Inference</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
 </header>
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 13</small></small><br/>Static Type Checking<small style="line-height:0"><small><small><br/>and<br/></small></small></small>Inference<br/><br/></h1>
 <p> </p>
 <p>In this chapter, we will implement a type checker for our language with <em>local type inference</em>. Local type inference means that local variables do not need a type annotation, so you can write the following:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span></code></pre></div>
@@ -391,7 +389,7 @@ When assigning a new value to a variable, we check two things:
 <p>Checking that each control flow path leads to a return statement requires a bit of control-flow analysis which is outside of the scope of this book.</p>
 <h2 id="error-messages">Error messages</h2>
 <p>We can improve our error messages by specializing them to each situation instead of relying on a generic message produced by <code>assertType</code>.</p>
-<center><a href="./14-dynamic-typing#fold">Next: Chapter 14. Dynamic Typing</a></center>
+<center><a href="./14-dynamic-typing">Next: Chapter 14. Dynamic Typing</a></center>
 
 
   <hr class="fleuron" />

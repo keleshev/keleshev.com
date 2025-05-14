@@ -2,16 +2,13 @@
 title: Vladimir Keleshev
 ---
 
-<style> #home { position: absolute; line-height: 42px;} </style>
-
-<span id=home><a title=Home href=/>☰</a></span>
-
+<header>
 <h1>
 Vladimir Keleshev
 </h1>
+Programming, compilers, writing
+</header>
 
-
-<style>#home a { color: black; float: left; }</style>
 
 
 

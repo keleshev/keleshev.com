@@ -3,10 +3,11 @@ title: "3. High-level Compiler Overview • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 3</small></small><br/>High-level Compiler Overview<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 3</small></small><br/>High-level Compiler Overview</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \newpage
@@ -94,5 +95,5 @@ Abstract syntax trees are the most common type of intermediate representations.
 Let's talk about them in detail.
 
 ```{=html}
-<center><a href="./04-abstract-syntax-tree#fold">Next: Chapter 4. Abstract Syntax Tree</a></center>
+<center><a href="./04-abstract-syntax-tree">Next: Chapter 4. Abstract Syntax Tree</a></center>
 ```

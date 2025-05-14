@@ -70,18 +70,16 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
 
 
 
-<header id="title-block-header">
+<header>
+<h1><small><small>Chapter 14</small></small><br/>Dynamic Typing</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
 </header>
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 14</small></small><br/>Dynamic Typing<br/><br/></h1>
 <p> </p>
 <p>With dynamic typing, you expect to be able to query the data type of any variable, using <code class="sourceCode javascript"><span class="kw">instanceof</span></code> or some other mechanism. Right now we can’t distinguish at run time between a number and (a pointer to) an array. With the static type system we have, it doesn’t matter, because such comparison is disallowed at run time.</p>
 <p>So, how do we distinguish a pointer from a number, a false from zero, and so on? This is typically achieved with <em>tagging</em>.</p>
@@ -229,7 +227,7 @@
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assert</span>(<span class="op">!</span><span class="fu">isBoolean</span>(<span class="kw">undefined</span>))<span class="op">;</span></span>
 <span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<center><a href="./15-garbage-collection#fold">Next: Chapter 15. Garbage Collection</a></center>
+<center><a href="./15-garbage-collection">Next: Chapter 15. Garbage Collection</a></center>
 
 
   <hr class="fleuron" />

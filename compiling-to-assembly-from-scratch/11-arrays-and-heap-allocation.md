@@ -3,10 +3,11 @@ title: "11. Arrays and Heap Allocation • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 11</small></small><br/>Arrays and Heap Allocation<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 11</small></small><br/>Arrays and Heap Allocation</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{Arrays and Heap Allocation}
@@ -249,5 +250,5 @@ But before we jump into that, we need to learn about one particular pattern that
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 ```{=html}
-<center><a href="./12-visitor-pattern#fold">Next: Chapter 12. Visitor Pattern</a></center>
+<center><a href="./12-visitor-pattern">Next: Chapter 12. Visitor Pattern</a></center>
 ```

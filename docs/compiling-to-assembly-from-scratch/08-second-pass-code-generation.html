@@ -70,18 +70,16 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
 
 
 
-<header id="title-block-header">
+<header>
+<h1><small><small>Chapter 8</small></small><br/>Second Pass: Code Generation</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
 </header>
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 8</small></small><br/>Second Pass: Code Generation<br/><br/></h1>
 <p> </p>
 <p>The second and the last pass of our compiler is called the <em>emitter</em> or the <em>code generator</em>, since it generates the assembly code. It converts an AST of a program into assembly instrucitons. How do we organize that? We extend the <code>AST</code> interface with a new method called <code>emit</code>.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AST {</span>
@@ -870,7 +868,7 @@ But this is not the case in some of the other languages.
 </blockquote>
 <hr />
 <p>The baseline compiler is done. Now, onto <em>Part II</em>, where we will continue extending and expanding the compiler with new functionality.</p>
-<center><a href="./09-introduction-to-part-2#fold">Next: Chapter 9. Introduction to Part II</a></center>
+<center><a href="./09-introduction-to-part-2">Next: Chapter 9. Introduction to Part II</a></center>
 
 
   <hr class="fleuron" />

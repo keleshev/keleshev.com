@@ -3,10 +3,11 @@ title: "12. Visitor Pattern • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 12</small></small><br/>Visitor Pattern<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 12</small></small><br/>Visitor Pattern</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \chapter{Visitor Pattern}
@@ -163,5 +164,5 @@ New passes that we will introduce will also be based on the visitor pattern.
 
 
 ```{=html}
-<center><a href="./13-static-type-checking-and-inference#fold">Next: Chapter 13. Static Type Checking and Inference</a></center>
+<center><a href="./13-static-type-checking-and-inference">Next: Chapter 13. Static Type Checking and Inference</a></center>
 ```

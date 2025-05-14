@@ -3,10 +3,11 @@ title: "8. Second Pass: Code Generation • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 8</small></small><br/>Second Pass: Code Generation<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 8</small></small><br/>Second Pass: Code Generation</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \newpage
@@ -1348,5 +1349,5 @@ The baseline compiler is done.
 Now, onto *Part II*, where we will continue extending and expanding the compiler with new functionality.
 
 ```{=html}
-<center><a href="./09-introduction-to-part-2#fold">Next: Chapter 9. Introduction to Part II</a></center>
+<center><a href="./09-introduction-to-part-2">Next: Chapter 9. Introduction to Part II</a></center>
 ```

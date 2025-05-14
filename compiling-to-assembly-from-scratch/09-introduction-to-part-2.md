@@ -3,10 +3,11 @@ title: "9. Introduction to Part II • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 9</small></small><br/>Introduction to Part II<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 9</small></small><br/>Introduction to Part II</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \part{Compiler Extensions} 
@@ -44,5 +45,5 @@ We will start by introducing booleans, undefined, and then arrays.
 First, we will introduce them in an unsafe/untyped manner, and then we will apply static/dynamic treatment to them.
 
 ```{=html}
-<center><a href="./10-primitive-scalar-data-types#fold">Next: Chapter 10. Primitive Scalar Data Types</a></center>
+<center><a href="./10-primitive-scalar-data-types">Next: Chapter 10. Primitive Scalar Data Types</a></center>
 ```

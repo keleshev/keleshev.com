@@ -71,7 +71,6 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
   <h1>Namespacing Variants in ML</h1>
@@ -79,8 +78,6 @@
 
 <center style="margin: 25.46px;" >Vladimir Keleshev • 2015-04-12</center>
 
-<header id="title-block-header">
-</header>
 <p>When reading code written in OCaml or Standard ML, I keep seeing variant constructors having ad-hoc prefixes or suffixes used for namespacing.</p>
 <p>Here’s an example from <a href="http://www.amazon.com/Modern-Compiler-Implementation-Andrew-Appel/dp/0521607647">Modern Compiler Implementation in ML</a> (page 98):</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> operator = PlusOp | MinusOp | TimesOp | DivideOp</span></code></pre></div>

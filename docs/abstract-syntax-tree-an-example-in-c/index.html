@@ -71,7 +71,6 @@
   <![endif]-->
 </head>
 <body>
-  <span id="home-menu"><a title="Home" href="/">☰</a></span>
 
 
   <h1>Abstract Syntax Tree<br/><small><small>An Example in C</small></small></h1>
@@ -80,8 +79,6 @@
 
 <center style="margin: 25.46px;" >Vladimir Keleshev • 2022-06-20</center>
 
-<header id="title-block-header">
-</header>
 <p>In <a href="/one-pass-compiler-primer">a previous blog post</a>, we looked at a simple one-pass compiler written in C. Now, let’s look at how we can design an <em>abstract syntax tree</em> and work with it.</p>
 <p>An abstract syntax tree (or an AST) is a tree-shaped representation of source code that is convenient for a compiler to operate. A compiler might represent an expression like <code>4 + 2 * 10 + 3 * (5 + 1)</code> using a tree structure like this:</p>
 <figure>

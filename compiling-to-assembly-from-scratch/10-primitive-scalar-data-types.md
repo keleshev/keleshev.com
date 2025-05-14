@@ -3,10 +3,11 @@ title: "10. Primitive Scalar Data Types • Compiling to Assembly from Scratch"
 ---
 
 ```{=html}
-<h1>Compiling to Assembly<small><small><br/>from Scratch</small></small><br/></h1>
-<center><p> — <a href='./#table-of-contents'>Table of Contents</a> — </p></center>
-<span id="fold"> </span>
-<h1><br/><small><small>Chapter 10</small></small><br/>Primitive Scalar Data Types<br/><br/></h1>
+<header>
+<h1><small><small>Chapter 10</small></small><br/>Primitive Scalar Data Types</h1>
+<a href='./#table-of-contents'>Compiling to Assembly from Scratch</a>
+<br/>by <a href='/'>Vladimir Keleshev</a>
+</header>
 ```
 
 \newpage
@@ -90,5 +91,5 @@ Table: Summary of AST constructor signatures with examples
 +---------------------------------------------------------------+------------------+
                                                                                    
 ```{=html}
-<center><p><a href="./11-arrays-and-heap-allocation#fold">Next: Chapter 11. Arrays and Heap Allocation</a></p></center>
+<center><p><a href="./11-arrays-and-heap-allocation">Next: Chapter 11. Arrays and Heap Allocation</a></p></center>
 ```
