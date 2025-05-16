@@ -1,19 +1,13 @@
 ---
 title: Writing a Book with Pandoc, Make, and Vim — Vladimir Keleshev
+fancy-title: "Writing a Book<br/><small><small>with</small></small><br/> Pandoc, Make, and Vim"
+date: 2020-04-12
+cta: {book: true}
 ---
-
-
-<style> #home { position:absolute; line-height: inherit; } </style>
-
-<span id=home><a title=Home href=/>☰</a></span>
-
-<h1>Writing a Book<br/><small><small>with</small></small><br/> Pandoc, Make, and Vim</h1>
-
-<center>2020-04-12</center>
 
 As you might know,
 I'm writing a book called
-[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch-the-book).
+[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch/).
 Recently I
 [tweeted](https://twitter.com/keleshev/status/1246720964790046721)
 about my book-writing setup, and
@@ -26,7 +20,7 @@ But here it is, anyway.
 
 A screenshot:
 
-<a href=screenshot.png><img src=screenshot.png width=100% height=100% /></a>
+<a href="./screenshot.png"><img src="./screenshot.png" width="100%" height="100%" /></a>
 
 I'm on macOS, so I'm using the native
 full-screen split functionality.
@@ -99,11 +93,11 @@ I've been using [draw.io](https://draw.io)
 for various diagrams at work and for this blog.
 But for the book, I wanted to use something open-source,
 something reliable, something that would not
-*incredible journey* me over halfway through writing
+*incredible journey* me somewhere halfway through writing
 the book, leaving me without a critical tool.
 
 So I started searching, and imagine my surprise when
-I learn that draw.io is, in fact,
+I learned that draw.io is, in fact,
 [open-source](https://github.com/jgraph/drawio).
 That was a relief!
 
@@ -230,16 +224,17 @@ In fact, I use this option for all my editing
 in Vim for about a decade now.
 My first programming environment was
 Turbo Pascal, and this is exactly how the
-cursor works there, which I grew accustomed to.
+cursor worked there, which I grew accustomed to.
 
 When I open the editor I write `:!make open`
 to open the preview, and then use `:!!` to repeat
 that command.
 In fact, I have a shortcut that maps
-space bar to save current file and run previous command:
+the space bar to the combination of
+saving the current file and running the previous command:
 
 ```vim
-map &lt;Space&gt; :w&lt;Enter&gt;:!!&lt;Enter&gt;
+map <Space> :w<Enter>:!!<Enter>
 ```
 
 This *save-file-and-repeat-last-command* command is
@@ -247,61 +242,9 @@ is useful for other things, for example, running
 test suites.
 
 
-<center>⁂</center>
+* * *
 
 And that's about it.
 When I finish my book, I will write a new blog
 post about any significant changes to this process.
-[&#9632;](/ "Home")
 
-
-<center>
-
-
-⁂
-
-<style>
-#cover {
-  border: 1px solid black;
-  width: 500px;
-  color: black;
-  display: block;
-}
-
-</style>
-
-
-
-<h2>By now, you have probably heard that
-</br>
-I’m writing a book about compilers!</h2>
-
-
-<div id=cover >
-<a id=cover href=/compiling-to-assembly-from-scratch-the-book >
-
-<br/>
-
-<h1>Compiling to Assembly<br/><small>from Scratch<br/><small><em></em></small></small></h1>
-
-— the book —<br/>
-<br/>
-<br/>
-
-<img src=/dragon.png width=256 height=260 />
-
-<br/>
-<br/>
-<br/>
-
-
-<p>Vladimir Keleshev</p>
-
-<em>TypeScript — ARM — Summer 2020</em>
-<br/>
-<br/>
-
-</a>
-</div>
-
-</center>

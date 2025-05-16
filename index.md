@@ -40,7 +40,7 @@ Writing
 [One-pass Compiler Primer](/one-pass-compiler-primer) \
 [Standard IO—Under the Hood](/standard-io-under-the-hood) \
 [Verbose Regular Expressions in JavaScript](/verbose-regular-expressions-in-javascript) \
-[Writing a Book with Pandoc, Make, and Vim](/my-book-writing-setup) \
+[Writing a Book with Pandoc, Make, and Vim](/writing-a-book-with-pandoc-make-and-vim) \
 [EAX x86 Register—Meaning and History](/eax-x86-register-meaning-and-history) ★ \
 
 <span style="float:right">(2019)</span>

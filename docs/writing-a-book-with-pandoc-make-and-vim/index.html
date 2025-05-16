@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <meta name="dcterms.date" content="2020-04-12" />
+  <title>Writing a Book with Pandoc, Make, and Vim — Vladimir Keleshev</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+
+
+<header>
+  <h1>Writing a Book<br/><small><small>with</small></small><br/> Pandoc, Make, and Vim</h1>
+<a href="/">Vladimir Keleshev</a> • 2020-04-12
+</header>
+
+
+<p>As you might know, I’m writing a book called <a href="/compiling-to-assembly-from-scratch/">Compiling to Assembly from Scratch</a>. Recently I <a href="https://twitter.com/keleshev/status/1246720964790046721">tweeted</a> about my book-writing setup, and there was a lot of interest in the details of my setup. I’m only halfway through with writing the book (or, so I think), so my setup will likely to change as I go. But here it is, anyway.</p>
+<p>A screenshot:</p>
+<p><a href="./screenshot.png"><img src="./screenshot.png" width="100%" height="100%" /></a></p>
+<p>I’m on macOS, so I’m using the native full-screen split functionality. On the left, I have Terminal.app running Vim, and on the right, I have Preview.app showing—ahem—a preview. Both apps ship with macOS.</p>
+<p>I’m writing the book in Markdown, then use Pandoc to convert it to PDF and EPUB.</p>
+<h2 id="pandoc">Pandoc</h2>
+<p>I use <a href="https://pandoc.org/">Pandoc</a> as my Markdown processor. It is a great tool, written in Haskell, and available from most package managers. It converts from and to many different document formats. Still, I am mainly interested in PDF and EPUB for my book.</p>
+<p>While Pandoc supports CommonMark and GitHub-flavored Markdown, I am using the Pandoc dialect of Markdown. It has support for many extensions: footnotes, different styles of tables, math, etc.</p>
+<p>For example, the table style that I’m using in the screenshot allows changing column width and proportions by changing the Markdown column widths.</p>
+<p>Although I’m using Make to run Pandoc, here’s an equivalent shell command:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode txt"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>$ pandoc book.md -o book.pdf           \</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    --table-of-contents                \</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    --number-sections                  \</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    --pdf-engine=xelatex               \</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    --indented-code-classes=javascript \</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    --highlight-style=monochrome       \</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    -V mainfont=&quot;Palatino&quot;             \</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    -V documentclass=report            \</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    -V papersize=A5                    \</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    -V geometry:margin=1in</span></code></pre></div>
+<p>By default, to produce PDF, Pandoc converts the document to LaTeX first, then calls <code>pdflatex</code> to produce the PDF. Howerver, with <code>--pdf-engine=xelatex</code> I opted in to use XeTeX together with <code>xelatex</code> command to produce PDF.</p>
+<p>First, XeTeX allows to use Unicode characters in the source of the document. I’m quite accustomed to entering en-dash and em-dash and other special characters using option-key shortcuts on macOS. Second, XeTeX allows to use arbitrary system’s fonts, and that’s what I did with <em>Palatino</em>.</p>
+<p>I’ve set up some preliminary paper size and margin and LaTeX <code>documentclass</code>, but I will definitely be tweaking them before releasing the book.</p>
+<p>Producing EPUB with Pandoc also works fine, but I’m sure I will do more tweaking there as well:</p>
+<p><a href=epub.png><img src=epub.png width=100% height=100% /></a></p>
+<h2 id="figures">Figures</h2>
+<p>I’ve been using <a href="https://draw.io">draw.io</a> for various diagrams at work and for this blog. But for the book, I wanted to use something open-source, something reliable, something that would not <em>incredible journey</em> me somewhere halfway through writing the book, leaving me without a critical tool.</p>
+<p>So I started searching, and imagine my surprise when I learned that draw.io is, in fact, <a href="https://github.com/jgraph/drawio">open-source</a>. That was a relief!</p>
+<p><a href=drawio.png><img src=drawio.png width=100% height=100% /></a></p>
+<p>I’ve been using one big draw.io document so far and I exported individual figures to SVG by using <em>export selection</em> feature.</p>
+<p>SVG is well supported with EPUB, since EPUB is just glorified HTML and CSS under-the-hood. For PDF output, Pandoc requires to install <code>librsvg</code> (written in Rust) and handles the conversion transparently.</p>
+<h2 id="makefile">Makefile</h2>
+<p>Even though my book right now is written in a single Markdown file, I started using Make anyway from the get-go. I’m using my system’s build-in GNU Make. Here’s my Makefile:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode txt"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>.PHONY: phony</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>FIGURES = $(shell find . -name &#39;*.svg&#39;)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>PANDOCFLAGS =                        \</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  --table-of-contents                \</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  --pdf-engine=xelatex               \</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  --from=markdown                    \</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  --number-sections                  \</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  --indented-code-classes=javascript \</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  --highlight-style=monochrome       \</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  -V mainfont=&quot;Palatino&quot;             \</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  -V documentclass=report            \</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  -V papersize=A5                    \</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  -V geometry:margin=1in</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>all: phony output/book.pdf</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>output/%.pdf: %.md $(FIGURES) Makefile | output</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        pandoc $&lt; -o $@ $(PANDOCFLAGS)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>output/%.epub: %.md $(FIGURES) Makefile | output</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        pandoc $&lt; -o $@ $(PANDOCFLAGS)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>output:</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        mkdir ./output</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>clean: phony</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        rm -rf ./output</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>open: phony output/book.pdf</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        open output/book.pdf</span></code></pre></div>
+<p>A few things that are worth mentioning:</p>
+<p><code>Makefile</code> itself is a dependency of some rules. This is done so that if I change a font (or some other Pandoc flag), Make would pick it up and rebuild the target.</p>
+<p>The list of all figures (<code>*.svg</code> glob) is a dependency as well, to make sure that the book is rebuilt when a figure is updated.</p>
+<p>The build artifacts are stored in the <code>output</code> folder, which is an <a href="https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html">order-only prerequisite</a> (specified with “<code>| output</code>” syntax). This is useful because we don’t care about the timestamp of this directory, only that it exists.</p>
+<p>Running “<code>make open</code>” uses macOS <code>open</code> command (similar to <code>xdg-open</code> on Linux) to open the PDF in Preview.app. If it is already open, the Preview.app will refresh the existing window.</p>
+<p>I have a special “<code>.PHONY: phony</code>” rule, that allows me to write:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode txt"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>clean: phony</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>        rm -rf ./output</span></code></pre></div>
+<p>Instead of the usual:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode txt"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>.PHONY: clean</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>clean:</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        rm -rf ./output</span></code></pre></div>
+<p>Note that this trick can slow down huge Makefiles.</p>
+<p>To be honest, this is mostly just me flexing my knowledge of Make, rather than anything useful. A small build script could do just as well.</p>
+<h2 id="vim">Vim</h2>
+<p>I am using the version of Vim that ships with macOS, with minimal tuning. One <code>~/.vimrc</code> option worth mentioning here is <code>virtualedit</code>:</p>
+<pre class="vim"><code>set virtualedit=all</code></pre>
+<p>It allows to move the cursor past the last character. If you insert a new character there, it is automatically padded with spaces. It is easier to see it than to explain it:</p>
+<p><img src=virtualedit.gif width=100% height=100% /></p>
+<p>This is very useful for dealing with tables and much more! In fact, I use this option for all my editing in Vim for about a decade now. My first programming environment was Turbo Pascal, and this is exactly how the cursor worked there, which I grew accustomed to.</p>
+<p>When I open the editor I write <code>:!make open</code> to open the preview, and then use <code>:!!</code> to repeat that command. In fact, I have a shortcut that maps the space bar to the combination of saving the current file and running the previous command:</p>
+<pre class="vim"><code>map &lt;Space&gt; :w&lt;Enter&gt;:!!&lt;Enter&gt;</code></pre>
+<p>This <em>save-file-and-repeat-last-command</em> command is is useful for other things, for example, running test suites.</p>
+<hr />
+<p>And that’s about it. When I finish my book, I will write a new blog post about any significant changes to this process.</p>
+
+
+      <br/>
+  <div style="text-align: center; line-height: 0px">
+      <a href="/compiling-to-assembly-from-scratch"
+         style="border-bottom: none; font-size: 0">
+       <img alt="Compiling to Assembly from Scratch, the book by Vladimir Keleshev"
+            src="/compiling-to-assembly-from-scratch.jpg"
+            style="box-shadow: rgb(0, 0, 0) 0px 0px 46px -23px"
+            width=200 height=300 />
+      </a>
+  </div>
+  <hr class="fleuron" />
+</body>
+</html>
