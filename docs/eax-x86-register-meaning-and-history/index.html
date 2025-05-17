@@ -1,283 +1,127 @@
-<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>EAX x86 Register: Meaning and History</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="icon" sizes="109x109" href="/favicon.gif" />
-    </head>
-    <body>
-        <p><style> #home { position:absolute; line-height: inherit; } </style></p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
 
-<p><span id=home><a title=Home href=/>☰</a></span></p>
+  <meta name="dcterms.date" content="2020-03-20" />
+  <title>EAX x86 Register: Meaning and History</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
 
-<h1>
-EAX x86 Register<br/><small><small>Meaning and History</small></small></h1>
 
-<p><center>Vladimir Keleshev • 2020-03-20</center></p>
+<header>
+  <h1>EAX x86 Register<br/><small><small>Meaning and History</small></small></h1>
+<a href="/">Vladimir Keleshev</a> • 2020-03-20
+</header>
 
-<p>Usually, x86 tutorials
-don&#8217;t spend much time explaining
-the historical perspective of design and naming decisions.
-When learning x86 assembly,
-you&#8217;re usually told something along the lines:
-<em>Here&#8217;s <code>EAX</code>. It&#8217;s a register. Use it.</em></p>
 
-<p><big>So, what exactly do those letters stand for? E–A–X.      </big></p>
-
-<p>I&#8217;m afraid there&#8217;s no short answer!
-We&#8217;ll have to go back to 1972…</p>
-
-<h2>8008</h2>
-
-<p>In 1972, after an odd sequence of events,
-Intel introduced the world&#8217;s first 8-bit microprocessor,
-the <em>8008</em>.
-Back then, Intel was primarily a vendor of memory chips.
-The 8008 was commissioned by the Computer Terminal Corporation (CTC)
-for their new Datapoint 2200 programmable terminal.
-But the chip was delayed and did not meet CTC expectations.
-So Intel added a few general-purpose instructions to it
-and marketed the chip to other customers.</p>
-
+<p>Usually, x86 tutorials don’t spend much time explaining the historical perspective of design and naming decisions. When learning x86 assembly, you’re usually told something along the lines: <em>Here’s <code>EAX</code>. It’s a register. Use it.</em></p>
+<p>So, what exactly do those letters stand for? E–A–X.</p>
+<p>I’m afraid there’s no short answer! We’ll have to go back to 1972…</p>
+<h2 id="section">8008</h2>
+<p>In 1972, after an odd sequence of events, Intel introduced the world’s first 8-bit microprocessor, the <em>8008</em>. Back then, Intel was primarily a vendor of memory chips. The 8008 was commissioned by the Computer Terminal Corporation (CTC) for their new Datapoint 2200 programmable terminal. But the chip was delayed and did not meet CTC expectations. So Intel added a few general-purpose instructions to it and marketed the chip to other customers.</p>
 <p>8008 had <em>seven</em> 8-bit registers:</p>
-
-<p><center><img src=8008.svg></center></p>
-
+<center>
+<img src=8008.svg>
+</center>
 <blockquote>
-  <p><code>A</code> stood for <em>accumulator</em>, which was an implicit
-  operand and return value of the arithmetic and logical operations.</p>
+<p>“<code>A</code>” stood for <em>accumulator</em>, which was an implicit operand and return value of the arithmetic and logical operations.</p>
 </blockquote>
-
-<p>You might think—<em>gee, seven is a very odd number of registers</em>—and
-would be right!
-The registers were encoded as three bits of the instruction,
-so it allowed for eight combinations.
-The last one was for a pseudo-register called <code>M</code>.
-It stood for <em>memory</em>.
-<code>M</code> referred to the memory location
-pointed by the combination of registers <code>H</code> and <code>L</code>.
-<code>H</code> stood for <em>high-order</em> byte, while <code>L</code> stood for
-<em>low-order</em> byte of the memory address.
-That was the only available way to reference memory in 8008.</p>
-
-<p>So, <code>A</code> was an accumulator, <code>H</code> and <code>L</code> were also used for
-addressing memory. However, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> were
-completely generic and interchangeable.</p>
-
-<h2>8086</h2>
-
-<p>In 1979, Intel was already a microprocessor company,
-and their flagship processor iAPX 432 is delayed.
-So as a stop-gap measure, they introduce 8086,
-a 16-bit microprocessor
-derived from 8080, which was itself derived from 8008.</p>
-
-<p>To leverage its existing customer base, Intel made 8086
-software-compatible down to 8008.
-A simple translator program would translate
-from 8008 assembly to 8086 assembly.
-For that to work well, 8086 instruction set architecture
-had to map well to 8008, inheriting many design decisions.</p>
-
-<p>8086 had eight 16-bit registers and eight 8-bit registers,
-and they overlapped as follows:</p>
-
-<p><center><img src=8086.svg></center></p>
-
-<p>8086 instructions had a bit flag that specified
-whether the three-bit encoding of a register
-referred to one of eight 8-bit registers,
-or to one of eight 16-bit registers.</p>
-
-<p>As you can see from the figure above,
-data in the first four 16-bit registers could
-also be accessed by one of the eight 8-bit registers.</p>
-
+<p>You might think—<em>gee, seven is a very odd number of registers</em>—and would be right! The registers were encoded as three bits of the instruction, so it allowed for eight combinations. The last one was for a pseudo-register called <code>M</code>. It stood for <em>memory</em>. <code>M</code> referred to the memory location pointed by the combination of registers <code>H</code> and <code>L</code>. <code>H</code> stood for <em>high-order</em> byte, while <code>L</code> stood for <em>low-order</em> byte of the memory address. That was the only available way to reference memory in 8008.</p>
+<p>So, <code>A</code> was an accumulator, <code>H</code> and <code>L</code> were also used for addressing memory. However, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> were completely generic and interchangeable.</p>
+<h2 id="section-1">8086</h2>
+<p>In 1979, Intel was already a microprocessor company, and their flagship processor iAPX 432 is delayed. So as a stop-gap measure, they introduce 8086, a 16-bit microprocessor derived from 8080, which was itself derived from 8008.</p>
+<p>To leverage its existing customer base, Intel made 8086 software-compatible down to 8008. A simple translator program would translate from 8008 assembly to 8086 assembly. For that to work well, 8086 instruction set architecture had to map well to 8008, inheriting many design decisions.</p>
+<p>8086 had eight 16-bit registers and eight 8-bit registers, and they overlapped as follows:</p>
+<center>
+<img src=8086.svg>
+</center>
+<p>8086 instructions had a bit flag that specified whether the three-bit encoding of a register referred to one of eight 8-bit registers, or to one of eight 16-bit registers.</p>
+<p>As you can see from the figure above, data in the first four 16-bit registers could also be accessed by one of the eight 8-bit registers.</p>
 <blockquote>
-  <p><code>AX</code> was a 16-bit accumulator, while <code>AH</code> and <code>AL</code>
-  could be thought of as 8-bit registers on their own
-  or as a way to access the <em>high-order</em> and the <em>low-order</em>
-  bytes of <code>AX</code>.</p>
-
-  <p>The <code>X</code> in <code>AX</code> meant to be a placeholder that stood for both
-  <code>H</code> and <code>L</code>.</p>
-
-  <p>This is in a way similar to how much later
-  the &#8220;x&#8221; in x86 was meant to refer to 8086, 80186, 80286, etc.</p>
+<p><code>AX</code> was a 16-bit accumulator, while <code>AH</code> and <code>AL</code> could be thought of as 8-bit registers on their own or as a way to access the <em>high-order</em> and the <em>low-order</em> bytes of <code>AX</code>.</p>
+<p>The <code>X</code> in <code>AX</code> meant to be a placeholder that stood for both <code>H</code> and <code>L</code>.</p>
+<p>This is in a way similar to how much later the “x” in x86 was meant to refer to 8086, 80186, 80286, etc.</p>
 </blockquote>
-
-<p>Since 8008 had seven 8-bit registers,
-they could be mapped well to the eight 8086 registers,
-with one to spare.</p>
-
-<p>The <code>M</code> pseudo-register was not needed anymore
-since 8086 allowed for many memory addressing modes.
-Hence, it freed an encoding for an additional register.</p>
-
-<p>In the following figure you can see how exactly
-the 8008 registers were mapped to the 8086 ones:</p>
-
-<p><center><img src=8008vs8086.svg></center></p>
-
+<p>Since 8008 had seven 8-bit registers, they could be mapped well to the eight 8086 registers, with one to spare.</p>
+<p>The <code>M</code> pseudo-register was not needed anymore since 8086 allowed for many memory addressing modes. Hence, it freed an encoding for an additional register.</p>
+<p>In the following figure you can see how exactly the 8008 registers were mapped to the 8086 ones:</p>
+<center>
+<img src=8008vs8086.svg>
+</center>
 <!--center><img src=ax.svg></center-->
-
-<p>Even though many arithmetic and logical operations
-could work on any of these registers,
-none of the registers were truly generic at this point.
-Each had some instructions introduced that worked for
-one of the registers but didn&#8217;t work for others.
-The mnemonics are: <code>BX</code> is <em>base register</em>,
-<code>CX</code> is <em>count register</em>, <code>DX</code> is <em>data register</em>,
-and <code>AX</code> is still the <em>accumulator</em>.</p>
-
-<p>The new
-<code>SP</code> is <em>stack pointer</em>, <code>BP</code> is <em>base pointer</em>,
-<code>SI</code> is <em>source index</em>, <code>DI</code> is <em>destination index</em>.
-But we won&#8217;t go into details about them here.</p>
-
-<p>8086 also introduced the segment registers, but they
-were very much a separate beast.
-Segmented architecture deserves a story on its own,
-as it is the result of maintaining backward-compatibility
-with 8080.</p>
-
+<p>Even though many arithmetic and logical operations could work on any of these registers, none of the registers were truly generic at this point. Each had some instructions introduced that worked for one of the registers but didn’t work for others. The mnemonics are: <code>BX</code> is <em>base register</em>, <code>CX</code> is <em>count register</em>, <code>DX</code> is <em>data register</em>, and <code>AX</code> is still the <em>accumulator</em>.</p>
+<p>The new <code>SP</code> is <em>stack pointer</em>, <code>BP</code> is <em>base pointer</em>, <code>SI</code> is <em>source index</em>, <code>DI</code> is <em>destination index</em>. But we won’t go into details about them here.</p>
+<p>8086 also introduced the segment registers, but they were very much a separate beast. Segmented architecture deserves a story on its own, as it is the result of maintaining backward-compatibility with 8080.</p>
 <!--*It's 1979, and by all accounts, 8086 instruction set
 architecture is already a mess.*-->
-
 <!--em>
-To sum up, <code>AX</code> is the 16 bit accumulator,
-which lower byte can be accessed as <code>AL</code>, and higher byte—as <code>AH</code>.
+To sum up, `AX` is the 16 bit accumulator,
+which lower byte can be accessed as `AL`, and higher byte—as `AH`.
 </em-->
-
-<h2>x86</h2>
-
-<p>In 1985 Intel introduced 80386, the first 32-bit processor
-in the x86 line.
-An early batch of processors had a defect
-in one of the 32-bit operations.
-They were marked as <em>16-BIT S/W ONLY</em> and sold anyway.</p>
-
-<p>Many new features were introduced, but 80386
-continued to be <em>(mostly)</em> binary-compatible down to 8086.</p>
-
-<p>The main registers were <em>extended</em> to 32 bits by
-adding an <code>E</code> prefix:</p>
-
-<p><center><img src=eax.svg></center></p>
-
+<h2 id="x86">x86</h2>
+<p>In 1985 Intel introduced 80386, the first 32-bit processor in the x86 line. An early batch of processors had a defect in one of the 32-bit operations. They were marked “<small>16-BIT S/W ONLY</small>” and sold anyway.</p>
+<p>Many new features were introduced, but 80386 continued to be <em>(mostly)</em> binary-compatible down to 8086.</p>
+<p>The main registers were <em>extended</em> to 32 bits by adding an <code>E</code> prefix:</p>
+<center>
+<img src=eax.svg>
+</center>
 <blockquote>
-  <p><code>EAX</code> stood for <em>extended</em> <code>AX</code>.
-  And <code>AX</code> now refers to the lower half of <code>EAX</code>,
-  while <code>AH</code> and <code>AL</code> continue to refer to the two <code>AX</code> bytes.</p>
+<p><code>EAX</code> stood for <em>extended</em> <code>AX</code>. And <code>AX</code> now refers to the lower half of <code>EAX</code>, while <code>AH</code> and <code>AL</code> continue to refer to the two <code>AX</code> bytes.</p>
 </blockquote>
-
-<p>And that&#8217;s how <code>EAX</code> got its name.</p>
-
-<p><em>But wait, there&#8217;s more to the story!</em></p>
-
-<h2>x86-64</h2>
-
-<p>In 2003 AMD effectively takes over the architectural leadership
-and introduces
-the first 64-bit processor in the x86 lineage.
-In <em>legacy mode</em>, it is backward-compatible down to 8086.</p>
-
+<p>And that’s how <code>EAX</code> got its name.</p>
+<p><em>But wait, there’s more to the story!</em></p>
+<h2 id="x86-64">x86-64</h2>
+<p>In 2003 AMD effectively takes over the architectural leadership and introduces the first 64-bit processor in the x86 lineage. In <em>legacy mode</em>, it is backward-compatible down to 8086.</p>
 <p>The eight main registers are extended to 64 bits.</p>
-
-<p>The extended registers get an <code>R</code> prefix that replaces
-the <code>E</code> prefix. So the accumulator is now referred to as <code>RAX</code>:</p>
-
-<p><center><img src=rax.svg></center></p>
-
+<p>The extended registers get an <code>R</code> prefix that replaces the <code>E</code> prefix. So the accumulator is now referred to as <code>RAX</code>:</p>
+<center>
+<img src=rax.svg>
+</center>
 <p><em>Why <code>R</code>?</em></p>
-
-<p>Well, AMD wanted to streamline the register handling.
-They introduced eight new registers called <code>R8</code> to <code>R15</code>.
-They even discussed calling the extensions of the
-existing eight registers as <code>R0</code> to <code>R7</code>.
-But they recognized that many instructions
-have mnemonics that refer to one of the register
-letters like <code>A</code> or <code>B</code>.
-So they kept the
-original names, replacing <code>E</code> with <code>R</code>.
-That also provided at least some
-consistency with the new <code>R8</code>–<code>R15</code>.</p>
-
+<p>Well, AMD wanted to streamline the register handling. They introduced eight new registers called <code>R8</code> to <code>R15</code>. They even discussed calling the extensions of the existing eight registers as <code>R0</code> to <code>R7</code>. But they recognized that many instructions have mnemonics that refer to one of the register letters like <code>A</code> or <code>B</code>. So they kept the original names, replacing <code>E</code> with <code>R</code>. That also provided at least some consistency with the new <code>R8</code>–<code>R15</code>.</p>
 <blockquote>
-  <p>So <code>R</code> in <code>RAX</code> stood for <em>register</em>, and was a way to unify
-  the naming to be more consistent with the new <code>R8</code>–<code>R15</code> registers.</p>
+<p>So <code>R</code> in <code>RAX</code> stood for <em>register</em>, and was a way to unify the naming to be more consistent with the new <code>R8</code>–<code>R15</code> registers.</p>
 </blockquote>
-
-<p>The new registers also got their &#8220;narrow&#8221; versions.
-Take <code>R15</code>, for example:</p>
-
-<p><center><img src=r15.svg></center></p>
-
-<p><center>⁂</center></p>
-
-<p>And that, folks, was a quick history of x86 accumulator!
-From an 8-bit <code>A</code> of 8008, to 16-bit <code>AX</code> of 8086,
-to 32-bit <code>EAX</code> of 80386, to 64-bit <code>RAX</code>.</p>
-
-<h2>Correction</h2>
-
-<p>An earlier version of this blog post stated that the <code>X</code> in <code>AX</code> stood
-for e<em>X</em>tended.</p>
-
-<p>Some of you pointed out that this was not quite right
-and that the <code>X</code> stood, in a way, for &#8220;pair<span><span style="position: absolute">.</span>&rdquo;</span> I must admit that,
-unlike for the rest of the article, I couldn&#8217;t find a reference that
-authoritatively described the meaning of <code>X</code>. So, I decided to reach
-out to Dr. Stephen Morse, the architect of 8086.</p>
-
+<p>The new registers also got their “narrow” versions. Take <code>R15</code>, for example:</p>
+<center>
+<img src=r15.svg>
+</center>
+<hr />
+<p>And that, folks, was a quick history of the x86 accumulator! From an 8-bit <code>A</code> of 8008, to 16-bit <code>AX</code> of 8086, to 32-bit <code>EAX</code> of 80386, to 64-bit <code>RAX</code>.</p>
+<h2 id="correction">Correction</h2>
+<p>An earlier version of this blog post stated that the <code>X</code> in <code>AX</code> stood for e<em>X</em>tended.</p>
+<p>Some of you pointed out that this was not quite right and that the <code>X</code> stood, in a way, for “pair”. I must admit that, unlike for the rest of the article, I couldn’t find a reference that authoritatively described the meaning of <code>X</code>. So, I decided to reach out to Dr. Stephen Morse, the architect of 8086.</p>
 <p>With his permission, I include the response:</p>
-
 <blockquote>
-  <p><em>Vladimir,</em></p>
-
-  <p><em>Your question is certainly pushing my memory about decisions that were
-  made over 40 years ago.  So the following is the best of my recollection
-  and not necessarily 100% accurate.</em></p>
-
-  <p><em>Prior to the 8086 the registers were single letters, e.g., A, B, C, D.
-  Each was an 8-bit register.   The 8086 had 16-bit registers that could
-  be referenced either 8-bits at a time or all 16-bits at once. For
-  example, we could reference the 8 high-order bits of the A register, the
-  8 low-order bits of the A register, or the entire 16 bits of the A
-  register.  The nomenclature of the first two were chosen to be AL and
-  AH, where the L/H designated the low-order or the high order half.  Now
-  we needed a term to designate the full 16 bits.  So the letter X was
-  selected.  The X was simply an arbitrary letter that combined both L and
-  H &#8211; sort of like the use of X in algebra to designate the unknown.
-  There really wasn&#8217;t that much thought given as to what X stood for (if
-  anything) &#8211; it was just a letter that was needed to identify the
-  General Registers (AX, BX, CX, DX), as opposed to the Pointer and Index
-  Registers (SP, BP, SI, DI), and the Segment Registers (CS, DS, ES, SS).</em></p>
-
-  <p><em>&#8211; Steve Morse</em></p>
+<p><em>Vladimir,</em></p>
+<p><em>Your question is certainly pushing my memory about decisions that were made over 40 years ago. So the following is the best of my recollection and not necessarily 100% accurate.</em></p>
+<p><em>Prior to the 8086 the registers were single letters, e.g., A, B, C, D. Each was an 8-bit register. The 8086 had 16-bit registers that could be referenced either 8-bits at a time or all 16-bits at once. For example, we could reference the 8 high-order bits of the A register, the 8 low-order bits of the A register, or the entire 16 bits of the A register. The nomenclature of the first two were chosen to be AL and AH, where the L/H designated the low-order or the high order half. Now we needed a term to designate the full 16 bits. So the letter X was selected. The X was simply an arbitrary letter that combined both L and H – sort of like the use of X in algebra to designate the unknown. There really wasn’t that much thought given as to what X stood for (if anything) – it was just a letter that was needed to identify the General Registers (AX, BX, CX, DX), as opposed to the Pointer and Index Registers (SP, BP, SI, DI), and the Segment Registers (CS, DS, ES, SS).</em></p>
+<p><em>– Steve Morse</em></p>
 </blockquote>
+<h2 id="references">References</h2>
+<p><a href="https://stevemorse.org/8086history/8086history.pdf">Intel Microprocessors: 8008 to 8086</a> by Stephen Morse.</p>
 
-<h2>References</h2>
 
-<p><a href="https://stevemorse.org/8086history/8086history.pdf">Intel Microprocessors: 8008 to 8086</a>
-by Stephen Morse. <a href="/" title="Home">&#9632;</a></p>
-
-<p><style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style></p>
-
-<p><center> ⁂ </center></p>
-
-<p><center></p>
-
-<p><em>If you liked this blog post, check out my book,<br/>Compiling to Assembly from Scratch:</em></p>
-
-<p><a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></a></p>
-
-<p><em>TypeScript — ARM — September 2020</em></p>
-
-<p></center></p>
-
-<p><center><br/><br/>  </center></p>
-
-    </body>
+  <hr class="fleuron" />
+</body>
 </html>

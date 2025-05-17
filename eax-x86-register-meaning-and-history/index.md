@@ -1,16 +1,9 @@
 ---
-title: EAX x86 Register: Meaning and History
+title: "EAX x86 Register: Meaning and History"
+fancy-title: "EAX x86 Register<br/><small><small>Meaning and History</small></small>"
+date: 2020-03-20
 ---
 
-
-<style> #home { position:absolute; line-height: inherit; } </style>
-
-<span id=home><a title=Home href=/>☰</a></span>
-
-<h1>
-EAX x86 Register<br/><small><small>Meaning and History</small></small></h1>
-
-<center>Vladimir Keleshev • 2020-03-20</center>
 
 Usually, x86 tutorials
 don't spend much time explaining
@@ -19,7 +12,7 @@ When learning x86 assembly,
 you're usually told something along the lines:
 *Here's `EAX`. It's a register. Use it.*
 
-<big>So, what exactly do those letters stand for? E–A–X.      </big>
+So, what exactly do those letters stand for? E–A–X.
 
 I'm afraid there's no short answer!
 We'll have to go back to 1972…
@@ -40,7 +33,7 @@ and marketed the chip to other customers.
 
 <center><img src=8008.svg></center>
 
-> `A` stood for *accumulator*, which was an implicit
+> "`A`" stood for *accumulator*, which was an implicit
 > operand and return value of the arithmetic and logical operations.
 
 You might think—*gee, seven is a very odd number of registers*—and
@@ -149,7 +142,7 @@ In 1985 Intel introduced 80386, the first 32-bit processor
 in the x86 line.
 An early batch of processors had a defect
 in one of the 32-bit operations.
-They were marked as *16-BIT S/W ONLY* and sold anyway.
+They were marked "<small>16-BIT S/W ONLY</small>" and sold anyway.
 
 Many new features were introduced, but 80386
 continued to be *(mostly)* binary-compatible down to 8086.
@@ -206,9 +199,9 @@ Take `R15`, for example:
 
 <center><img src=r15.svg></center>
 
-<center>⁂</center>
+* * *
 
-And that, folks, was a quick history of x86 accumulator!
+And that, folks, was a quick history of the x86 accumulator!
 From an 8-bit `A` of 8008, to 16-bit `AX` of 8086,
 to 32-bit `EAX` of 80386, to 64-bit `RAX`.
 
@@ -253,25 +246,6 @@ With his permission, I include the response:
 ## References
 
 [Intel Microprocessors: 8008 to 8086][MORSE]
-by Stephen Morse. [&#9632;](/ "Home")
+by Stephen Morse.
 
-
-
-
-
-
-
-
-<style> #home { position: absolute; line-height: inherit; } #cover { box-shadow: 0px 0px 46px -23px; } #excerpt { box-shadow: black 0 0 46px -23px; } #excerpt:hover { border-bottom: 0 !important; }</style>
-
-<center> ⁂ </center>
-
-<center>
-<p><em>If you liked this blog post, check out my book,<br/>Compiling to Assembly from Scratch:</em></p>
-<a id=excerpt href=/compiling-to-assembly-from-scratch><img id=excerpt alt=compiling-to-assembly-from-scratch src=/compiling-to-assembly-from-scratch.jpg width=200 height=300 /></a>
-<p><em>TypeScript — ARM — September 2020</em></p>
-</center>
-
-
-<center><br/><br/>  </center>
 
