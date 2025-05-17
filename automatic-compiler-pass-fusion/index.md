@@ -1,16 +1,8 @@
 ---
 title: Automatic Compiler Pass Fusion
+fancy-title: Automatic Compiler Pass Fusion
+date: 2019-09-22
 ---
-
-<style> #home { position: absolute; line-height: inherit; } </style>
-
-<span id=home><a title=Home href=/>☰</a></span>
-
-<h1>Automatic Compiler Pass Fusion</h1>
-
-<center>2019-09-22</center>
-
-
 
 
 On the one hand, when we write a compiler we want to split it into many
@@ -28,6 +20,7 @@ that work, including the toy language and the AST type, that we refer here as
 
 The language is as follows:
 
+```{=html}
 <p style="padding-left: 3.0em; text-indent: -1.25em" >
 <em>e&nbsp;</em> → <code>(</code><em>e</em><code>)</code><br/>
   |<code> ()</code> <br/>
@@ -39,6 +32,7 @@ The language is as follows:
   |<b><code> let </code></b><em>id</em><code> = </code><em>e</em><b><code> in </code></b><em>e</em><br/>
   |<b><code> if </code></b><em>e</em><b><code> then </code></b><em>e</em><b><code> else </code></b><em>e</em>
 </p>
+```
 
 Here is the type we use to represent its syntax:
 
@@ -69,29 +63,31 @@ too.
 
 ## Transformations
 
+<!--
 > If you’ve read this blog before, then you are familiar with these
 > transformations. We've used them before.
+-->
 
 Our first transformation is *dead code elimination*. It removes redundant
 branches of the if statement, in case the condition is hard-coded:
 
 ```ocaml
-if true  then x else y  ⇒  x
-if false then x else y  ⇒  y
+if true  then x else y  ⤇  x
+if false then x else y  ⤇  y
 ```
 
 Next one is *constant propagation* where we compute statically
 known fractions, for example:
 
 ```ocaml
-42 / 2  ⇒  21
+42 / 2  ⤇  21
 ```
 
 Next is *removing redundant let*, in case a let binding is
 used immediately in its own body:
 
 ```ocaml
-let x = y in x  ⇒  y
+let x = y in x  ⤇  y
 ```
 
 ## No Fusion
@@ -133,9 +129,6 @@ module Not_fused = struct
       (Constant_propagation.pass
         (Dead_code_elimination.pass t))
 end
-```
-```ocaml
-
 ```
 
 In the end, we combined the passes using function composition.
@@ -229,9 +222,6 @@ module Fused = struct
           (map pass)))) t
 end
 ```
-```ocaml
-
-```
 
 Here, each sub-pass, instead of being directly recursive, relies on open
 recursion. Each takes two parameters: `first_pass` and `next_pass`. If none of
@@ -313,16 +303,7 @@ from one AST to a different one.
 
 The passes we discussed used disjoint patterns.
 It would be interesting to see if this could be adapted for
-passes with overlapping patterns.  [&#9632;](/ "Home")
+passes with overlapping patterns.
 
 [gist]: https://gist.github.com/keleshev/36ea8fd1cd27995807ab49c4da04cc67
-
-
-<center markdown="1">
-
-⁂
-
-<em>Follow me on <a href="https://twitter.com/keleshev/">Twitter</a></em>
-</center>
-
 

@@ -1,35 +1,87 @@
-<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Automatic Compiler Pass Fusion</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="icon" sizes="109x109" href="/favicon.gif" />
-    </head>
-    <body>
-        <p><style> #home { position: absolute; line-height: inherit; } </style></p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
 
-<p><span id=home><a title=Home href=/>☰</a></span></p>
+  <meta name="dcterms.date" content="2019-09-22" />
+  <title>Automatic Compiler Pass Fusion</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { font-weight: bold; } /* Alert */
+    code span.an { font-style: italic; } /* Annotation */
+    code span.cf { font-weight: bold; } /* ControlFlow */
+    code span.co { font-style: italic; } /* Comment */
+    code span.cv { font-style: italic; } /* CommentVar */
+    code span.do { font-style: italic; } /* Documentation */
+    code span.dt { text-decoration: underline; } /* DataType */
+    code span.er { font-weight: bold; } /* Error */
+    code span.in { font-style: italic; } /* Information */
+    code span.kw { font-weight: bold; } /* Keyword */
+    code span.pp { font-weight: bold; } /* Preprocessor */
+    code span.wa { font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
 
-<h1>Automatic Compiler Pass Fusion</h1>
 
-<p><center>2019-09-22</center></p>
+<header>
+  <h1>Automatic Compiler Pass Fusion</h1>
+<a href="/">Vladimir Keleshev</a> • 2019-09-22
+</header>
 
-<p>On the one hand, when we write a compiler we want to split it into many
-compiler passes to make each pass more tractable and testable. On the other
-hand, we want to minimize the number of AST traversals to improve performance.
-Automatic pass fusion is about combining several passes into one traversal to
-address both concerns. This article presents one way to do that.</p>
 
-<p>A previous post,
-<a href="/map-as-a-recursion-scheme-in-ocaml">map as a recursion scheme</a>,
-showed how to use the map function
-to reduce boilerplate when writing compiler passes. In this post, we build upon
-that work, including the toy language and the AST type, that we refer here as
-<code>t</code>.</p>
-
+<p>On the one hand, when we write a compiler we want to split it into many compiler passes to make each pass more tractable and testable. On the other hand, we want to minimize the number of AST traversals to improve performance. Automatic pass fusion is about combining several passes into one traversal to address both concerns. This article presents one way to do that.</p>
+<p>A previous post, <a href="/map-as-a-recursion-scheme-in-ocaml">map as a recursion scheme</a>, showed how to use the map function to reduce boilerplate when writing compiler passes. In this post, we build upon that work, including the toy language and the AST type, that we refer here as <code>t</code>.</p>
 <p>The language is as follows:</p>
-
 <p style="padding-left: 3.0em; text-indent: -1.25em" >
 <em>e&nbsp;</em> → <code>(</code><em>e</em><code>)</code><br/>
   |<code> ()</code> <br/>
@@ -41,279 +93,161 @@ that work, including the toy language and the AST type, that we refer here as
   |<b><code> let </code></b><em>id</em><code> = </code><em>e</em><b><code> in </code></b><em>e</em><br/>
   |<b><code> if </code></b><em>e</em><b><code> then </code></b><em>e</em><b><code> else </code></b><em>e</em>
 </p>
-
 <p>Here is the type we use to represent its syntax:</p>
-
-<pre><b>type </b>t =
-  | Unit
-  | Boolean <b>of </b>bool
-  | Number <b>of </b>int
-  | Id <b>of </b>string
-  | Divide <b>of </b>t * t
-  | Sequence <b>of </b>t * t
-  | Let <b>of </b>{id: string; value: t; body: t}
-  | If <b>of </b>{conditional: t; consequence: t; alternative: t}
-</pre>
-
-<h2>Overview</h2>
-
-<p>We’ll take three language transformations to create motivation for our passes.
-Then we’ll implement them in three different ways:</p>
-
+<div class="sourceCode" id="cb1"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> t =</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  | Unit</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  | Boolean <span class="kw">of</span> <span class="dt">bool</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  | Number <span class="kw">of</span> <span class="dt">int</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  | Id <span class="kw">of</span> <span class="dt">string</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  | Divide <span class="kw">of</span> t * t</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  | Sequence <span class="kw">of</span> t * t</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  | Let <span class="kw">of</span> {id: <span class="dt">string</span>; value: t; body: t}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  | If <span class="kw">of</span> {conditional: t; consequence: t; alternative: t}</span></code></pre></div>
+<h2 id="overview">Overview</h2>
+<p>We’ll take three language transformations to create motivation for our passes. Then we’ll implement them in three different ways:</p>
 <ul>
 <li>First, as three separate passes doing three traversals.</li>
 <li>Then, as one pass that is fused manually.</li>
 <li>Last, we’ll try our automatic fusion technique.</li>
 </ul>
-
-<p>As we go, we’ll compare the code, and in the end, we’ll compare the performance
-too.</p>
-
-<h2>Transformations</h2>
-
-<blockquote>
-  <p>If you’ve read this blog before, then you are familiar with these
-  transformations. We&#8217;ve used them before.</p>
-</blockquote>
-
-<p>Our first transformation is <em>dead code elimination</em>. It removes redundant
-branches of the if statement, in case the condition is hard-coded:</p>
-
-<pre><b>if </b><b>true  </b><b>then </b>x <b>else </b>y  ⇒  x
-<b>if </b><b>false </b><b>then </b>x <b>else </b>y  ⇒  y
-</pre>
-
-<p>Next one is <em>constant propagation</em> where we compute statically
-known fractions, for example:</p>
-
-<pre>42 / 2  ⇒  21
-</pre>
-
-<p>Next is <em>removing redundant let</em>, in case a let binding is
-used immediately in its own body:</p>
-
-<pre><b>let </b>x = y <b>in </b>x  ⇒  y
-</pre>
-
-<h2>No Fusion</h2>
-
-<p>First, let&#8217;s implement the three passes separately, using
-the map function
-as the recursion scheme.</p>
-
-<pre><b>module </b>Not_fused = <b>struct
-  </b><b>module </b>Dead_code_elimination = <b>struct
-    </b><b>let </b><b>rec </b>pass = <b>function
-      </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
-          pass consequence
-      | If {conditional=Boolean <b>false</b>; alternative; _} ->
-          pass alternative
-      | other ->
-          map pass other
-  <b>end
-
-  </b><b>module </b>Constant_propagation = <b>struct
-    </b><b>let </b><b>rec </b>pass = <b>function
-      </b>| Divide (Number n, Number m) when m <> 0 ->
-          pass (Number (n / m))
-      | other ->
-          map pass other
-  <b>end
-
-  </b><b>module </b>Remove_redundant_let = <b>struct
-    </b><b>let </b><b>rec </b>pass = <b>function
-      </b>| Let {name; value; body=Name n} when n = name ->
-          pass value
-      | other ->
-          map pass other
-  <b>end
-
-  </b><b>let </b>pass t =
-    Remove_redundant_let.pass
-      (Constant_propagation.pass
-        (Dead_code_elimination.pass t))
-<b>end
-</b></pre>
-<pre>
-</pre>
-
-<p>In the end, we combined the passes using function composition.</p>
-
-<h2>Manual Fusion</h2>
-
-<p>Now, let&#8217;s try to combine the three passes into a single traversal manually.</p>
-
-<pre><b>module </b>Manually_fused = <b>struct
-  </b><b>let </b><b>rec </b>pass = <b>function
-    </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
-        pass consequence
-    | If {conditional=Boolean <b>false</b>; alternative; _} ->
-        pass alternative
-    | Divide (Number n, Number m) when m <> 0 ->
-        pass (Number (n / m))
-    | Let {name; value; body=Name n} when n = name ->
-        pass value
-    | other ->
-        map pass other
-<b>end
-</b></pre>
-
-Note that <code>Not_fused.pass</code> and <code>Manually_fused.pass</code> are not the same
-function. Since <code>Not_fused.pass</code> works in three separate passes, an earlier
-pass might uncover more optimization opportunities for the next passes.
-For example, consider a syntax tree corresponding to a fragment of our
-toy language:
-
-<pre>10 / (<b>if </b><b>true </b><b>then </b>2 <b>else </b>5)
-</pre>
-
-<p>The <code>Not_fused.pass</code> will first run <code>Dead_code_elimination.pass</code> to obtain
-<code>10 / 2</code>, and then separately run <code>Constant_propagation.pass</code> to get the
-result—<code>5</code>. At the same time, <code>Manually_fused.pass</code> dives straight into
-dead code elimination, without reconsiderations and ends up with <code>10 / 2</code>
-as the result.</p>
-
-<p>However, both functions are not perfect and do not uncover all the
-optimization opportunities. For example, consider a syntax tree for
-the following fragment:</p>
-
-<pre>10 / (<b>let </b>x = 2 <b>in </b>x)
-</pre>
-
-<p>Both <code>Not_fused.pass</code> and <code>Manually_fused.pass</code> evaluate this to <code>10 / 2</code>.
-So both miss some optimizations, and the only way to cover them all is to
-call the function repeatedly until a fixpoint value emerges.</p>
-
-<h2>Automatic Fusion</h2>
-
-<p>Here&#8217;s an implementation style that allows writing the three passes separately,
-and then fuse them into a single traversal.</p>
-
-<pre><b>module </b>Fused = <b>struct
-  </b><b>module </b>Dead_code_elimination = <b>struct
-    </b><b>let </b>pass first_pass next_pass = <b>function
-      </b>| If {conditional=Boolean <b>true</b>; consequence; _} ->
-          first_pass consequence
-      | If {conditional=Boolean <b>false</b>; alternative; _} ->
-          first_pass alternative
-      | other ->
-          next_pass other
-  <b>end
-
-  </b><b>module </b>Constant_propagation = <b>struct
-    </b><b>let </b>pass first_pass next_pass = <b>function
-      </b>| Divide (Number n, Number m) when m <> 0 ->
-          first_pass (Number (n / m))
-      | other ->
-          next_pass other
-  <b>end
-
-  </b><b>module </b>Remove_redundant_let = <b>struct
-    </b><b>let </b>pass first_pass next_pass = <b>function
-      </b>| Let {name; value; body=Name n} when n = name ->
-          first_pass value
-      | other ->
-          next_pass other
-  <b>end
-
-  </b><em>(* Fuse the passes together *)</em>
-  <b>let </b><b>rec </b>pass t =
-    (Dead_code_elimination.pass pass
-      (Constant_propagation.pass pass
-        (Remove_redundant_let.pass pass
-          (map pass)))) t
-<b>end
-</b></pre>
-<pre>
-</pre>
-
-<p>Here, each sub-pass, instead of being directly recursive, relies on open
-recursion. Each takes two parameters: <code>first_pass</code> and <code>next_pass</code>. If none of
-the patterns in the pass match, then it delegates the work to the <code>next_pass</code>.
-However, if the pass needs to recur on a nested expression, it calls
-<code>first_pass</code>, to re-start the pipeline.</p>
-
-<p>The sub-passes are combined as follows. Each consecutive pass is the next one&#8217;s
-<code>next_pass</code> argument, ending with <code>map pass</code> which ties the first recursive knot.
-The combined pass is also recursively passed to each function as the <code>first_pass</code>
-parameter, tying the second recursive knot.</p>
-
-<p>Fixpoint combinator and function composition operator could be
-used here, but they affect the performance of the resulting
-pass (probably due to closure allocation after partial application).</p>
-
-<h2>Proof</h2>
-
-<p>The resulting function <code>Fused.pass</code> is identical to <code>Manually_fused.pass</code>
-for all inputs. We can use <a href="https://www.imandra.ai/">Imandra</a>
-proof assistant to check this:</p>
-
-<pre><em>#use "fusion.ml"
-</em>
-<b>theorem </b>our_fusion_is_the_same_as_manual_fusion x =
-  Fused.pass x = Manually_fused.pass x
-[@@auto]
-</pre>
-
-<p>When running this, Imandra will print several pages of proofs,
-and in the end will conclude:</p>
-
-<p><code>
-[✓] Theorem proved.
-</code></p>
-
-<h2>Benchmark</h2>
-
-<p>After generating <code>100_000_000</code> random syntax trees and measuring
-the total time of applying the three different techniques, we get the
-results in seconds:</p>
-
-<p><br/>
-<center><img src=bench.svg></center></p>
-
+<p>As we go, we’ll compare the code, and in the end, we’ll compare the performance too.</p>
+<h2 id="transformations">Transformations</h2>
 <!--
-* <code>Not_fused.pass</code>—11.803 seconds
-* <code>Manually_fused.pass</code>—4.669 seconds
-* <code>Fused.pass</code>—6.337 seconds-->
+> If you’ve read this blog before, then you are familiar with these
+> transformations. We've used them before.
+-->
+<p>Our first transformation is <em>dead code elimination</em>. It removes redundant branches of the if statement, in case the condition is hard-coded:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> <span class="kw">true</span>  <span class="kw">then</span> x <span class="kw">else</span> y  ⤇  x</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">if</span> <span class="kw">false</span> <span class="kw">then</span> x <span class="kw">else</span> y  ⤇  y</span></code></pre></div>
+<p>Next one is <em>constant propagation</em> where we compute statically known fractions, for example:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dv">42</span> / <span class="dv">2</span>  ⤇  <span class="dv">21</span></span></code></pre></div>
+<p>Next is <em>removing redundant let</em>, in case a let binding is used immediately in its own body:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x = y <span class="kw">in</span> x  ⤇  y</span></code></pre></div>
+<h2 id="no-fusion">No Fusion</h2>
+<p>First, let’s implement the three passes separately, using the map function as the recursion scheme.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Not_fused = <span class="kw">struct</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> Dead_code_elimination = <span class="kw">struct</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">rec</span> pass = <span class="kw">function</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      | If {conditional=Boolean <span class="kw">true</span>; consequence; _} -&gt;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>          pass consequence</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      | If {conditional=Boolean <span class="kw">false</span>; alternative; _} -&gt;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>          pass alternative</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      | other -&gt;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>          map pass other</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> Constant_propagation = <span class="kw">struct</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">rec</span> pass = <span class="kw">function</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      | Divide (Number n, Number m) <span class="kw">when</span> m &lt;&gt; <span class="dv">0</span> -&gt;</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>          pass (Number (n / m))</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      | other -&gt;</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>          map pass other</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> Remove_redundant_let = <span class="kw">struct</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">rec</span> pass = <span class="kw">function</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      | Let {name; value; body=Name n} <span class="kw">when</span> n = name -&gt;</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>          pass value</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      | other -&gt;</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>          map pass other</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pass t =</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    Remove_redundant_let.pass</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>      (Constant_propagation.pass</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        (Dead_code_elimination.pass t))</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
+<p>In the end, we combined the passes using function composition.</p>
+<h2 id="manual-fusion">Manual Fusion</h2>
+<p>Now, let’s try to combine the three passes into a single traversal manually.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Manually_fused = <span class="kw">struct</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> <span class="kw">rec</span> pass = <span class="kw">function</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    | If {conditional=Boolean <span class="kw">true</span>; consequence; _} -&gt;</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        pass consequence</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    | If {conditional=Boolean <span class="kw">false</span>; alternative; _} -&gt;</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        pass alternative</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    | Divide (Number n, Number m) <span class="kw">when</span> m &lt;&gt; <span class="dv">0</span> -&gt;</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        pass (Number (n / m))</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    | Let {name; value; body=Name n} <span class="kw">when</span> n = name -&gt;</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        pass value</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    | other -&gt;</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        map pass other</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
+<p>Note that <code>Not_fused.pass</code> and <code>Manually_fused.pass</code> are not the same function. Since <code>Not_fused.pass</code> works in three separate passes, an earlier pass might uncover more optimization opportunities for the next passes. For example, consider a syntax tree corresponding to a fragment of our toy language:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> / (<span class="kw">if</span> <span class="kw">true</span> <span class="kw">then</span> <span class="dv">2</span> <span class="kw">else</span> <span class="dv">5</span>)</span></code></pre></div>
+<p>The <code>Not_fused.pass</code> will first run <code>Dead_code_elimination.pass</code> to obtain <code>10 / 2</code>, and then separately run <code>Constant_propagation.pass</code> to get the result—<code>5</code>. At the same time, <code>Manually_fused.pass</code> dives straight into dead code elimination, without reconsiderations and ends up with <code>10 / 2</code> as the result.</p>
+<p>However, both functions are not perfect and do not uncover all the optimization opportunities. For example, consider a syntax tree for the following fragment:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> / (<span class="kw">let</span> x = <span class="dv">2</span> <span class="kw">in</span> x)</span></code></pre></div>
+<p>Both <code>Not_fused.pass</code> and <code>Manually_fused.pass</code> evaluate this to <code>10 / 2</code>. So both miss some optimizations, and the only way to cover them all is to call the function repeatedly until a fixpoint value emerges.</p>
+<h2 id="automatic-fusion">Automatic Fusion</h2>
+<p>Here’s an implementation style that allows writing the three passes separately, and then fuse them into a single traversal.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Fused = <span class="kw">struct</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> Dead_code_elimination = <span class="kw">struct</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pass first_pass next_pass = <span class="kw">function</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      | If {conditional=Boolean <span class="kw">true</span>; consequence; _} -&gt;</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>          first_pass consequence</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      | If {conditional=Boolean <span class="kw">false</span>; alternative; _} -&gt;</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>          first_pass alternative</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      | other -&gt;</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>          next_pass other</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> Constant_propagation = <span class="kw">struct</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pass first_pass next_pass = <span class="kw">function</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      | Divide (Number n, Number m) <span class="kw">when</span> m &lt;&gt; <span class="dv">0</span> -&gt;</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>          first_pass (Number (n / m))</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>      | other -&gt;</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>          next_pass other</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">module</span> Remove_redundant_let = <span class="kw">struct</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pass first_pass next_pass = <span class="kw">function</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>      | Let {name; value; body=Name n} <span class="kw">when</span> n = name -&gt;</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>          first_pass value</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>      | other -&gt;</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>          next_pass other</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">(* Fuse the passes together *)</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> <span class="kw">rec</span> pass t =</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    (Dead_code_elimination.pass pass</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>      (Constant_propagation.pass pass</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>        (Remove_redundant_let.pass pass</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>          (map pass)))) t</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div>
+<p>Here, each sub-pass, instead of being directly recursive, relies on open recursion. Each takes two parameters: <code>first_pass</code> and <code>next_pass</code>. If none of the patterns in the pass match, then it delegates the work to the <code>next_pass</code>. However, if the pass needs to recur on a nested expression, it calls <code>first_pass</code>, to re-start the pipeline.</p>
+<p>The sub-passes are combined as follows. Each consecutive pass is the next one’s <code>next_pass</code> argument, ending with <code>map pass</code> which ties the first recursive knot. The combined pass is also recursively passed to each function as the <code>first_pass</code> parameter, tying the second recursive knot.</p>
+<p>Fixpoint combinator and function composition operator could be used here, but they affect the performance of the resulting pass (probably due to closure allocation after partial application).</p>
+<h2 id="proof">Proof</h2>
+<p>The resulting function <code>Fused.pass</code> is identical to <code>Manually_fused.pass</code> for all inputs. We can use <a href="https://www.imandra.ai/">Imandra</a> proof assistant to check this:</p>
+<pre class="imandra"><code>#use &quot;fusion.ml&quot;
 
-<h2>Conclusion</h2>
-
-<p>We can see that our pass fusion technique achieves most of
-the performance benefit of manual pass fusion, while maintaining
-independent implementation of each sub-pass.</p>
-
-<p>Having independent sub-passes allows a hypothetical pass manager
-to arrange them differently, depending on the optimization level.
-For a fast unoptimized build, it can fuse as many passes as possible
-into one pipeline. For slower optimized builds it can instantiate
-each sub-pass into a full-fledged pass and even run some of them
-repeatedly.</p>
-
+theorem our_fusion_is_the_same_as_manual_fusion x =
+  Fused.pass x = Manually_fused.pass x
+[@@auto]</code></pre>
+<p>When running this, Imandra will print several pages of proofs, and in the end will conclude:</p>
+<pre><code>[✓] Theorem proved.</code></pre>
+<h2 id="benchmark">Benchmark</h2>
+<p>After generating <code>100_000_000</code> random syntax trees and measuring the total time of applying the three different techniques, we get the results in seconds:</p>
+<br/>
+<center>
+<img src=bench.svg>
+</center>
+<!--
+* `Not_fused.pass`—11.803 seconds
+* `Manually_fused.pass`—4.669 seconds
+* `Fused.pass`—6.337 seconds-->
+<h2 id="conclusion">Conclusion</h2>
+<p>We can see that our pass fusion technique achieves most of the performance benefit of manual pass fusion, while maintaining independent implementation of each sub-pass.</p>
+<p>Having independent sub-passes allows a hypothetical pass manager to arrange them differently, depending on the optimization level. For a fast unoptimized build, it can fuse as many passes as possible into one pipeline. For slower optimized builds it can instantiate each sub-pass into a full-fledged pass and even run some of them repeatedly.</p>
 <p>Another benefit is that each sub-pass can be tested in isolation.</p>
+<h2 id="code">Code</h2>
+<p>The <a href="https://gist.github.com/keleshev/3529129da1bd03b4e9e3e983434cedd8">gist</a> contains the code from this article together with additional testing and benchmarking code.</p>
+<h2 id="futher-work">Futher work</h2>
+<p>All passes that we discussed have the form <code>t -&gt; t</code>. It would be interesting to see how this technique fairs for passes of form <code>t -&gt; t m</code> for some monad <code>m</code>, or for passes from one AST to a different one.</p>
+<p>The passes we discussed used disjoint patterns. It would be interesting to see if this could be adapted for passes with overlapping patterns. <a href="/" title="Home">■</a></p>
 
-<h2>Code</h2>
 
-<p>The <a href="https://gist.github.com/keleshev/3529129da1bd03b4e9e3e983434cedd8">gist</a>
-contains the code from this article together with additional
-testing and benchmarking code.</p>
-
-<h2>Futher work</h2>
-
-<p>All passes that we discussed have the form <code>t -&gt; t</code>.
-It would be interesting to see how this technique fairs
-for passes of form <code>t -&gt; t m</code> for some monad <code>m</code>, or for passes
-from one AST to a different one.</p>
-
-<p>The passes we discussed used disjoint patterns.
-It would be interesting to see if this could be adapted for
-passes with overlapping patterns.  <a href="/" title="Home">&#9632;</a></p>
-
-<p><center markdown="1"></p>
-
-<p>⁂</p>
-
-<p><em>Follow me on <a href="https://twitter.com/keleshev/">Twitter</a></em>
-</center></p>
-
-    </body>
+  <hr class="fleuron" />
+</body>
 </html>
