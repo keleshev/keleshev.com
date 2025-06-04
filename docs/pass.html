@@ -1,51 +1,267 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title></title>
-  </head>
-  <body>
+    <meta charset="utf-8" />
+    <title>Password Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <style>
+      :root {
+        --radius: 0.5rem;
+        --spacing: 1rem;
+        --font-size: 1rem;
+        --accent: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        font-size: var(--font-size);
+      }
+
+      body {
+        margin: 0;
+        padding: var(--spacing);
+        background: #f3f4f6;
+        color: #111827;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #111827;
+          color: #f3f4f6;
+        }
+
+        input,
+        button {
+          background: #1f2937;
+          color: inherit;
+          border-color: #374151;
+        }
+
+        .chip {
+          background: #374151;
+        }
+      }
+
+      .card {
+        width: 100%;
+        max-width: 420px;
+        background: #ffffff;
+        border-radius: var(--radius);
+        padding: calc(2 * var(--spacing));
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: var(--spacing);
+      }
+
       input {
-        /*font-variant-numeric: tabular-nums slashed-zero; */
-        font-variant-numeric: slashed-zero; 
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--radius);
+        font-variant-numeric: slashed-zero;
+      }
+
+      input:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      button {
+        padding: 0.75rem;
+        width: 100%;
+        background: var(--accent);
+        color: #ffffff;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:active {
+        opacity: 0.85;
+      }
+
+      .history {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: var(--spacing);
+      }
+
+      .chip {
+        background: #e5e7eb;
+        border-radius: var(--radius);
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        border: none;
       }
     </style>
-    <script src="/pass.js"></script>
+
+    <script src="/pass.js" ></script>
+  </head>
+
+  <body>
+    <main class="card">
+      <!-- Recent service chips (not tabbable) -->
+      <div style="display:none" id="history" class="history" aria-label="Recent services"></div>
+
+      <div class="field">
+        <input
+          id="service"
+          name="service"
+          placeholder="Service name"
+          type="text"
+          required
+          autocomplete="off"
+          spellcheck="false"
+          list="service-list"
+          autofocus
+        />
+        <datalist id="service-list"></datalist>
+      </div>
+
+      <div class="field">
+        <input
+          id="master"
+          name="master-password"
+          placeholder="Master password"
+          type="password"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <div class="field">
+        <input id="password" name="password" type="text" readonly />
+      </div>
+
+      <button id="copy" type="button" aria-live="polite">Copy to clipboard</button>
+    </main>
+
     <script>
-      var generate_password = function () {
-        var service_name = document.getElementsByName('service')[0].value;
-        var master_password = document.getElementsByName('master-password')[0].value;
-        var password = PassKeleshevCom.run(service_name + ' ' + master_password + '\n');
-        document.getElementsByName('password')[0].value = password;
-      }
-      var copy_to_clipboard = function m() {
-        var copyText = document.getElementsByName('password')[0];
-        copyText.select(); 
-        copyText.setSelectionRange(0, 99999);
-        document.execCommand("copy");
-      }
+      (function () {
+        // DOM references
+        const serviceInput = document.getElementById("service");
+        const masterInput = document.getElementById("master");
+        const passwordOutput = document.getElementById("password");
+        const copyBtn = document.getElementById("copy");
+        const historyContainer = document.getElementById("history");
+        const datalist = document.getElementById("service-list");
+
+        /* Generate password on every keystroke */
+        function generate() {
+          const service = serviceInput.value.trim();
+          const master = masterInput.value;
+          passwordOutput.value = PassKeleshevCom.run(`${service} ${master}\n`);
+        }
+
+        /* Copy to clipboard with feedback + haptics */
+        function copyToClipboard() {
+          if (!passwordOutput.value) return;
+          (navigator.clipboard?.writeText(passwordOutput.value) || Promise.reject())
+            .then(feedback)
+            .catch(() => {
+              passwordOutput.select();
+              document.execCommand("copy");
+              feedback();
+            });
+        }
+
+        function feedback() {
+          copyBtn.textContent = "Copied!";
+          navigator.vibrate?.(50);
+          setTimeout(() => (copyBtn.textContent = "Copy to clipboard"), 2000);
+          saveToHistory(serviceInput.value.trim());
+        }
+
+        /* Click button: generate, copy */
+        copyBtn.addEventListener("click", () => {
+          generate();
+          copyToClipboard();
+        });
+
+        /* Generate live while typing */
+        serviceInput.addEventListener("input", generate);
+        masterInput.addEventListener("input", generate);
+
+        /* Pressing Enter in any field generates & copies */
+        [serviceInput, masterInput, passwordOutput].forEach((el) => {
+          el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              generate();
+              copyToClipboard();
+            }
+          });
+        });
+
+        /* Tab‑complete service name from history when unique */
+        serviceInput.addEventListener("keydown", (e) => {
+          if (e.key !== "Tab") return;
+          const prefix = serviceInput.value.toLowerCase();
+          const list = JSON.parse(localStorage.getItem("serviceHistory") || "[]");
+          const match = list.find(
+            (n) => n.toLowerCase().startsWith(prefix) && n.toLowerCase() !== prefix
+          );
+          if (match) {
+            serviceInput.value = match;
+            generate();
+          }
+        });
+
+        /* History persistence */
+        function loadHistory() {
+          renderHistory(JSON.parse(localStorage.getItem("serviceHistory") || "[]"));
+        }
+
+        function saveToHistory(name) {
+          if (!name) return;
+          let list = JSON.parse(localStorage.getItem("serviceHistory") || "[]");
+          list = [name, ...list.filter((n) => n !== name)].slice(0, 8);
+          localStorage.setItem("serviceHistory", JSON.stringify(list));
+          renderHistory(list);
+        }
+
+        function renderHistory(list) {
+          historyContainer.innerHTML = "";
+          datalist.innerHTML = "";
+
+          list.forEach((name) => {
+            // Chip
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "chip";
+            chip.textContent = name;
+            chip.tabIndex = -1; // skip in tab order
+            chip.addEventListener("click", () => {
+              serviceInput.value = name;
+              generate();
+              masterInput.focus();
+            });
+            historyContainer.appendChild(chip);
+
+            // Datalist option
+            const option = document.createElement("option");
+            option.value = name;
+            datalist.appendChild(option);
+          });
+        }
+
+        // Initialise history and initial password
+        loadHistory();
+        generate();
+      })();
     </script>
-      <p><input name="service" placeholder="Service name" type="text"
-        onkeyup='generate_password()'
-        onkeydown='generate_password()'
-        onkeypress='generate_password()'
-        required autofocus></p>
-      <p><input name="master-password" type="password" placeholder="Master password"
-        onkeyup='generate_password()'
-        onkeydown='generate_password()'
-        onkeypress='generate_password()'
-        required ></p>
-      <p><input name="password" readonly value="0xE16F_1596_2018_50FD"></p>
-      <p><button onclick="copy_to_clipboard()">Copy to clipboard</button></p>
   </body>
 </html>
-
-
-
-
-
-
-
-
-

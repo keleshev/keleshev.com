@@ -3,7 +3,7 @@ title: Vladimir Keleshev
 ---
 
 <header>
-<img src=./keleshev.jpg width="150" height="150" style="border-radius:100px; filter:grayscale(20%)" />
+<img src=./keleshev.jpg width="125" height="125" style="border-radius:100px; filter:grayscale(20%)" />
 <h1>
 Vladimir Keleshev
 </h1>

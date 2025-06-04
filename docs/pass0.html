@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <style>
+      input {
+        /*font-variant-numeric: tabular-nums slashed-zero; */
+        font-variant-numeric: slashed-zero; 
+      }
+    </style>
+    <script src="/pass.js"></script>
+    <script>
+      var generate_password = function () {
+        var service_name = document.getElementsByName('service')[0].value;
+        var master_password = document.getElementsByName('master-password')[0].value;
+        var password = PassKeleshevCom.run(service_name + ' ' + master_password + '\n');
+        document.getElementsByName('password')[0].value = password;
+      }
+      var copy_to_clipboard = function m() {
+        var copyText = document.getElementsByName('password')[0];
+        copyText.select(); 
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+      }
+    </script>
+      <p><input name="service" placeholder="Service name" type="text"
+        onkeyup='generate_password()'
+        onkeydown='generate_password()'
+        onkeypress='generate_password()'
+        required autofocus></p>
+      <p><input name="master-password" type="password" placeholder="Master password"
+        onkeyup='generate_password()'
+        onkeydown='generate_password()'
+        onkeypress='generate_password()'
+        required ></p>
+      <p><input name="password" readonly value="0xE16F_1596_2018_50FD"></p>
+      <p><button onclick="copy_to_clipboard()">Copy to clipboard</button></p>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
