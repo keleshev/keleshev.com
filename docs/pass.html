@@ -10,7 +10,7 @@
         --radius: 0.5rem;
         --spacing: 1rem;
         --font-size: 1rem;
-        --accent: #2563eb;
+        --accent: #000000;
       }
 
       * {
@@ -29,24 +29,6 @@
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        body {
-          background: #111827;
-          color: #f3f4f6;
-        }
-
-        input,
-        button {
-          background: #1f2937;
-          color: inherit;
-          border-color: #374151;
-        }
-
-        .chip {
-          background: #374151;
-        }
       }
 
       .card {
@@ -161,8 +143,9 @@
 
         /* Generate password on every keystroke */
         function generate() {
-          const service = serviceInput.value.trim();
+          const service = serviceInput.value.trim().toLowerCase();
           const master = masterInput.value;
+          serviceInput.value = service;
           passwordOutput.value = PassKeleshevCom.run(`${service} ${master}\n`);
         }
 
