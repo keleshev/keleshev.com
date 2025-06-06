@@ -72,60 +72,35 @@
       button:active {
         opacity: 0.85;
       }
-
-      .history {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: var(--spacing);
-      }
-
-      .chip {
-        background: #e5e7eb;
-        border-radius: var(--radius);
-        padding: 0.4rem 0.8rem;
-        font-size: 0.875rem;
-        cursor: pointer;
-        border: none;
-      }
     </style>
 
-    <script src="/pass.js" ></script>
+    <script src="/pass.js"></script>
   </head>
 
   <body>
     <main class="card">
-      <!-- Recent service chips (not tabbable) -->
-      <div style="display:none" id="history" class="history" aria-label="Recent services"></div>
-
       <div class="field">
         <input
           id="service"
-          name="service"
           placeholder="Service name"
           type="text"
-          required
           autocomplete="off"
           spellcheck="false"
-          list="service-list"
           autofocus
         />
-        <datalist id="service-list"></datalist>
       </div>
 
       <div class="field">
         <input
           id="master"
-          name="master-password"
           placeholder="Master password"
           type="password"
-          required
           autocomplete="current-password"
         />
       </div>
 
       <div class="field">
-        <input id="password" name="password" type="text" readonly />
+        <input id="password" type="text" readonly />
       </div>
 
       <button id="copy" type="button" aria-live="polite">Copy to clipboard</button>
@@ -133,53 +108,89 @@
 
     <script>
       (function () {
-        // DOM references
+        const Pass =
+          window.PassKeleshevCom && typeof window.PassKeleshevCom.run === "function"
+            ? window.PassKeleshevCom
+            : {
+                // Deterministic stub for demo / offline use
+                run: (str) => "p_" + btoa(str).slice(-10)
+              };
+
         const serviceInput = document.getElementById("service");
         const masterInput = document.getElementById("master");
         const passwordOutput = document.getElementById("password");
         const copyBtn = document.getElementById("copy");
-        const historyContainer = document.getElementById("history");
-        const datalist = document.getElementById("service-list");
 
-        /* Generate password on every keystroke */
+        let lastCopied = "";
+
+        /* ---------- History helpers ---------- */
+        const historyKey = "serviceHistory";
+        const getHistory = () => JSON.parse(localStorage.getItem(historyKey) || "[]");
+        const saveToHistory = (name) => {
+          if (!name) return;
+          const list = [name, ...getHistory().filter((n) => n !== name)].slice(0, 8);
+          localStorage.setItem(historyKey, JSON.stringify(list));
+        };
+
+        /* ---------- Autocomplete ---------- */
+        function inlineSuggest() {
+          const prefix = serviceInput.value;
+          if (!prefix) return;
+          const match = getHistory().find((n) => n.startsWith(prefix));
+          if (match && match.length > prefix.length) {
+            serviceInput.value = match;
+            serviceInput.setSelectionRange(prefix.length, match.length);
+          }
+        }
+
+        /* ---------- Core ---------- */
         function generate() {
           const service = serviceInput.value.trim().toLowerCase();
           const master = masterInput.value;
-          serviceInput.value = service;
-          passwordOutput.value = PassKeleshevCom.run(`${service} ${master}\n`);
+          const newPass = Pass.run(`${service} ${master}
+`);
+          passwordOutput.value = newPass;
+
+          if (lastCopied && newPass !== lastCopied) {
+            copyBtn.textContent = "Copy to clipboard";
+          }
         }
 
-        /* Copy to clipboard with feedback + haptics */
         function copyToClipboard() {
           if (!passwordOutput.value) return;
           (navigator.clipboard?.writeText(passwordOutput.value) || Promise.reject())
-            .then(feedback)
+            .then(() => {
+              lastCopied = passwordOutput.value;
+              copyBtn.textContent = "Copied!";
+              navigator.vibrate?.(50);
+              saveToHistory(serviceInput.value.trim());
+            })
             .catch(() => {
               passwordOutput.select();
               document.execCommand("copy");
-              feedback();
+              lastCopied = passwordOutput.value;
+              copyBtn.textContent = "Copied!";
+              navigator.vibrate?.(50);
+              saveToHistory(serviceInput.value.trim());
             });
         }
 
-        function feedback() {
-          copyBtn.textContent = "Copied!";
-          navigator.vibrate?.(50);
-          setTimeout(() => (copyBtn.textContent = "Copy to clipboard"), 2000);
-          saveToHistory(serviceInput.value.trim());
-        }
+        /* ---------- Event wiring ---------- */
+        serviceInput.addEventListener("input", (e) => {
+          if (!e.inputType?.startsWith("delete")) inlineSuggest();
+          generate();
+        });
 
-        /* Click button: generate, copy */
+        ["input", "keyup", "paste"].forEach((evt) =>
+          masterInput.addEventListener(evt, generate)
+        );
+
         copyBtn.addEventListener("click", () => {
           generate();
           copyToClipboard();
         });
 
-        /* Generate live while typing */
-        serviceInput.addEventListener("input", generate);
-        masterInput.addEventListener("input", generate);
-
-        /* Pressing Enter in any field generates & copies */
-        [serviceInput, masterInput, passwordOutput].forEach((el) => {
+        [serviceInput, masterInput].forEach((el) => {
           el.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -189,60 +200,6 @@
           });
         });
 
-        /* Tab‑complete service name from history when unique */
-        serviceInput.addEventListener("keydown", (e) => {
-          if (e.key !== "Tab") return;
-          const prefix = serviceInput.value.toLowerCase();
-          const list = JSON.parse(localStorage.getItem("serviceHistory") || "[]");
-          const match = list.find(
-            (n) => n.toLowerCase().startsWith(prefix) && n.toLowerCase() !== prefix
-          );
-          if (match) {
-            serviceInput.value = match;
-            generate();
-          }
-        });
-
-        /* History persistence */
-        function loadHistory() {
-          renderHistory(JSON.parse(localStorage.getItem("serviceHistory") || "[]"));
-        }
-
-        function saveToHistory(name) {
-          if (!name) return;
-          let list = JSON.parse(localStorage.getItem("serviceHistory") || "[]");
-          list = [name, ...list.filter((n) => n !== name)].slice(0, 8);
-          localStorage.setItem("serviceHistory", JSON.stringify(list));
-          renderHistory(list);
-        }
-
-        function renderHistory(list) {
-          historyContainer.innerHTML = "";
-          datalist.innerHTML = "";
-
-          list.forEach((name) => {
-            // Chip
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "chip";
-            chip.textContent = name;
-            chip.tabIndex = -1; // skip in tab order
-            chip.addEventListener("click", () => {
-              serviceInput.value = name;
-              generate();
-              masterInput.focus();
-            });
-            historyContainer.appendChild(chip);
-
-            // Datalist option
-            const option = document.createElement("option");
-            option.value = name;
-            datalist.appendChild(option);
-          });
-        }
-
-        // Initialise history and initial password
-        loadHistory();
         generate();
       })();
     </script>
