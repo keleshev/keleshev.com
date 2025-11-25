@@ -14,7 +14,11 @@ Hello, my name is Vladimir Keleshev and
 I am a software developer living and working just outside of Copenhagen.
 In the past, I have worked with embedded systems, safety-critical systems,
 compilers, and now in finance.
-Recently, I have published a book called [Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch).
+Recently, I have published a book called…
+
+<center>
+[Compiling to Assembly from Scratch](/compiling-to-assembly-from-scratch)
+</center>
 
 
 Writing
