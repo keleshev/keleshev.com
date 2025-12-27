@@ -12,7 +12,7 @@
       --fg: #111;
 
       /* Core contract: exactly this many monospace columns per line */
-      --cols: 72;
+      --columns: 72;
 
       /* Shared geometry so prompt + input align */
       --pad-y: 14px;
@@ -26,7 +26,7 @@
       --ui-bg: #fff;
     }
 
-    html, body { height: 100%; }
+    html, body { min-height: 100%; }
     body {
       margin: 0;
       overflow-x: auto;
@@ -38,7 +38,7 @@
     }
 
     .wrap {
-      width: calc(var(--cols) * 1ch + 2 * var(--pad-x) + 2 * var(--border-w));
+      width: calc(var(--columns) * 1ch + 2 * var(--pad-x) + 2 * var(--border-w));
       margin: 48px auto;
     }
 
@@ -74,21 +74,30 @@
       gap: 8px;
       align-items: center;
       z-index: 2;
-      pointer-events: none; /* buttons re-enable */
+      opacity: 0;
+      transition: opacity 120ms ease-out;
+      pointer-events: none; /* only buttons should receive events */
     }
 
-    .btn {$1font-size: var(--font-size);$2line-height: var(--line-height);$3padding: 6px 10px;
+    /* Show controls only when hovering the prompt area, but not while typing */
+    .promptBox:hover .controls { opacity: 1; }
+    body.isTyping .controls { opacity: 0; }
+    .editing .controls { opacity: 1; }
+
+    .btn {
+      pointer-events: auto;
+      font-family: var(--font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+      padding: 6px 11px; /* one extra monospace char of width */
       border-radius: 10px;
       border: 1px solid rgba(0,0,0,0.18);
-      background: rgba(255,255,255,0.55); /* semi-transparent; text may sit underneath */
-      color: #111;
+      background: rgba(255,255,255,0.35); /* just transparency; no blur */
+      color: #777; /* de-emphasised grey */
       cursor: pointer;
       user-select: none;
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
     }
 
-    .btn:hover { background: rgba(255,255,255,0.72); }
     .btn:active { transform: translateY(1px); }
 
     .btn-primary {
@@ -97,11 +106,9 @@
       color: #fff;
     }
 
-    .btn-primary:hover { background: rgba(0,0,0,0.88); }
-
     .btn-muted {
-      background: rgba(255,255,255,0.35);
-      color: #111;
+      background: rgba(255,255,255,0.30);
+      color: #777;
     }
 
     .inputRow {
@@ -180,12 +187,12 @@
     const promptBoxEl = document.getElementById('promptBox');
     const promptEl = document.getElementById('prompt');
     const controlsEl = document.getElementById('controls');
-    const typeEl   = document.getElementById('type');
+    const typeEl = document.getElementById('type');
     const statusEl = document.getElementById('status');
 
     /* ---- Contract ---- */
-    const COLS = parseInt(
-      getComputedStyle(document.documentElement).getPropertyValue('--cols'),
+    const COLUMNS = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue('--columns'),
       10
     ) || 72;
 
@@ -196,7 +203,7 @@
     const TEXT_KEY = 'typing-text-v1';
     const STATE_KEY = 'typing-state-v4';
 
-    /* ---- Default story (ASCII only, Barks-inspired, original) ---- */
+    /* ---- Default story (ASCII only) ---- */
     const DEFAULT_STORY = `THE CHEAPEST WALL IN DUCKBURG
 
 Scrooge McDuck needed a new wall.
@@ -652,7 +659,6 @@ The End.`;
     };
 
     const saveText = (text) => {
-      // Best effort. If storage is unavailable, we still keep text in memory.
       try { localStorage.setItem(TEXT_KEY, text); } catch {}
     };
 
@@ -680,10 +686,10 @@ The End.`;
     };
 
     const resizePromptToContent = () => {
-      // Only when NOT editing.
+      if (isEditing) return;
       const cs = getComputedStyle(promptEl);
       const pad = px(cs.paddingTop) + px(cs.paddingBottom);
-      const lh  = lineHeightPx(promptEl);
+      const lh = lineHeightPx(promptEl);
 
       promptEl.style.height = 'auto';
       const content = Math.max(0, promptEl.scrollHeight - pad);
@@ -704,8 +710,8 @@ The End.`;
       if (delta > 0) scroller.scrollTop += delta;
     };
 
-    // Wrap a single paragraph line to COLS chars, word-boundary when possible.
-    const wrapLineToCols = (rawLine, cols) => {
+    // Wrap a single line to fixed columns, breaking at word boundaries when possible.
+    const wrapLineToColumns = (rawLine, columns) => {
       const trimmed = rawLine.trim();
       if (trimmed === '') return [''];
 
@@ -719,15 +725,16 @@ The End.`;
       };
 
       for (let w of words) {
-        while (w.length > cols) {
-          const head = w.slice(0, cols);
+        // Hard-split very long words.
+        while (w.length > columns) {
+          const head = w.slice(0, columns);
           if (line) pushLine();
           out.push(head);
-          w = w.slice(cols);
+          w = w.slice(columns);
         }
 
         const test = line ? (line + ' ' + w) : w;
-        if (test.length > cols) {
+        if (test.length > columns) {
           pushLine();
           line = w;
         } else {
@@ -739,24 +746,23 @@ The End.`;
       return out;
     };
 
-    const wrapTextToCols = (text, cols) => {
+    const wrapTextToColumns = (text, columns) => {
       const out = [];
       for (const rawLine of text.split(/\n/)) {
         if (rawLine.trim() === '') {
           out.push('');
           continue;
         }
-        out.push(...wrapLineToCols(rawLine, cols));
+        out.push(...wrapLineToColumns(rawLine, columns));
       }
       return out;
     };
 
     const storyFingerprint = (s) => {
-      // No literal newlines in the prefix to avoid accidental source-edit parsing issues.
-      const withCols = `COLS=${COLS}|` + s;
+      const tagged = `COLUMNS=${COLUMNS}|` + s;
       let h = 2166136261;
-      for (let i = 0; i < withCols.length; i++) {
-        h ^= withCols.charCodeAt(i);
+      for (let i = 0; i < tagged.length; i++) {
+        h ^= tagged.charCodeAt(i);
         h = Math.imul(h, 16777619);
       }
       return (h >>> 0).toString(16);
@@ -766,7 +772,7 @@ The End.`;
     let lines = []; // {raw, trimmed, isBlank}
 
     const rebuildLines = () => {
-      const wrapped = wrapTextToCols(rawStory, COLS);
+      const wrapped = wrapTextToColumns(rawStory, COLUMNS);
       lines = wrapped.map((l) => ({
         raw: l,
         trimmed: l.replace(/^\s+/, ''),
@@ -777,7 +783,6 @@ The End.`;
     /* ---- Progress (allowed to reset) ---- */
     let isEditing = false;
     let editDraft = '';
-    let lockedPromptHeightPx = 0;
 
     const loadState = () => {
       const fp = storyFingerprint(rawStory);
@@ -840,6 +845,7 @@ The End.`;
 
     const refreshControls = () => {
       controlsEl.innerHTML = '';
+
       if (!isEditing) {
         const b = document.createElement('button');
         b.className = 'btn btn-muted';
@@ -869,10 +875,13 @@ The End.`;
     const enterEditMode = () => {
       if (isEditing) return;
       isEditing = true;
-      statusEl.textContent = 'Editing: Save to reflow to 72 cols. Esc cancels. Ctrl/Cmd+S saves.';
+      statusEl.textContent = 'Editing: Save to reflow to 72 columns. Esc cancels. Ctrl/Cmd+S saves.';
+
+      // Preserve current scroll position explicitly.
+      const prevScrollTop = promptEl.scrollTop;
 
       // Lock current prompt height so it doesn't jump.
-      lockedPromptHeightPx = promptEl.getBoundingClientRect().height;
+      const lockedPromptHeightPx = promptEl.getBoundingClientRect().height;
       promptEl.style.height = lockedPromptHeightPx + 'px';
 
       promptBoxEl.classList.add('editing');
@@ -882,14 +891,17 @@ The End.`;
       editDraft = rawStory;
       promptEl.value = editDraft;
 
-      // Make textarea scrollable but same size.
-      // Do NOT force scroll position; keep whatever the browser keeps (no jumping).
+      // Restore scroll position (browsers may reset on value/focus change).
+      promptEl.scrollTop = prevScrollTop;
 
       // Disable typing input.
       typeEl.disabled = true;
 
       refreshControls();
-      promptEl.focus();
+
+      // Focus without scrolling the viewport.
+      try { promptEl.focus({ preventScroll: true }); }
+      catch { promptEl.focus(); }
     };
 
     const exitEditMode = () => {
@@ -911,8 +923,6 @@ The End.`;
 
     const cancelEdit = () => {
       if (!isEditing) return;
-      // Restore draft to stored story (no changes).
-      promptEl.value = editDraft; // doesn't matter; we'll re-render on exit
       exitEditMode();
     };
 
@@ -921,7 +931,6 @@ The End.`;
 
       // Commit: update rawStory (stable) and persist it.
       let next = promptEl.value;
-      // If user saved an empty/whitespace-only story, revert to the default.
       if (next.trim() === '') next = DEFAULT_STORY;
 
       rawStory = next;
@@ -951,7 +960,6 @@ The End.`;
         if (j < lines.length) {
           setIndex(j);
         } else {
-          // Finished
           state.index = lines.length;
           state.revealed = lines.length;
         }
@@ -959,18 +967,15 @@ The End.`;
         saveState();
         renderPrompt();
         requestAnimationFrame(scrollToTypingLine);
-
-        if (state.index >= lines.length) statusEl.textContent = 'The End.';
       } else {
         shakeInput();
       }
     };
 
     /* ---- Cheat navigation ----
-      Support multiple variants; decide later:
-        Forward: Ctrl/Cmd+Enter, Ctrl/Cmd+ArrowDown
-        Back:    Ctrl/Cmd+Shift+Enter, Ctrl/Cmd+Alt/Option+Enter,
-                 Ctrl/Cmd+ArrowUp, Ctrl/Cmd+Backspace (when input empty)
+      Forward: Ctrl/Cmd+Enter, Ctrl/Cmd+ArrowDown
+      Back:    Ctrl/Cmd+Shift+Enter, Ctrl/Cmd+Alt/Option+Enter,
+               Ctrl/Cmd+ArrowUp, Ctrl/Cmd+Backspace (when input empty)
     */
     const cheatForward = () => {
       if (state.index >= lines.length) return;
@@ -993,10 +998,18 @@ The End.`;
     /* ---- Focus policy ---- */
     document.addEventListener('pointerdown', (e) => {
       if (isEditing) return;
-      if (e.target === promptEl) return;
+      // Clicks anywhere inside the prompt box (textarea or buttons) should NOT steal focus.
+      if (promptBoxEl.contains(e.target)) return;
       if (e.target === typeEl) return;
       setTimeout(() => typeEl.focus(), 0);
     });
+
+    // Track whether the user is actively typing (used to hide Edit controls while typing)
+    const setTypingClass = (on) => {
+      document.body.classList.toggle('isTyping', !!on);
+    };
+    typeEl.addEventListener('focus', () => setTypingClass(true));
+    typeEl.addEventListener('blur',  () => setTypingClass(false));
 
     typeEl.addEventListener('keydown', (e) => {
       if (isEditing) return;
@@ -1064,27 +1077,31 @@ The End.`;
 
     /* ---- Tests ---- */
     const runTests = () => {
-      console.assert(wrapLineToCols('one two three', 7).join('|') === 'one two|three', 'wrap: basic');
-      console.assert(wrapLineToCols('abcdefgh', 4).join('|') === 'abcd|efgh', 'wrap: hard split long word');
-      console.assert(wrapTextToCols('a\n\n b', 72).length === 3, 'wrap: preserve blank lines');
+      console.assert(wrapLineToColumns('one two three', 7).join('|') === 'one two|three', 'wrap: basic');
+      console.assert(wrapLineToColumns('abcdefgh', 4).join('|') === 'abcd|efgh', 'wrap: hard split long word');
+      console.assert(wrapTextToColumns('a\n\n b', 72).length === 3, 'wrap: preserve blank lines');
 
-      const sample = wrapTextToCols('word '.repeat(200), 72);
-      console.assert(sample.every(l => l.length <= 72), 'wrap: never exceed cols');
+      const sample = wrapTextToColumns('word '.repeat(200), 72);
+      console.assert(sample.every(l => l.length <= 72), 'wrap: never exceed columns');
 
       console.assert(['a', 'b'].join('\n') === 'a\nb', 'join: newline escapes correctly');
 
-      // New tests: wrapLineToCols blank returns single empty
-      console.assert(wrapLineToCols('   ', 72).length === 1 && wrapLineToCols('   ', 72)[0] === '', 'wrap: blank line');
+      console.assert(
+        wrapLineToColumns('   ', 72).length === 1 && wrapLineToColumns('   ', 72)[0] === '',
+        'wrap: blank line'
+      );
 
-      // Fingerprint must depend on COLS without embedding newlines in prefix
+      // Fingerprint must depend on columns
       const fpA = storyFingerprint('hello');
       const fpB = (function(){
-        const withCols = 'COLS=73|' + 'hello';
+        const tagged = 'COLUMNS=73|' + 'hello';
         let h = 2166136261;
-        for (let i = 0; i < withCols.length; i++) { h ^= withCols.charCodeAt(i); h = Math.imul(h, 16777619); }
+        for (let i = 0; i < tagged.length; i++) { h ^= tagged.charCodeAt(i); h = Math.imul(h, 16777619); }
         return (h >>> 0).toString(16);
       })();
-      console.assert(fpA !== fpB, 'fingerprint: depends on cols delimiter');
+      console.assert(fpA !== fpB, 'fingerprint: depends on columns');
+
+      console.assert(typeof enterEditMode === 'function', 'edit: enterEditMode exists');
     };
 
     runTests();
@@ -1095,6 +1112,7 @@ The End.`;
     const loaded = loadState();
     state.index = loaded.index;
     state.fp = storyFingerprint(rawStory);
+
     clampState();
     skipBlanksForward();
     skipBlanksBackward();
@@ -1111,9 +1129,7 @@ The End.`;
         requestAnimationFrame(scrollToTypingLine);
       }
     });
-
   })();
   </script>
 </body>
 </html>
-
