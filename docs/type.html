@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Typing Exercise</title>
+  <style>
+    :root {
+      --font: monospace;
+      --font-size: 22px;
+      --line-height: 1.55;
+      --fg: #111;
+
+      /* Core contract: exactly this many monospace columns per line */
+      --cols: 72;
+
+      /* Shared geometry so prompt + input align */
+      --pad-y: 14px;
+      --pad-x: 18px;
+      --border-w: 1px;
+      --radius: 8px;
+
+      --ui-border: #ddd;
+      --ui-border-focus: #bbb;
+      --ui-muted: #666;
+      --ui-bg: #fff;
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow-x: auto;
+      background: #fff;
+      color: var(--fg);
+      font-family: var(--font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+    }
+
+    .wrap {
+      width: calc(var(--cols) * 1ch + 2 * var(--pad-x) + 2 * var(--border-w));
+      margin: 48px auto;
+    }
+
+    .promptBox {
+      position: relative;
+    }
+
+    /* No soft-wrap: every visible line must be a real line */
+    #prompt {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: var(--font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+
+      padding: var(--pad-y) var(--pad-x);
+      border: var(--border-w) solid transparent;
+      outline: none;
+      background: transparent;
+      color: var(--fg);
+
+      resize: none;
+      overflow: hidden;
+      white-space: pre;
+    }
+
+    /* Edit controls overlay */
+    .controls {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 2;
+      pointer-events: none; /* buttons re-enable */
+    }
+
+    .btn {$1font-size: var(--font-size);$2line-height: var(--line-height);$3padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.55); /* semi-transparent; text may sit underneath */
+      color: #111;
+      cursor: pointer;
+      user-select: none;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .btn:hover { background: rgba(255,255,255,0.72); }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary {
+      background: rgba(0,0,0,0.80);
+      border-color: rgba(0,0,0,0.80);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: rgba(0,0,0,0.88); }
+
+    .btn-muted {
+      background: rgba(255,255,255,0.35);
+      color: #111;
+    }
+
+    .inputRow {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    #type {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: var(--font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+
+      padding: var(--pad-y) var(--pad-x);
+      border: var(--border-w) solid var(--ui-border);
+      border-radius: var(--radius);
+      outline: none;
+      background: var(--ui-bg);
+      color: var(--fg);
+    }
+
+    #type:focus { border-color: var(--ui-border-focus); }
+    #type[disabled] {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    @keyframes shake {
+      0%   { transform: translateX(0); }
+      15%  { transform: translateX(-6px); }
+      30%  { transform: translateX(6px); }
+      45%  { transform: translateX(-5px); }
+      60%  { transform: translateX(5px); }
+      75%  { transform: translateX(-3px); }
+      90%  { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
+    #type.shake { animation: shake 0.35s; }
+
+    .status {
+      min-height: 1.2em;
+      font-size: 14px;
+      user-select: none;
+      color: var(--ui-muted);
+    }
+
+    /* Editing mode: prompt becomes scrollable but keeps same height */
+    .editing #prompt {
+      border: 1px solid rgba(0,0,0,0.14);
+      background: rgba(0,0,0,0.03);
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="promptBox" id="promptBox">
+      <textarea id="prompt" readonly spellcheck="false" wrap="off"></textarea>
+      <div class="controls" id="controls"></div>
+    </div>
+
+    <div class="inputRow">
+      <input id="type" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    /* ---- Elements ---- */
+    const promptBoxEl = document.getElementById('promptBox');
+    const promptEl = document.getElementById('prompt');
+    const controlsEl = document.getElementById('controls');
+    const typeEl   = document.getElementById('type');
+    const statusEl = document.getElementById('status');
+
+    /* ---- Contract ---- */
+    const COLS = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue('--cols'),
+      10
+    ) || 72;
+
+    /* ---- LocalStorage keys ----
+      Text must be stable ("never lost") => dedicated key, independent of progress.
+      Progress may reset if anything changes.
+    */
+    const TEXT_KEY = 'typing-text-v1';
+    const STATE_KEY = 'typing-state-v4';
+
+    /* ---- Default story (ASCII only, Barks-inspired, original) ---- */
+    const DEFAULT_STORY = `THE CHEAPEST WALL IN DUCKBURG
+
+Scrooge McDuck needed a new wall.
+
+The old one had fallen down.
+Again.
+
+He stood on Killmotor Hill, looking at the Money Bin.
+The vault was fine.
+The money was fine.
+
+The wall was the problem.
+
+Chapter I: A VERY GOOD DEAL
+---------------------------
+
+The salesman smiled.
+
+"These panels are half the price," he said.
+
+"Half the strength?" Scrooge asked.
+
+The salesman laughed.
+"Strength is overrated."
+
+Scrooge liked that answer.
+
+The panels were light.
+Very light.
+
+Scrooge lifted one with a finger.
+
+"Perfect," he said.
+"No heavy lifting costs."
+
+By sunset, the new wall was up.
+
+It looked solid.
+From a distance.
+
+Chapter II: IT ONLY NEEDS TO STAND
+----------------------------------
+
+The nephews arrived the next morning.
+
+"Is that cardboard?" Louie asked.
+
+"Compressed fiber," Scrooge said.
+"Very modern."
+
+Huey poked the wall.
+It bent.
+
+Dewey poked it again.
+It bent more.
+
+Scrooge tapped the wall with his cane.
+It bounced back.
+
+"See?" he said.
+"It only needs to stand."
+
+At that exact moment, the wind picked up.
+
+Chapter III: TEMPORARY REINFORCEMENTS
+-------------------------------------
+
+The wall leaned.
+Just a little.
+
+Scrooge nailed a plank across it.
+
+"One plank is cheaper than a new wall," he said.
+
+The wall leaned again.
+
+Scrooge added another plank.
+Then another.
+
+By noon, the wall had more wood than cardboard.
+
+Scrooge wrote everything down.
+
+So far, he was ahead by twelve cents.
+
+Chapter IV: THE SOUND OF RAIN
+-----------------------------
+
+Rain began to fall.
+
+Slowly.
+
+Politely.
+
+The wall made a noise.
+
+It was not a crack.
+It was not a snap.
+
+It was a sigh.
+
+Water soaked into the panels.
+They grew darker.
+Then heavier.
+
+Scrooge fetched a tarp.
+
+"Temporary," he said.
+"Very temporary."
+
+The rain agreed to stop.
+
+The wall did not recover.
+
+Chapter V: THE CHEAP FIX
+------------------------
+
+Replacing the wall would cost money.
+
+Fixing it would not.
+
+Scrooge chose wisely.
+
+He applied tape.
+Lots of tape.
+
+The wall now had stripes.
+
+From far away, it looked stronger.
+From close up, it looked nervous.
+
+Scrooge nodded.
+"Good as new."
+
+Chapter VI: THE FIRST CRACK
+---------------------------
+
+The crack appeared at noon.
+
+It was thin.
+Almost polite.
+
+Scrooge ignored it.
+
+By afternoon, the crack had friends.
+
+By evening, the wall sighed again.
+
+Scrooge did the math.
+
+If he replaced the wall now,
+he would lose seventeen cents.
+
+He went to bed.
+
+Chapter VII: A VERY SMALL COLLAPSE
+----------------------------------
+
+The collapse was not dramatic.
+
+It was quiet.
+
+A corner folded inward.
+Coins rolled.
+Not many.
+Just enough.
+
+Scrooge slid down the hill.
+
+He caught the last coin.
+
+"That," he said,
+"could have been worse."
+
+Chapter VIII: DOUBLE OR NOTHING
+-------------------------------
+
+The next morning, Scrooge reinforced the wall again.
+
+More planks.
+More tape.
+More rope.
+
+The wall looked like a project.
+
+The nephews watched.
+
+"You could rebuild it properly," Huey said.
+
+Scrooge shook his head.
+"Now would be the worst time."
+
+Chapter IX: THE WRONG COMPARISON
+--------------------------------
+
+Scrooge calculated everything.
+
+Materials.
+Time.
+Effort.
+
+He did not calculate embarrassment.
+
+Across the hill, someone was watching.
+
+Someone who liked cheap walls very much.
+
+Chapter X: TO BE CONTINUED
+--------------------------
+
+Chapter XI: A PROFESSIONAL OPINION
+----------------------------------
+
+The man across the hill took notes.
+
+He did not smile.
+He did not laugh.
+
+He measured.
+
+Glomgold had built many things.
+Most of them cheaply.
+Some of them twice.
+
+He watched the wall bend.
+He watched the tape stretch.
+He watched Scrooge pull the tarp tighter.
+
+"Interesting," Glomgold said.
+
+Chapter XII: THE INSPECTION NOTICE
+----------------------------------
+
+A letter arrived at the Money Bin.
+
+Scrooge read it once.
+Then twice.
+
+OFFICIAL STRUCTURAL INSPECTION
+REQUIRED BY FRIDAY
+
+Scrooge folded the letter.
+
+"Routine," he said.
+"Absolutely routine."
+
+The wall leaned slightly to the left.
+
+Chapter XIII: CHEAPER THAN FIXING
+---------------------------------
+
+A proper rebuild would cost money.
+
+A temporary solution would not.
+
+Scrooge added braces.
+Diagonal ones.
+Vertical ones.
+Some that only made sense on paper.
+
+The wall now had a diagram.
+
+Scrooge admired it.
+
+"So long as nothing unusual happens," he said,
+"this will hold."
+
+Chapter XIV: SOMETHING UNUSUAL
+------------------------------
+
+The weather report was very clear.
+
+Wind.
+Then rain.
+Then more wind.
+
+Scrooge bought extra rope.
+On sale.
+
+He tied the wall to the hill.
+
+The hill did not object.
+
+The wall made the sighing sound again.
+
+Chapter XV: AN UNEXPECTED OFFER
+-------------------------------
+
+Glomgold arrived with a clipboard.
+
+"I could buy the hill," he said.
+"Cheap."
+
+Scrooge laughed.
+"Never."
+
+Glomgold pointed at the wall.
+
+"I could buy that too," he said.
+"Cheaper."
+
+Scrooge stopped laughing.
+
+Chapter XVI: THE MATH GETS COMPLICATED
+--------------------------------------
+
+Scrooge calculated everything again.
+
+Tape.
+Wood.
+Rope.
+Tarps.
+Time.
+
+He did not calculate reputation.
+
+Down in Duckburg, people were talking.
+
+"The Money Bin looks tired," they said.
+"It looks patched."
+"It looks temporary."
+
+Scrooge underlined a number twice.
+
+Chapter XVII: FRIDAY MORNING
+----------------------------
+
+The inspector arrived early.
+
+The wind arrived earlier.
+
+The wall leaned.
+Then leaned back.
+
+The inspector raised an eyebrow.
+
+Scrooge cleared his throat.
+
+"It only needs to last today," he said.
+
+Chapter XVIII: FAILURE IS CHEAP
+-------------------------------
+
+The collapse was still quiet.
+
+But not polite.
+
+The wall folded inward, carefully, as if following instructions.
+
+Coins rolled.
+More this time.
+
+Not enough to bankrupt Scrooge.
+
+Enough to embarrass him.
+
+Glomgold wrote something down.
+
+Chapter XIX: THE REAL COST
+--------------------------
+
+Rebuilding properly would cost money.
+
+Rebuilding now would cost more.
+
+Rebuilding later would cost even more.
+
+Scrooge stood in the mess.
+
+He looked at the tape.
+The rope.
+The planks.
+
+He looked at Glomgold.
+
+"This," Scrooge said slowly,
+"has become expensive."
+
+Chapter XX: A RARE EXPENSE
+--------------------------
+
+Scrooge paid for real materials.
+
+Strong ones.
+Heavy ones.
+Boring ones.
+
+The new wall went up slowly.
+
+It did not bend.
+It did not sigh.
+
+It just stood.
+
+Scrooge watched it carefully.
+
+Chapter XXI: THE RECEIPT
+------------------------
+
+Scrooge pinned the receipt to his wall.
+
+He did not frame it.
+
+He did not smile.
+
+But he did not tear it up either.
+
+"Cheap," he said,
+"is not the same as wise."
+
+Chapter XXII: THE LAST REPAIR
+-----------------------------
+
+Glomgold returned once more.
+
+The wall did not move.
+
+Glomgold frowned.
+
+"Too solid," he said.
+"No opportunity."
+
+Scrooge nodded.
+
+"That," he said,
+"was the point."
+
+Chapter XXIII: THE BIN STANDS
+-----------------------------
+
+The Money Bin stood on Killmotor Hill.
+
+The wall stood with it.
+
+Scrooge slept well.
+
+The hill was quiet again.
+
+This time, Scrooge trusted it.
+
+Chapter XXIV: THE END
+---------------------
+
+The End.`;
+
+    const loadText = () => {
+      try {
+        const v = localStorage.getItem(TEXT_KEY);
+        return (typeof v === 'string' && v.length > 0) ? v : DEFAULT_STORY;
+      } catch {
+        return DEFAULT_STORY;
+      }
+    };
+
+    const saveText = (text) => {
+      // Best effort. If storage is unavailable, we still keep text in memory.
+      try { localStorage.setItem(TEXT_KEY, text); } catch {}
+    };
+
+    let rawStory = loadText();
+
+    /* ---- Helpers ---- */
+    const px = (v) => {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const normalizeTyped = (s) => s.replace(/^\s+/, ''); // ignore leading whitespace
+
+    const shakeInput = () => {
+      typeEl.classList.remove('shake');
+      void typeEl.offsetWidth;
+      typeEl.classList.add('shake');
+    };
+
+    const lineHeightPx = (el) => {
+      const cs = getComputedStyle(el);
+      const lh = parseFloat(cs.lineHeight);
+      if (Number.isFinite(lh)) return lh;
+      return px(cs.fontSize) * 1.2;
+    };
+
+    const resizePromptToContent = () => {
+      // Only when NOT editing.
+      const cs = getComputedStyle(promptEl);
+      const pad = px(cs.paddingTop) + px(cs.paddingBottom);
+      const lh  = lineHeightPx(promptEl);
+
+      promptEl.style.height = 'auto';
+      const content = Math.max(0, promptEl.scrollHeight - pad);
+      const visualLines = Math.max(1, Math.round(content / lh));
+      promptEl.style.height = (pad + visualLines * lh) + 'px';
+    };
+
+    const scrollToTypingLine = () => {
+      if (isEditing) return;
+      if (document.activeElement === promptEl) return;
+
+      const scroller = document.scrollingElement || document.documentElement;
+      const rect = typeEl.getBoundingClientRect();
+
+      const breathe = Math.max(96, Math.min(220, Math.round(window.innerHeight * 0.20)));
+      const bottomLimit = window.innerHeight - breathe;
+      const delta = rect.bottom - bottomLimit;
+      if (delta > 0) scroller.scrollTop += delta;
+    };
+
+    // Wrap a single paragraph line to COLS chars, word-boundary when possible.
+    const wrapLineToCols = (rawLine, cols) => {
+      const trimmed = rawLine.trim();
+      if (trimmed === '') return [''];
+
+      const words = trimmed.split(/\s+/);
+      const out = [];
+      let line = '';
+
+      const pushLine = () => {
+        if (line !== '') out.push(line);
+        line = '';
+      };
+
+      for (let w of words) {
+        while (w.length > cols) {
+          const head = w.slice(0, cols);
+          if (line) pushLine();
+          out.push(head);
+          w = w.slice(cols);
+        }
+
+        const test = line ? (line + ' ' + w) : w;
+        if (test.length > cols) {
+          pushLine();
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+
+      pushLine();
+      return out;
+    };
+
+    const wrapTextToCols = (text, cols) => {
+      const out = [];
+      for (const rawLine of text.split(/\n/)) {
+        if (rawLine.trim() === '') {
+          out.push('');
+          continue;
+        }
+        out.push(...wrapLineToCols(rawLine, cols));
+      }
+      return out;
+    };
+
+    const storyFingerprint = (s) => {
+      // No literal newlines in the prefix to avoid accidental source-edit parsing issues.
+      const withCols = `COLS=${COLS}|` + s;
+      let h = 2166136261;
+      for (let i = 0; i < withCols.length; i++) {
+        h ^= withCols.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0).toString(16);
+    };
+
+    /* ---- Derived runtime data ---- */
+    let lines = []; // {raw, trimmed, isBlank}
+
+    const rebuildLines = () => {
+      const wrapped = wrapTextToCols(rawStory, COLS);
+      lines = wrapped.map((l) => ({
+        raw: l,
+        trimmed: l.replace(/^\s+/, ''),
+        isBlank: l.trim() === ''
+      }));
+    };
+
+    /* ---- Progress (allowed to reset) ---- */
+    let isEditing = false;
+    let editDraft = '';
+    let lockedPromptHeightPx = 0;
+
+    const loadState = () => {
+      const fp = storyFingerprint(rawStory);
+      try {
+        const saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+        if (saved && saved.fp === fp && Number.isFinite(saved.index)) {
+          return { index: saved.index };
+        }
+      } catch {}
+      return { index: 0 };
+    };
+
+    const state = { index: 0, revealed: 1, fp: '' };
+
+    const saveState = () => {
+      try {
+        localStorage.setItem(STATE_KEY, JSON.stringify({ index: state.index, fp: state.fp }));
+      } catch {}
+    };
+
+    const clampState = () => {
+      const last = Math.max(0, lines.length - 1);
+      state.index = Math.max(0, Math.min(state.index, last));
+      state.revealed = Math.min(state.index + 1, lines.length);
+    };
+
+    const nextNonBlankIndex = (i) => {
+      let j = i;
+      while (j < lines.length && lines[j].isBlank) j++;
+      return j;
+    };
+
+    const prevNonBlankIndex = (i) => {
+      let j = Math.min(i, lines.length - 1);
+      while (j > 0 && lines[j].isBlank) j--;
+      return j;
+    };
+
+    const setIndex = (i) => {
+      const last = Math.max(0, lines.length - 1);
+      state.index = Math.max(0, Math.min(i, last));
+      state.revealed = Math.min(state.index + 1, lines.length);
+    };
+
+    const skipBlanksForward = () => {
+      const j = nextNonBlankIndex(state.index);
+      if (j !== state.index) setIndex(j);
+    };
+
+    const skipBlanksBackward = () => {
+      const j = prevNonBlankIndex(state.index);
+      if (j !== state.index) setIndex(j);
+    };
+
+    const renderPrompt = () => {
+      if (isEditing) return;
+      promptEl.value = lines.slice(0, state.revealed).map(l => l.raw).join('\n');
+      resizePromptToContent();
+    };
+
+    const refreshControls = () => {
+      controlsEl.innerHTML = '';
+      if (!isEditing) {
+        const b = document.createElement('button');
+        b.className = 'btn btn-muted';
+        b.type = 'button';
+        b.textContent = 'Edit';
+        b.addEventListener('click', enterEditMode);
+        controlsEl.appendChild(b);
+        return;
+      }
+
+      const save = document.createElement('button');
+      save.className = 'btn btn-primary';
+      save.type = 'button';
+      save.textContent = 'Save';
+      save.addEventListener('click', saveEdit);
+
+      const cancel = document.createElement('button');
+      cancel.className = 'btn';
+      cancel.type = 'button';
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', cancelEdit);
+
+      controlsEl.appendChild(save);
+      controlsEl.appendChild(cancel);
+    };
+
+    const enterEditMode = () => {
+      if (isEditing) return;
+      isEditing = true;
+      statusEl.textContent = 'Editing: Save to reflow to 72 cols. Esc cancels. Ctrl/Cmd+S saves.';
+
+      // Lock current prompt height so it doesn't jump.
+      lockedPromptHeightPx = promptEl.getBoundingClientRect().height;
+      promptEl.style.height = lockedPromptHeightPx + 'px';
+
+      promptBoxEl.classList.add('editing');
+      promptEl.readOnly = false;
+
+      // Show the raw story for editing (not wrapped view).
+      editDraft = rawStory;
+      promptEl.value = editDraft;
+
+      // Make textarea scrollable but same size.
+      // Do NOT force scroll position; keep whatever the browser keeps (no jumping).
+
+      // Disable typing input.
+      typeEl.disabled = true;
+
+      refreshControls();
+      promptEl.focus();
+    };
+
+    const exitEditMode = () => {
+      isEditing = false;
+      promptBoxEl.classList.remove('editing');
+      promptEl.readOnly = true;
+
+      // Restore to content-sized height.
+      promptEl.style.height = 'auto';
+      typeEl.disabled = false;
+
+      statusEl.textContent = '';
+      refreshControls();
+
+      renderPrompt();
+      requestAnimationFrame(scrollToTypingLine);
+      typeEl.focus();
+    };
+
+    const cancelEdit = () => {
+      if (!isEditing) return;
+      // Restore draft to stored story (no changes).
+      promptEl.value = editDraft; // doesn't matter; we'll re-render on exit
+      exitEditMode();
+    };
+
+    const saveEdit = () => {
+      if (!isEditing) return;
+
+      // Commit: update rawStory (stable) and persist it.
+      let next = promptEl.value;
+      // If user saved an empty/whitespace-only story, revert to the default.
+      if (next.trim() === '') next = DEFAULT_STORY;
+
+      rawStory = next;
+      saveText(rawStory);
+
+      // Rebuild wrapped lines.
+      rebuildLines();
+
+      // Progress may reset (allowed). Start from top.
+      state.index = 0;
+      state.revealed = 1;
+      state.fp = storyFingerprint(rawStory);
+      saveState();
+
+      exitEditMode();
+    };
+
+    /* ---- Typing logic ---- */
+    const tryAdvance = () => {
+      const expected = lines[state.index];
+      if (!expected) return;
+
+      if (normalizeTyped(typeEl.value) === expected.trimmed) {
+        typeEl.value = '';
+
+        const j = nextNonBlankIndex(state.index + 1);
+        if (j < lines.length) {
+          setIndex(j);
+        } else {
+          // Finished
+          state.index = lines.length;
+          state.revealed = lines.length;
+        }
+
+        saveState();
+        renderPrompt();
+        requestAnimationFrame(scrollToTypingLine);
+
+        if (state.index >= lines.length) statusEl.textContent = 'The End.';
+      } else {
+        shakeInput();
+      }
+    };
+
+    /* ---- Cheat navigation ----
+      Support multiple variants; decide later:
+        Forward: Ctrl/Cmd+Enter, Ctrl/Cmd+ArrowDown
+        Back:    Ctrl/Cmd+Shift+Enter, Ctrl/Cmd+Alt/Option+Enter,
+                 Ctrl/Cmd+ArrowUp, Ctrl/Cmd+Backspace (when input empty)
+    */
+    const cheatForward = () => {
+      if (state.index >= lines.length) return;
+      const j = nextNonBlankIndex(state.index + 1);
+      if (j < lines.length) setIndex(j);
+      saveState();
+      renderPrompt();
+      requestAnimationFrame(scrollToTypingLine);
+    };
+
+    const cheatBackward = () => {
+      if (state.index <= 0) return;
+      const j = prevNonBlankIndex(state.index - 1);
+      setIndex(j);
+      saveState();
+      renderPrompt();
+      requestAnimationFrame(scrollToTypingLine);
+    };
+
+    /* ---- Focus policy ---- */
+    document.addEventListener('pointerdown', (e) => {
+      if (isEditing) return;
+      if (e.target === promptEl) return;
+      if (e.target === typeEl) return;
+      setTimeout(() => typeEl.focus(), 0);
+    });
+
+    typeEl.addEventListener('keydown', (e) => {
+      if (isEditing) return;
+
+      const mod = (e.ctrlKey || e.metaKey);
+
+      if (mod && e.key === 'ArrowDown') {
+        e.preventDefault();
+        typeEl.value = '';
+        cheatForward();
+        return;
+      }
+      if (mod && e.key === 'ArrowUp') {
+        e.preventDefault();
+        typeEl.value = '';
+        cheatBackward();
+        return;
+      }
+      if (mod && e.key === 'Backspace' && typeEl.value.length === 0) {
+        e.preventDefault();
+        cheatBackward();
+        return;
+      }
+
+      if (e.key !== 'Enter') return;
+
+      if (mod && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        typeEl.value = '';
+        cheatForward();
+        return;
+      }
+      if (mod && e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        typeEl.value = '';
+        cheatBackward();
+        return;
+      }
+      if (mod && e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        typeEl.value = '';
+        cheatBackward();
+        return;
+      }
+
+      e.preventDefault();
+      tryAdvance();
+    });
+
+    // Editing shortcuts: Esc cancel, Ctrl/Cmd+S save
+    promptEl.addEventListener('keydown', (e) => {
+      if (!isEditing) return;
+      const mod = (e.ctrlKey || e.metaKey);
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit();
+        return;
+      }
+      if (mod && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        saveEdit();
+        return;
+      }
+    });
+
+    /* ---- Tests ---- */
+    const runTests = () => {
+      console.assert(wrapLineToCols('one two three', 7).join('|') === 'one two|three', 'wrap: basic');
+      console.assert(wrapLineToCols('abcdefgh', 4).join('|') === 'abcd|efgh', 'wrap: hard split long word');
+      console.assert(wrapTextToCols('a\n\n b', 72).length === 3, 'wrap: preserve blank lines');
+
+      const sample = wrapTextToCols('word '.repeat(200), 72);
+      console.assert(sample.every(l => l.length <= 72), 'wrap: never exceed cols');
+
+      console.assert(['a', 'b'].join('\n') === 'a\nb', 'join: newline escapes correctly');
+
+      // New tests: wrapLineToCols blank returns single empty
+      console.assert(wrapLineToCols('   ', 72).length === 1 && wrapLineToCols('   ', 72)[0] === '', 'wrap: blank line');
+
+      // Fingerprint must depend on COLS without embedding newlines in prefix
+      const fpA = storyFingerprint('hello');
+      const fpB = (function(){
+        const withCols = 'COLS=73|' + 'hello';
+        let h = 2166136261;
+        for (let i = 0; i < withCols.length; i++) { h ^= withCols.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return (h >>> 0).toString(16);
+      })();
+      console.assert(fpA !== fpB, 'fingerprint: depends on cols delimiter');
+    };
+
+    runTests();
+
+    /* ---- Init ---- */
+    rebuildLines();
+
+    const loaded = loadState();
+    state.index = loaded.index;
+    state.fp = storyFingerprint(rawStory);
+    clampState();
+    skipBlanksForward();
+    skipBlanksBackward();
+
+    refreshControls();
+    renderPrompt();
+    requestAnimationFrame(scrollToTypingLine);
+    typeEl.focus();
+
+    // Best-effort: if fonts load late, re-render (system monospace usually instant)
+    document.fonts?.ready?.then?.(() => {
+      if (!isEditing) {
+        renderPrompt();
+        requestAnimationFrame(scrollToTypingLine);
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>
+
