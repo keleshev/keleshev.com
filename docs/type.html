@@ -7,7 +7,7 @@
   <style>
     :root {
       --font: monospace;
-      --font-size: 22px;
+      --font-size: 20px;
       --line-height: 1.55;
       --fg: #111;
 
@@ -42,9 +42,7 @@
       margin: 48px auto;
     }
 
-    .promptBox {
-      position: relative;
-    }
+    .promptBox { position: relative; }
 
     /* No soft-wrap: every visible line must be a real line */
     #prompt {
@@ -54,7 +52,7 @@
       font-size: var(--font-size);
       line-height: var(--line-height);
 
-      padding: var(--pad-y) var(--pad-x);
+      padding: var(--pad-y) var(--pad-x) var(--pad-y) var(--pad-x);
       border: var(--border-w) solid transparent;
       outline: none;
       background: transparent;
@@ -97,9 +95,7 @@
       cursor: pointer;
       user-select: none;
     }
-
-    .btn:active { transform: translateY(1px); }
-
+    
     .btn-primary {
       background: rgba(0,0,0,0.80);
       border-color: rgba(0,0,0,0.80);
@@ -112,7 +108,6 @@
     }
 
     .inputRow {
-      margin-top: 12px;
       display: grid;
       gap: 8px;
     }
@@ -748,7 +743,7 @@ The End.`;
 
     const wrapTextToColumns = (text, columns) => {
       const out = [];
-      for (const rawLine of text.split(/\n/)) {
+      for (const rawLine of String(text).split(/\n/)) {
         if (rawLine.trim() === '') {
           out.push('');
           continue;
@@ -756,6 +751,25 @@ The End.`;
         out.push(...wrapLineToColumns(rawLine, columns));
       }
       return out;
+    };
+
+    // Sanitize user-provided story text from the editor.
+    // - If empty => default story
+    // - If first line is blank (common paste error) => drop leading blank lines
+    // - Store wrapped text ("chopped") so future edits are not giant long lines
+    const sanitizeStoryInput = (text) => {
+      let t = (typeof text === 'string') ? text : '';
+      if (t.trim() === '') return DEFAULT_STORY;
+
+      // Drop leading blank/whitespace-only lines.
+      const ls = t.split(/\n/);
+      while (ls.length > 0 && ls[0].trim() === '') ls.shift();
+      t = ls.join('\n');
+
+      if (t.trim() === '') return DEFAULT_STORY;
+
+      // Reflow to fixed columns and store that representation.
+      return wrapTextToColumns(t, COLUMNS).join('\n');
     };
 
     const storyFingerprint = (s) => {
@@ -929,11 +943,8 @@ The End.`;
     const saveEdit = () => {
       if (!isEditing) return;
 
-      // Commit: update rawStory (stable) and persist it.
-      let next = promptEl.value;
-      if (next.trim() === '') next = DEFAULT_STORY;
-
-      rawStory = next;
+      // Commit: sanitize + reflow and persist.
+      rawStory = sanitizeStoryInput(promptEl.value);
       saveText(rawStory);
 
       // Rebuild wrapped lines.
@@ -1102,6 +1113,19 @@ The End.`;
       console.assert(fpA !== fpB, 'fingerprint: depends on columns');
 
       console.assert(typeof enterEditMode === 'function', 'edit: enterEditMode exists');
+
+      // sanitize drops leading blank lines
+      console.assert(
+        sanitizeStoryInput('\n\nHello').startsWith('Hello'),
+        'sanitize: drops leading blank lines'
+      );
+
+      // sanitize stores wrapped (chopped) text
+      const chopped = sanitizeStoryInput('a '.repeat(200));
+      console.assert(
+        chopped.split(/\n/).every(l => l.length <= 72),
+        'sanitize: stores wrapped lines'
+      );
     };
 
     runTests();
