@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bass Note Trainer</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111111;
+      --line: rgba(0,0,0,0.18);
+      --line-strong: rgba(0,0,0,0.45);
+      --target: rgba(0,0,0,0.08);
+      --ok: rgba(16, 185, 129, 0.28);
+      --bad: rgba(239, 68, 68, 0.26);
+      --ring: rgba(0,0,0,0.6);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .stars {
+      font-size: 18px;
+      line-height: 1;
+      user-select: none;
+      letter-spacing: 4px;
+      min-height: 22px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .star {
+      display: inline-block;
+      transform-origin: 50% 55%;
+      will-change: transform, filter;
+      filter: none;
+    }
+
+    .star.hollow { opacity: 0.95; }
+
+    @keyframes starPop {
+      0%   { transform: scale(0.85) rotate(-8deg); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+      40%  { transform: scale(1.25) rotate(8deg);  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.18)); }
+      100% { transform: scale(1.0)  rotate(0deg);  filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+    }
+
+    @keyframes newMaxSweep {
+      0%   { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); transform: translateY(0); }
+      35%  { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.20)); transform: translateY(-1px); }
+      100% { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); transform: translateY(0); }
+    }
+
+    .star.pop { animation: starPop 260ms ease-out; }
+    .stars.newmax { animation: newMaxSweep 320ms ease-out; }
+
+    .boardWrap { overflow-x: auto; }
+
+    table.board {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      table-layout: fixed; /* prevent content-driven column width jumps */
+    }
+
+    .cell {
+      transition: opacity 120ms linear;
+      position: relative;
+      height: 64px;
+      text-align: center;
+      vertical-align: middle;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .open { border-left: none !important; }
+    .v { border-left: 1px solid var(--line); }
+    .nut { border-right: 4px solid var(--line-strong); }
+    .last { border-right: 1px solid var(--line); }
+
+    .target {
+      background: var(--target);
+      outline: 2px solid var(--ring);
+      outline-offset: -2px;
+    }
+
+    .ok { background: var(--ok) !important; }
+    .bad { background: var(--bad) !important; }
+
+    .note {
+      white-space: pre-line;
+      line-height: 1.05;
+    }
+
+    .marker {
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .marker.double {
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    /* Bigger dots */
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.45);
+    }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .btn:disabled { opacity: 0.6; cursor: default; }
+
+    .wide {
+      width: min(560px, 100%);
+      height: 44px;
+    }
+
+    .dunno { font-style: italic; }
+
+    .toggle {
+      width: min(560px, 100%);
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .toggle button {
+      flex: 1;
+      height: 36px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .toggle button + button { border-left: 1px solid var(--line); }
+    .toggle .on { background: #111; color: #fff; font-weight: 600; }
+
+    .kbdWrap { width: min(560px, 100%); }
+
+    .keyboard {
+      position: relative;
+      height: 140px;
+      border: 1px solid var(--line);
+      background: #f7f7f7;
+      padding: 10px;
+      border-radius: 2px;
+    }
+
+    .whiteRow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      height: 100%;
+      gap: 6px;
+    }
+
+    .keyWhite {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.28);
+      border-radius: 8px;
+      box-shadow: inset 0 -6px 0 rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    .blackLayer {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      height: 62%;
+      pointer-events: none;
+    }
+
+    .keyBlack {
+      position: absolute;
+      width: 10.5%;
+      height: 100%;
+      background: #111;
+      border-radius: 8px;
+      pointer-events: auto;
+      box-shadow: inset 0 -6px 0 rgba(255,255,255,0.10);
+    }
+
+    /* press animation even when disabled */
+    .pressed { transform: translateY(1px); }
+
+    .kOk { outline: 3px solid rgba(16,185,129,0.65); outline-offset: -3px; }
+    .kBad { outline: 3px solid rgba(239,68,68,0.65); outline-offset: -3px; }
+
+    .kLabel {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
+      font-size: 12px;
+      text-align: center;
+      white-space: pre-line;
+      line-height: 1.05;
+    }
+
+    .kLabel.onBlack { color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="stars" id="stars" aria-label="streak"></div>
+    <div class="boardWrap">
+      <table class="board" id="board"><colgroup id="cols"></colgroup></table>
+    </div>
+    <div class="controls" id="controls"></div>
+  </div>
+
+<script>
+  const PC_LABELS = [
+    { sharp: 'C',  flat: 'C'  },
+    { sharp: 'C#', flat: 'Db' },
+    { sharp: 'D',  flat: 'D'  },
+    { sharp: 'D#', flat: 'Eb' },
+    { sharp: 'E',  flat: 'E'  },
+    { sharp: 'F',  flat: 'F'  },
+    { sharp: 'F#', flat: 'Gb' },
+    { sharp: 'G',  flat: 'G'  },
+    { sharp: 'G#', flat: 'Ab' },
+    { sharp: 'A',  flat: 'A'  },
+    { sharp: 'A#', flat: 'Bb' },
+    { sharp: 'B',  flat: 'B'  },
+  ];
+
+  // Display order: G D A E
+  const STRINGS = [7, 2, 9, 4];
+  const FRETS = Array.from({ length: 13 }, (_, i) => i);
+  const singleDots = new Set([3, 5, 7, 9]);
+  const doubleDots = new Set([12]);
+
+  const WHITE_PCS = [0, 2, 4, 5, 7, 9, 11];
+
+  const el = (id) => document.getElementById(id);
+
+  const state = {
+    mode: 'normal',
+    started: false,
+    pos: { si: 0, f: 0 },
+    revealed: true,
+    pickedPc: null,
+    showKeyLabels: true,
+    currentStreak: 0,
+    maxStreak: 0,
+    _prevStreak: 0,
+    _prevMax: 0,
+  };
+
+  // persistence
+  const MODE_KEY = 'bassNoteTrainer.mode';
+  const MAX_KEY  = 'bassNoteTrainer.maxStreak';
+  try {
+    const m = localStorage.getItem(MODE_KEY);
+    if (m === 'easy' || m === 'normal') state.mode = m;
+  } catch (_) {}
+  try {
+    const ms = Number(localStorage.getItem(MAX_KEY) || '0');
+    state.maxStreak = Number.isFinite(ms) && ms > 0 ? Math.floor(ms) : 0;
+  } catch (_) {}
+
+  const pcAt = (openPc, fret) => (openPc + fret) % 12;
+  const pretty = (s) => s.replace(/#/g, '♯').replace(/b/g, '♭');
+  const label2 = (pc) => {
+    const n = PC_LABELS[pc];
+    const a = pretty(n.sharp);
+    const b = pretty(n.flat);
+    return a === b ? `${a}\n` : `${a}\n${b}`;
+  };
+  const pcLabel = (pc) => {
+    const n = PC_LABELS[pc];
+    const a = pretty(n.sharp);
+    const b = pretty(n.flat);
+    return a === b ? a : `${a}\n${b}`;
+  };
+  const rand = (n) => Math.floor(Math.random() * n);
+  const correctPc = () => pcAt(STRINGS[state.pos.si], state.pos.f);
+
+  function buildColgroup() {
+    const cols = el('cols');
+    if (!cols) return;
+    cols.innerHTML = '';
+
+    // Real-ish fret spacing: x_n = 1 - 2^(-n/12)
+    const x = [];
+    for (let n = 0; n <= 12; n++) x.push(1 - Math.pow(2, -n / 12));
+    const seg = [];
+    for (let n = 0; n < 12; n++) seg.push(x[n + 1] - x[n]);
+    seg.push(seg[seg.length - 1]);
+
+    const sum = seg.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < seg.length; i++) {
+      const col = document.createElement('col');
+      col.style.width = ((seg[i] / sum) * 100).toFixed(6) + '%';
+      cols.appendChild(col);
+    }
+  }
+
+  function allowedStrings() {
+    return state.mode === 'easy' ? [1, 2, 3] : [0, 1, 2, 3];
+  }
+  function allowedFrets() {
+    return state.mode === 'easy' ? [0, 1, 2, 3, 4, 5] : FRETS;
+  }
+  function isStringAllowed(si) { return allowedStrings().includes(si); }
+  function isFretAllowed(f) { return allowedFrets().includes(f); }
+
+  function deemphasize(td, si, f) {
+    if (state.mode === 'easy' && (!isStringAllowed(si) || !isFretAllowed(f))) td.style.opacity = '0.35';
+    else td.style.opacity = '1';
+  }
+
+  function newQuestion() {
+    const sis = allowedStrings();
+    const fis = allowedFrets();
+    state.pos = { si: sis[rand(sis.length)], f: fis[rand(fis.length)] };
+    state.revealed = false;
+    state.pickedPc = null;
+    state.showKeyLabels = false;
+    render();
+  }
+
+  function buildStars() {
+    const starsEl = el('stars');
+    if (!starsEl) return;
+
+    // Track changes for animation
+    const prevCur = state._prevStreak;
+    const prevMax = state._prevMax;
+    const cur = state.currentStreak;
+    const max = state.maxStreak;
+
+    starsEl.classList.remove('newmax');
+
+    // Clear
+    starsEl.textContent = '';
+
+    if (max <= 0) {
+      state._prevStreak = cur;
+      state._prevMax = max;
+      return;
+    }
+
+    const filled = Math.min(cur, max);
+
+    for (let i = 0; i < max; i++) {
+      const span = document.createElement('span');
+      span.className = 'star ' + (i < filled ? 'filled' : 'hollow');
+      span.textContent = (i < filled) ? '★' : '☆';
+      starsEl.appendChild(span);
+    }
+
+    // Animate newly gained star
+    if (cur > prevCur && cur <= max) {
+      const idx = Math.min(cur, max) - 1;
+      const target = starsEl.children[idx];
+      if (target) {
+        target.classList.add('pop');
+        // restart animation if rapid clicks
+        void target.offsetWidth;
+        target.classList.add('pop');
+        setTimeout(() => target.classList.remove('pop'), 300);
+      }
+    }
+
+    // Animate when setting a new max streak
+    if (max > prevMax) {
+      starsEl.classList.add('newmax');
+      setTimeout(() => starsEl.classList.remove('newmax'), 360);
+    }
+
+    state._prevStreak = cur;
+    state._prevMax = max;
+  }
+
+  function buildBoard() {
+    const board = el('board');
+    const old = board.querySelector('tbody');
+    if (old) old.remove();
+
+    const tb = document.createElement('tbody');
+
+    for (let si = 0; si < STRINGS.length; si++) {
+      const tr = document.createElement('tr');
+
+      for (const f of FRETS) {
+        const td = document.createElement('td');
+        td.className = 'cell';
+
+        if (f === 0) td.classList.add('open', 'nut');
+        else td.classList.add('v');
+        if (f === 12) td.classList.add('last');
+
+        deemphasize(td, si, f);
+
+        const isT = state.started && si === state.pos.si && f === state.pos.f;
+        const pc = pcAt(STRINGS[si], f);
+
+        if (!state.revealed && isT) {
+          td.classList.add('target');
+          td.textContent = '?';
+        }
+
+        if (state.revealed) {
+          const d = document.createElement('div');
+          d.className = 'note';
+          d.textContent = pcLabel(pc);
+          td.appendChild(d);
+
+          if (isT && state.pickedPc !== null) {
+            td.classList.add(state.pickedPc === correctPc() ? 'ok' : 'bad');
+          }
+        }
+
+        if (si === 1) {
+          if (singleDots.has(f) || doubleDots.has(f)) {
+            const m = document.createElement('div');
+            m.className = 'marker' + (doubleDots.has(f) ? ' double' : '');
+            const d1 = document.createElement('div'); d1.className = 'dot';
+            m.appendChild(d1);
+            if (doubleDots.has(f)) {
+              const d2 = document.createElement('div'); d2.className = 'dot';
+              m.appendChild(d2);
+            }
+            td.appendChild(m);
+          }
+        }
+
+        tr.appendChild(td);
+      }
+
+      tb.appendChild(tr);
+    }
+
+    board.appendChild(tb);
+  }
+
+  function addPressHandlers(btn) {
+    btn.addEventListener('mousedown', () => btn.classList.add('pressed'));
+    btn.addEventListener('mouseup', () => btn.classList.remove('pressed'));
+    btn.addEventListener('mouseleave', () => btn.classList.remove('pressed'));
+  }
+
+  function buildKeyboard() {
+    const k = document.createElement('div');
+    k.className = 'keyboard';
+
+    const wr = document.createElement('div');
+    wr.className = 'whiteRow';
+
+    const hasAnswer = state.started && state.revealed;
+    const cp = hasAnswer ? correctPc() : null;
+
+    // White keys
+    for (const pc of WHITE_PCS) {
+      const b = document.createElement('button');
+      b.className = 'btn keyWhite';
+      b.disabled = !state.started || state.revealed;
+      b.onclick = () => pick(pc);
+      addPressHandlers(b);
+
+      if (hasAnswer) {
+        if (state.pickedPc !== null && state.pickedPc === pc && state.pickedPc === cp) b.classList.add('kOk');
+        if (state.pickedPc !== null && state.pickedPc === pc && state.pickedPc !== cp) b.classList.add('kBad');
+        if (cp === pc && state.pickedPc !== cp) b.classList.add('kOk');
+      }
+
+      if (state.showKeyLabels) {
+        const lab = document.createElement('div');
+        lab.className = 'kLabel';
+        lab.textContent = label2(pc);
+        b.appendChild(lab);
+      }
+
+      wr.appendChild(b);
+    }
+
+    k.appendChild(wr);
+
+    // Black keys overlay
+    const bl = document.createElement('div');
+    bl.className = 'blackLayer';
+
+    const specs = [
+      [1, 9.5],
+      [3, 23.8],
+      [6, 52.0],
+      [8, 66.2],
+      [10, 80.5],
+    ];
+
+    for (const [pc, leftPct] of specs) {
+      const b = document.createElement('button');
+      b.className = 'btn keyBlack';
+      b.style.left = leftPct + '%';
+      b.disabled = !state.started || state.revealed;
+      b.onclick = () => pick(pc);
+      addPressHandlers(b);
+
+      if (hasAnswer) {
+        if (state.pickedPc !== null && state.pickedPc === pc && state.pickedPc === cp) b.classList.add('kOk');
+        if (state.pickedPc !== null && state.pickedPc === pc && state.pickedPc !== cp) b.classList.add('kBad');
+        if (cp === pc && state.pickedPc !== cp) b.classList.add('kOk');
+      }
+
+      if (state.showKeyLabels) {
+        const lab = document.createElement('div');
+        lab.className = 'kLabel onBlack';
+        lab.textContent = label2(pc);
+        b.appendChild(lab);
+      }
+
+      bl.appendChild(b);
+    }
+
+    k.appendChild(bl);
+    return k;
+  }
+
+  function buildControls() {
+    const c = el('controls');
+    c.innerHTML = '';
+
+    const t = document.createElement('div');
+    t.className = 'toggle';
+
+    for (const m of ['easy', 'normal']) {
+      const b = document.createElement('button');
+      b.textContent = m[0].toUpperCase() + m.slice(1);
+      if (state.mode === m) b.className = 'on';
+      b.onclick = () => {
+        state.mode = m;
+        try { localStorage.setItem(MODE_KEY, m); } catch (_) {}
+        state.currentStreak = 0;
+        if (state.started) newQuestion();
+        else render();
+      };
+      t.appendChild(b);
+    }
+
+    c.appendChild(t);
+
+    const kw = document.createElement('div');
+    kw.className = 'kbdWrap';
+    kw.appendChild(buildKeyboard());
+    c.appendChild(kw);
+
+    if (!state.started) {
+      const b = document.createElement('button');
+      b.className = 'btn wide';
+      b.textContent = 'Start';
+      b.onclick = () => {
+        state.started = true;
+        newQuestion();
+      };
+      c.appendChild(b);
+      return;
+    }
+
+    if (state.revealed) {
+      const b = document.createElement('button');
+      b.className = 'btn wide';
+      b.textContent = 'Try again';
+      b.onclick = newQuestion;
+      c.appendChild(b);
+      return;
+    }
+
+    const d = document.createElement('button');
+    d.className = 'btn wide dunno';
+    d.textContent = "Don't know";
+    d.onclick = () => pick(null);
+    c.appendChild(d);
+  }
+
+  function pick(pc) {
+    if (!state.started || state.revealed) return;
+
+    const wasCorrect = (pc !== null && pc === correctPc());
+
+    if (wasCorrect) {
+      state.currentStreak += 1;
+      if (state.currentStreak > state.maxStreak) {
+        state.maxStreak = state.currentStreak;
+        try { localStorage.setItem(MAX_KEY, String(state.maxStreak)); } catch (_) {}
+      }
+      state.showKeyLabels = false;
+    } else {
+      state.currentStreak = 0;
+      state.showKeyLabels = true; // same as start state
+    }
+
+    state.pickedPc = pc;
+    state.revealed = true;
+    render();
+  }
+
+  function render() {
+    buildStars();
+    buildBoard();
+    buildControls();
+  }
+
+  buildColgroup();
+  window.addEventListener('resize', buildColgroup);
+
+  // tests
+  (function tests() {
+    const cols = el('cols');
+    console.assert(cols && cols.children.length === 13, 'colgroup should have 13 columns');
+    console.assert(['easy','normal'].includes(state.mode), 'mode should be easy|normal');
+    console.assert(state.maxStreak >= 0, 'maxStreak non-negative');
+    // stars behavior: when max=0, stars empty
+    const s = el('stars');
+    const prev = state.maxStreak;
+    state.maxStreak = 0; state.currentStreak = 0; state._prevMax = 0; state._prevStreak = 0;
+    buildStars();
+    console.assert(s.textContent === '', 'no stars when maxStreak=0');
+    state.maxStreak = prev;
+  })();
+
+  render();
+</script>
+</body>
+</html>
