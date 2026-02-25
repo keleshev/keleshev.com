@@ -26,6 +26,10 @@ Writing
 
 <div style="text-align:left">
 
+<span style="float:right">(2026)</span>
+
+[Say No—to Human-AI Workflow Segregation](say-no-to-human-ai-workflow-segregation)
+
 <span style="float:right">(2024)</span>
 
 [Pretty Printing in OCaml—A Format Primer](/pretty-printing-in-ocaml-a-format-primer) 
