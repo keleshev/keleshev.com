@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=750;" />
+  <!-- favicon stuff -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=1">
+  <!--link rel="mask-icon" href="/safari-pinned-tab.svg?v=1"> <!-- color="#5bbad5">-->
+  <link rel="shortcut icon" href="/favicon.ico?v=1">
+  <!--meta name="theme-color" content="#ffffff"-->
+
+  <meta name="dcterms.date" content="2026-02-25" />
+  <title>AI=true is an Anti-Pattern</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+
+
+<header>
+  <h1><big>AI=true</big><br/><small>is an Anti-Pattern</small></h1>
+<a href="/">Vladimir Keleshev</a> • 2026-02-25
+</header>
+
+
+<p>One programming trend that surpised me a lot recently, something that happens both at work and in open-source, is people <em>suddenly</em> starting doing the following:</p>
+<ul>
+<li>Writing a lot of relevant, long-overdue, sharp, concise, to-the-point documentation… but placing it in <code>copilot-instructions.md</code> or <code>AGENTS.md</code> files.</li>
+<li>Implementing extremely valuable workflows, but exposing them in form of <code>skills</code> or <abbr title="Model Context Protocol">MCP</abbr> servers.</li>
+<li>Improving output of tests and command-line tools, but enabling it only under AI-oriented flags and environmental variables (like <code>AI=true</code>).</li>
+</ul>
+<p>Well, I think we need to take deep breath and take a step back.</p>
+<h2 id="documentation">Documentation</h2>
+<p>Yes, good documentation <em>is</em> valuable for AI agents, especially if it is not part of the training data set. A good documentation <em>digest</em> is often even more important, because it takes less of the context window. But… that documentation is equally valuable for humans, and we have a limited context window too, and benefit from good summaries equally.</p>
+<p>Moreover, we should strive to place the documentation where it is well discoverable by both humans and AI agents. <code>README.md</code> files is one such choice.</p>
+<p>I know that there are a few technicalities involved, for example, some tools will pre-load files like <code>AGENTS.md</code> into the context, but the actual conventions are changing rapidly, and often are vendor-specific (i.e. not to be relied upon), and most of the benefit can be obtained by placing “See <code>README.md</code>” in the right place.</p>
+<h2 id="tools">Tools</h2>
+<p>First, there are tools that are mostly human-oriented, tools with graphical user interfaces. Then there are new kinds of tools that are primarily AI-oriented, the MCP tools. However, there’s a set of tools that both developers and AI agents can use alike: command-line tools and APIs. They are scriptable, composable, text-oriented, and can perfectly expose functionality to both developers and AI agents. Why not default to them?</p>
+<p>I’m obviously biased towards command-line, but I use my share of GUI tools too. However, when it comes to MCP, I am yet to see a single case when it is supperior to a command-line tool. Maybe the time will prove me wrong.</p>
+<p>One example: I’ve seen an MCP tool being introduced because the actual command-line tool took a lot of time to execute, was producing no output and was—bacause of that—often mistakingly terminated early by the agent. That reminds me of someone else who is also prone to that… I am! Well, who else, when running a new tool and presented with a hanging command-line, doesn’t just Ctrl-C out of it, if nothing happens for straight 10 seconds?</p>
+<p>Or the opposite—who is not overwhelmed when a tool produces tons of unnecessary output? I am. And same thing, it makes AI context window slide and leave out potentially more useful information. Mental overload, anyone?</p>
+<p>Who likes it when tests execute fast and, if they fail, produce output that allows to easily narrow down the problem? You get the idea… What’s good for the goose is good for the gander.</p>
+<p>Making a new internal tool? Why not make a web app… and see developers always complain about missing functionality while you try to manage scope creep. Or make an API first. Even better, wrap it into a command-line too and see developers and AI agents alike mixing, matching, scripting away, and automating the workflows you would have never imagined, and being on top of their needs.</p>
+<h2 id="lets-sum-it-up">Let’s sum it up</h2>
+<ol type="1">
+<li>Place documentation where both human developers and AI agents can expect it. For example, in <code>README.md</code>, not <code>AGENTS.md</code>.</li>
+<li>Prefer exposing functionality as command-line tools and APIs, which are well accessible to developers and AI agents alike, over GUI and MCP tools.</li>
+<li>Avoid parameters (command-line, environment, etc.) that segregate workflows between humans and AI agents, for example, avoid <code>AI=true</code>, prefer <code>--quiet</code> or—<em>even better!</em>—design your tools with limited context/mental-overload in mind.</li>
+<li>In general, avoid making workflows that are available to AI but hard to access for humans, and vice-versa.</li>
+</ol>
+<hr />
+<p>I don’t normally write on topics like this, but this has been my cry to try to turn the tide of programming practice towards unification of human and AI workflows.</p>
+<p>There’s enough similarity between us to maintain the same textual interfaces and conventions. We should try to stay interoperable as far as possible, but the ramifications are not lost on me.</p>
+
+
+  <hr class="fleuron" />
+</body>
+</html>
