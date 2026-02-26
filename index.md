@@ -28,7 +28,7 @@ Writing
 
 <span style="float:right">(2026)</span>
 
-[Say No—to Human-AI Workflow Segregation](say-no-to-human-ai-workflow-segregation)
+[Against Human-AI Workflow Separation](/against-human-ai-workflow-separation)
 
 <span style="float:right">(2024)</span>
 
