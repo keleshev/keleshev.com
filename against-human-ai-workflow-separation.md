@@ -1,6 +1,6 @@
 ---
-title: "Against Human-AI Workflow Separation"
-fancy-title: "<big>Against</big><br/><small>Human-AI Workflow Separation</small>"
+title: "AI=true is an Anti-Pattern
+fancy-title: "<big>AI=true</big><br/><small>is an Anti-Pattern</small>"
 date: 2026-02-25
 #cta: {book: false}
 ---

@@ -28,7 +28,7 @@ Writing
 
 <span style="float:right">(2026)</span>
 
-[Against Human-AI Workflow Separation](/against-human-ai-workflow-separation)
+[`AI=true` is an Anti-Pattern](/ai-equals-true-is-an-anti-pattern)
 
 <span style="float:right">(2024)</span>
 
